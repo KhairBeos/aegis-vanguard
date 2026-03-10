@@ -2,8 +2,17 @@
   "version": 3,
   "configurePresets": [
     {
-      "name": "debug",
+      "name": "base",
+      "hidden": true,
       "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "AEGIS_ENABLE_TESTING": "ON"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": "base",
       "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
@@ -11,10 +20,28 @@
     },
     {
       "name": "release",
-      "generator": "Ninja",
+      "inherits": "base",
       "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "debug-collector",
+      "inherits": "debug",
+      "binaryDir": "${sourceDir}/build/debug-collector",
+      "cacheVariables": {
+        "AEGIS_BUILD_COLLECTOR": "ON",
+        "AEGIS_BUILD_ENGINE": "OFF"
+      }
+    },
+    {
+      "name": "debug-engine",
+      "inherits": "debug",
+      "binaryDir": "${sourceDir}/build/debug-engine",
+      "cacheVariables": {
+        "AEGIS_BUILD_COLLECTOR": "OFF",
+        "AEGIS_BUILD_ENGINE": "ON"
       }
     }
   ],
@@ -26,6 +53,14 @@
     {
       "name": "build-release",
       "configurePreset": "release"
+    },
+    {
+      "name": "build-debug-collector",
+      "configurePreset": "debug-collector"
+    },
+    {
+      "name": "build-debug-engine",
+      "configurePreset": "debug-engine"
     }
   ]
 }

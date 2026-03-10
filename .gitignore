@@ -22,7 +22,9 @@ __pycache__/
 .venv/
 
 # Local env
-deploy/env/.env
+deploy/env/.env*
+!deploy/env/.env.example
+!deploy/env/*.example
 
 # Sensitive key material
 *.pem
@@ -33,6 +35,7 @@ deploy/env/.env
 # Runtime data
 data/
 logs/
+deploy/backups/
 
 # IDE
 .vscode/
