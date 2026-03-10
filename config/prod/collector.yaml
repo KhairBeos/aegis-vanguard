@@ -1,0 +1,9 @@
+agent_id: prod-collector-01
+hostname: ${HOSTNAME}
+kafka:
+  brokers:
+    - kafka:29092
+  topic: siem.events
+collection:
+  process_events: true
+  network_events: true

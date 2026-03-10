@@ -1,0 +1,11 @@
+kafka:
+  brokers:
+    - localhost:9092
+  consume_topic: siem.events
+  produce_topic: siem.alerts
+clickhouse:
+  host: localhost
+  port: 8123
+  database: aegis
+rules:
+  path: ./rules

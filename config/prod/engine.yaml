@@ -1,0 +1,11 @@
+kafka:
+  brokers:
+    - kafka:29092
+  consume_topic: siem.events
+  produce_topic: siem.alerts
+clickhouse:
+  host: clickhouse
+  port: 8123
+  database: aegis
+rules:
+  path: /app/rules

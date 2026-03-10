@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package aegis.v1;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+import "shared/proto/event.proto";
+
+// Detection output published to siem.alerts.
+message SecurityAlert {
+  string schema_version = 1;
+  string alert_id = 2;
+  google.protobuf.Timestamp ts = 3;
+  string rule_id = 4;
+  string rule_name = 5;
+  Severity severity = 6;
+
+  // 0..100, used for ranking and aggregate risk analytics.
+  uint32 risk_score = 7;
+
+  string host = 8;
+  string tenant_id = 9;
+  string event_id = 10;
+  string process_guid = 11;
+  string summary = 12;
+  google.protobuf.Struct context = 13;
+  repeated string tags = 14;
+}

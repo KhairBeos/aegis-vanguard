@@ -1,0 +1,9 @@
+agent_id: dev-collector-01
+hostname: localhost
+kafka:
+  brokers:
+    - localhost:9092
+  topic: siem.events
+collection:
+  process_events: true
+  network_events: true

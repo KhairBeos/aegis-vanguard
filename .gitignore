@@ -1,0 +1,40 @@
+# Build outputs
+build/
+out/
+cmake-build-*/
+*.o
+*.obj
+*.so
+*.dll
+*.exe
+
+# Native tooling
+compile_commands.json
+
+# Node
+node_modules/
+.next/
+dashboard/.next/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Local env
+deploy/env/.env
+
+# Sensitive key material
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Runtime data
+data/
+logs/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store

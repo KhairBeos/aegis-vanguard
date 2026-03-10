@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package aegis.v1;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+// Severity used across SIEM events and alerts.
+enum Severity {
+  SEVERITY_UNSPECIFIED = 0;
+  SEVERITY_INFO = 1;
+  SEVERITY_LOW = 2;
+  SEVERITY_MEDIUM = 3;
+  SEVERITY_HIGH = 4;
+  SEVERITY_CRITICAL = 5;
+}
+
+// Canonical SIEM event envelope (api_spec v1.1).
+message SecurityEvent {
+  string schema_version = 1;
+  string event_id = 2;
+  google.protobuf.Timestamp ts = 3;
+  string host = 4;
+  string agent_id = 5;
+  string source = 6;
+  string event_type = 7;
+  Severity severity = 8;
+  string tenant_id = 9;
+  string trace_id = 10;
+
+  // Required for process-bound events (process_start, network_connect, file_open).
+  // Suggested generation: sha256(host + pid + process_start_time).
+  string process_guid = 11;
+
+  EventPayload event = 12;
+}
+
+message EventPayload {
+  oneof payload {
+    ProcessStartEvent process = 1;
+    NetworkConnectEvent network = 2;
+    FileOpenEvent file = 3;
+    AuthFailureEvent auth = 4;
+
+    // Fallback for forward compatibility when event type is not yet modeled.
+    google.protobuf.Struct generic = 15;
+  }
+}
+
+message ProcessStartEvent {
+  uint32 pid = 1;
+  uint32 ppid = 2;
+  uint32 uid = 3;
+  string user_name = 4;
+  string name = 5;
+  string exe = 6;
+  string cmdline = 7;
+  google.protobuf.Timestamp process_start_time = 8;
+}
+
+message NetworkConnectEvent {
+  uint32 pid = 1;
+  string process_guid = 2;
+  string protocol = 3;
+  string src_ip = 4;
+  uint32 src_port = 5;
+  string dst_ip = 6;
+  uint32 dst_port = 7;
+  string direction = 8;
+}
+
+message FileOpenEvent {
+  uint32 pid = 1;
+  string process_guid = 2;
+  string user_name = 3;
+  string path = 4;
+  repeated string flags = 5;
+  string result = 6;
+}
+
+message AuthFailureEvent {
+  string user_name = 1;
+  string method = 2;
+  string src_ip = 3;
+  string reason = 4;
+}
