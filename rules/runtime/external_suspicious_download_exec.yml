@@ -4,7 +4,7 @@ event_type: process_start
 severity: high
 risk_score: 85
 summary: External Sigma-like rule matched download-and-execute behavior
-summary_template: Suspicious download-and-execute on {{host}} by {{event.process.user_name}}: {{event.process.cmdline}}
+summary_template: 'Suspicious download-and-execute on {{host}} by {{event.process.user_name}}: {{event.process.cmdline}}'
 tags:
   - external
   - sigma-like
