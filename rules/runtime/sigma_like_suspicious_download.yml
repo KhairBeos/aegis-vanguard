@@ -1,0 +1,16 @@
+title: Sigma Like Suspicious Download and Execute
+id: sigma-like-download-exec
+description: Example Sigma-like runtime rule for process download-and-execute behavior
+summary_template: Suspicious download-and-execute on {{host}} by {{event.process.user_name}}: {{event.process.cmdline}}
+level: high
+tags:
+  - sigma-like
+  - external
+  - execution
+detection:
+  selection_download:
+    event_type: process_start
+    event.process.cmdline|contains:
+      - curl
+      - "| bash"
+  condition: 1 of selection*

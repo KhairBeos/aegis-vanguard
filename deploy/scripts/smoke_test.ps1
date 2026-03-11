@@ -57,6 +57,27 @@ function Get-ContainerHealth {
   return $health.Trim()
 }
 
+function Wait-CommandSuccess {
+  param(
+    [scriptblock]$Action,
+    [int]$MaxAttempts = 15,
+    [int]$DelaySeconds = 2
+  )
+
+  for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+    $result = & $Action
+    if ($LASTEXITCODE -eq 0) {
+      return $result
+    }
+
+    if ($attempt -lt $MaxAttempts) {
+      Start-Sleep -Seconds $DelaySeconds
+    }
+  }
+
+  return $null
+}
+
 $scriptDir = Split-Path -Parent $PSCommandPath
 $repoRoot = Join-Path $scriptDir "..\.."
 $repoRoot = [System.IO.Path]::GetFullPath($repoRoot)
@@ -121,8 +142,8 @@ Assert-True (($tables -contains "alerts")) "Missing ClickHouse table: ${clickhou
 Write-Output "[SMOKE] ClickHouse tables: OK"
 
 Write-Output "[SMOKE] Checking Grafana health endpoint..."
-$grafanaHealth = docker exec aegis-grafana sh -c "wget -q -O - http://localhost:3000/api/health"
-Assert-True ($LASTEXITCODE -eq 0) "Failed to call Grafana health endpoint"
+$grafanaHealth = Wait-CommandSuccess -Action { docker exec aegis-grafana sh -c "wget -q -O - http://localhost:3000/api/health" }
+Assert-True ($null -ne $grafanaHealth) "Failed to call Grafana health endpoint"
 $grafanaHealthText = ($grafanaHealth | Out-String).Trim()
 Assert-True ([bool]($grafanaHealthText -match '"database"\s*:\s*"ok"')) "Grafana health response does not contain database=ok"
 Write-Output "[SMOKE] Grafana health: OK"

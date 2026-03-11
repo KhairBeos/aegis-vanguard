@@ -1,0 +1,27 @@
+id: ext-auth-admin-failure
+name: External Administrative Account Authentication Failure
+event_type: auth_failure
+severity: medium
+risk_score: 70
+summary: External Sigma-like rule matched authentication failures for privileged usernames
+summary_template: Repeated privileged auth failures on {{host}} for {{event.auth.user_name}} from {{event.auth.src_ip}} via {{event.auth.method}} ({{match.current_hits}}/{{rule.min_hits}})
+tags: [external, sigma-like, auth]
+match: any
+min_hits: 5
+window_seconds: 600
+alert_cooldown_seconds: 600
+group_by:
+  - host
+  - event.auth.user_name
+  - event.auth.src_ip
+  - event.auth.method
+conditions:
+  - path: event.auth.user_name
+    op: equals
+    value: root
+  - path: event.auth.user_name
+    op: equals
+    value: administrator
+  - path: event.auth.user_name
+    op: equals
+    value: admin
