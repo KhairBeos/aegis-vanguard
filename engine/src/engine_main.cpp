@@ -1,4 +1,3 @@
-// engine/src/engine_main.cpp
 // Aegis-Vanguard SIEM Engine — main entry point.
 //
 // Pipeline loop:
@@ -8,7 +7,7 @@
 //     → ClickHouseWriter (raw events)
 //
 // Graceful shutdown: SIGINT / SIGTERM sets the running flag to false;
-// the consumer poll returns, the batch is processed, and all components flush.
+// the consumer poll returns, the batch is processed, and all components flush
 
 #include <atomic>
 #include <chrono>
@@ -33,10 +32,7 @@
 #include "pipeline/kafka_consumer.hpp"
 #include "pipeline/kafka_producer.hpp"
 
-// ---------------------------------------------------------------------------
-// Signal handling — atomic flag checked in the poll loop
-// ---------------------------------------------------------------------------
-
+// Signal handling — atomic flag checked in the poll loop to trigger graceful shutdown
 namespace {
 
 std::atomic<bool> g_shutdown{false};
@@ -70,12 +66,9 @@ struct EngineMetrics {
   uint64_t dlq_publish_failures{0};
 };
 
-}  // anonymous namespace
+}
 
-// ---------------------------------------------------------------------------
 // main
-// ---------------------------------------------------------------------------
-
 int main() {
   // 1. Load configuration
   aegis::Config cfg;
@@ -104,7 +97,7 @@ int main() {
   std::signal(SIGTERM, signal_handler);
 
   // 4. Construct shared components
-  // KafkaProducer is shared between DlqHandler and AlertPublisher.
+  // KafkaProducer is shared between DlqHandler and AlertPublisher
   auto producer      = std::make_shared<aegis::pipeline::KafkaProducer>(cfg);
   auto ch_writer     = std::make_shared<aegis::pipeline::ClickHouseWriter>(cfg);
 
@@ -155,7 +148,7 @@ int main() {
     valid_events.reserve(batch.size());
     dlq_entries.reserve(4);  // DLQ entries are rare in steady-state
 
-    // --- Validate & triage ---
+    // Validate & triage
     for (const auto& msg : batch) {
       aegis::ValidationResult result = validator.validate(msg.payload);
       if (std::holds_alternative<aegis::ParsedEvent>(result)) {
@@ -165,7 +158,7 @@ int main() {
         ++metrics.validation_failures;
         spdlog::warn("Validation failed partition={} offset={}: {}",
                msg.partition, msg.offset, fail.detail);
-        // Build DLQ entry with current UTC timestamp (use ts from msg if parse failed)
+        // Build DLQ entry with current UTC timestamp in ISO8601 format
         aegis::DlqEntry dlq;
         dlq.raw_message  = msg.payload;
         dlq.error_reason = fail.detail;
@@ -177,7 +170,7 @@ int main() {
       }
     }
 
-    // --- Persist raw events to ClickHouse ---
+    // Persist raw events to ClickHouse
     const bool raw_write_ok = valid_events.empty() || ch_writer->write_raw_events(valid_events);
     if (!raw_write_ok) {
       ++metrics.raw_write_failures;
@@ -187,10 +180,10 @@ int main() {
       continue;
     }
 
-    // --- Evaluate detection rules ---
+    // Evaluate detection rules
     std::vector<aegis::RuleMatch> matches = rule_engine.evaluate_batch(valid_events);
 
-    // --- Publish alerts ---
+    // Publish alerts
     const bool alerts_ok = alert_publisher.publish_batch(matches);
     if (!alerts_ok) {
       ++metrics.alert_publish_failures;
@@ -200,7 +193,7 @@ int main() {
       continue;
     }
 
-    // --- Forward DLQ entries ---
+    // Forward DLQ entries
     const bool dlq_ok = dlq_handler.publish_batch(dlq_entries);
     if (!dlq_ok) {
       ++metrics.dlq_publish_failures;
@@ -210,7 +203,7 @@ int main() {
       continue;
     }
 
-    // --- Commit offsets only after all downstream writes succeed ---
+    // Commit offsets only after all downstream writes succeed
     consumer.commit();
 
     total_events += valid_events.size();

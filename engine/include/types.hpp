@@ -11,10 +11,7 @@
 
 namespace aegis {
 
-// ---------------------------------------------------------------------------
 // Severity
-// ---------------------------------------------------------------------------
-
 enum class Severity : uint8_t {
     Info     = 1,
     Low      = 2,
@@ -51,10 +48,7 @@ inline uint32_t default_risk_score(Severity sev) noexcept {
     }
 }
 
-// ---------------------------------------------------------------------------
 // KafkaMessage — raw message received from Kafka
-// ---------------------------------------------------------------------------
-
 struct KafkaMessage {
     std::string payload;
     std::string topic;
@@ -62,19 +56,16 @@ struct KafkaMessage {
     int64_t     offset{0};
 };
 
-// ---------------------------------------------------------------------------
 // ParsedEvent — validated, normalized event extracted from a KafkaMessage
-// ---------------------------------------------------------------------------
-
 struct ParsedEvent {
     // Envelope fields (api_spec v1.1)
     std::string schema_version;
     std::string event_id;
-    std::string ts;           // RFC3339 UTC  e.g. "2026-03-10T12:00:00Z"
+    std::string ts;
     std::string host;
     std::string agent_id;
     std::string source;
-    std::string event_type;   // process_start | network_connect | file_open | auth_failure
+    std::string event_type; // process_start | network_connect | file_open | auth_failure
     Severity    severity{Severity::Info};
     std::string tenant_id;
     std::string trace_id;
@@ -86,17 +77,14 @@ struct ParsedEvent {
     uint16_t    dst_port{0};
     std::string user_name;
 
-    // Full original JSON string (stored verbatim in event_json column)
+    // Full original JSON string
     std::string raw_json;
 
-    // Parsed JSON for rule evaluation (not re-parsing from raw_json)
+    // Parsed JSON for rule evaluation
     nlohmann::json doc;
 };
 
-// ---------------------------------------------------------------------------
-// ValidationError — why an event failed validation
-// ---------------------------------------------------------------------------
-
+// ValidationError
 enum class ValidationError {
     ParseFailed,
     MissingRequiredField,
@@ -111,38 +99,32 @@ struct ValidationFail {
 
 using ValidationResult = std::variant<ParsedEvent, ValidationFail>;
 
-// ---------------------------------------------------------------------------
 // DlqEntry — a failed message forwarded to the dead-letter topic
-// ---------------------------------------------------------------------------
-
 struct DlqEntry {
-    std::string raw_message;   // original Kafka payload (may be truncated on parse error)
+    std::string raw_message; // original Kafka payload
     std::string error_reason;
     std::string source_topic;
     int32_t     partition{0};
     int64_t     offset{0};
-    std::string ts;            // ISO8601 timestamp when DLQ entry was created
+    std::string ts; // ISO8601 timestamp when DLQ entry was created
 };
 
-// ---------------------------------------------------------------------------
 // RuleMatch — result of a rule evaluation against a ParsedEvent
-// ---------------------------------------------------------------------------
-
 struct RuleMatch {
     std::string rule_id;
     std::string rule_name;
     Severity    severity{Severity::Medium};
     uint32_t    risk_score{50};
     std::string summary;
-    nlohmann::json context;          // structured evidence fields
+    nlohmann::json context; // structured evidence fields
     std::vector<std::string> tags;
 
     // Back-reference to the triggering event
     std::string event_id;
     std::string host;
     std::string tenant_id;
-    std::string event_ts;            // same ts as triggering event
+    std::string event_ts;
     std::string process_guid;
 };
 
-}  // namespace aegis
+}

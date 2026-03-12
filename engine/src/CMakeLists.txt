@@ -59,7 +59,30 @@ set(WITH_SASL_SCRAM           OFF CACHE BOOL "" FORCE)
 set(WITH_ZLIB                 OFF CACHE BOOL "" FORCE)
 set(WITH_ZSTD                 OFF CACHE BOOL "" FORCE)
 set(RDKAFKA_ENABLE_STATIC     ON  CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(rdkafka)
+
+# CMake >= 3.27 warns when third-party projects request policies older than 3.5.
+# Patch librdkafka's minimum line in the populated source tree so configure
+# stays warning-free without requiring manual edits under build/_deps.
+FetchContent_GetProperties(rdkafka)
+if(NOT rdkafka_POPULATED)
+	FetchContent_Populate(rdkafka)
+
+	set(_rdkafka_cmakelists "${rdkafka_SOURCE_DIR}/CMakeLists.txt")
+	if(EXISTS "${_rdkafka_cmakelists}")
+		file(READ "${_rdkafka_cmakelists}" _rdkafka_cmake_contents)
+		if(_rdkafka_cmake_contents MATCHES "cmake_minimum_required\\(VERSION[ \t]+3\\.2\\)")
+			string(REGEX REPLACE
+				"cmake_minimum_required\\(VERSION[ \t]+3\\.2\\)"
+				"cmake_minimum_required(VERSION 3.10...3.31)"
+				_rdkafka_cmake_contents
+				"${_rdkafka_cmake_contents}")
+			file(WRITE "${_rdkafka_cmakelists}" "${_rdkafka_cmake_contents}")
+			message(STATUS "[engine] patched librdkafka cmake_minimum_required to 3.10...3.31")
+		endif()
+	endif()
+
+	add_subdirectory("${rdkafka_SOURCE_DIR}" "${rdkafka_BINARY_DIR}")
+endif()
 
 ##############################################################################
 # aegis_engine target

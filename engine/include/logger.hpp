@@ -1,6 +1,5 @@
 #pragma once
 // engine/include/logger.hpp — Thin spdlog initialiser and convenience macros.
-// All engine components call spdlog::info/warn/error directly after init_logger().
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
@@ -15,7 +14,7 @@ inline void init_logger(const std::string& level_str = "info") {
     auto logger = spdlog::stdout_color_mt("aegis");
     logger->set_pattern("[%Y-%m-%dT%H:%M:%S.%e] [%^%l%$] %v");
 
-    // Map level string → spdlog enum.
+    // Map level string to spdlog enum.
     spdlog::level::level_enum level = spdlog::level::info;
     if (level_str == "trace")       level = spdlog::level::trace;
     else if (level_str == "debug")  level = spdlog::level::debug;
@@ -27,4 +26,4 @@ inline void init_logger(const std::string& level_str = "info") {
     spdlog::set_level(level);
 }
 
-}  // namespace aegis
+}
