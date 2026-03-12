@@ -1,4 +1,3 @@
-// engine/src/pipeline/kafka_consumer.cpp
 #include "pipeline/kafka_consumer.hpp"
 
 #include <spdlog/spdlog.h>
@@ -22,12 +21,10 @@ KafkaConsumer::KafkaConsumer(const Config& cfg) : cfg_(cfg) {
     set("bootstrap.servers",          cfg_.kafka_brokers);
     set("group.id",                    cfg_.kafka_group_id);
     set("auto.offset.reset",           "earliest");
-    // Manual offset commit — we commit after successful CH write + DLQ publish.
     set("enable.auto.commit",          "false");
     set("enable.partition.eof",        "false");
     set("session.timeout.ms",          "30000");
     set("max.poll.interval.ms",        "300000");
-    // Fetch up to 10 MB per request for high-throughput batching.
     set("fetch.max.bytes",             "10485760");
     set("queued.max.messages.kbytes",  "102400");
 
@@ -40,7 +37,6 @@ KafkaConsumer::KafkaConsumer(const Config& cfg) : cfg_(cfg) {
 KafkaConsumer::~KafkaConsumer() {
     if (consumer_) {
         consumer_->close();
-        // Allow rdkafka to process remaining events.
         RdKafka::wait_destroyed(2000);
     }
 }
@@ -48,13 +44,10 @@ KafkaConsumer::~KafkaConsumer() {
 void KafkaConsumer::start() {
     RdKafka::ErrorCode rc = consumer_->subscribe({cfg_.kafka_topic_events});
     if (rc != RdKafka::ERR_NO_ERROR) {
-        throw std::runtime_error(
-            "KafkaConsumer: subscribe to " + cfg_.kafka_topic_events +
-            " failed: " + RdKafka::err2str(rc));
+        throw std::runtime_error( "KafkaConsumer: subscribe to " + cfg_.kafka_topic_events + " failed: " + RdKafka::err2str(rc));
     }
     running_.store(true);
-    spdlog::info("KafkaConsumer: subscribed to topic={} group={} brokers={}",
-                 cfg_.kafka_topic_events, cfg_.kafka_group_id, cfg_.kafka_brokers);
+    spdlog::info("KafkaConsumer: subscribed to topic={} group={} brokers={}", cfg_.kafka_topic_events, cfg_.kafka_group_id, cfg_.kafka_brokers);
 }
 
 void KafkaConsumer::stop() {
@@ -68,13 +61,11 @@ std::vector<KafkaMessage> KafkaConsumer::poll_batch() {
 
     batch.reserve(cfg_.engine_batch_size);
 
-    auto deadline = std::chrono::steady_clock::now() +
-                    std::chrono::milliseconds(cfg_.engine_batch_timeout_ms);
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(cfg_.engine_batch_timeout_ms);
 
     while (running_.load() && static_cast<int>(batch.size()) < cfg_.engine_batch_size) {
         int remaining_ms = static_cast<int>(
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                deadline - std::chrono::steady_clock::now()).count());
+            std::chrono::duration_cast<std::chrono::milliseconds>( deadline - std::chrono::steady_clock::now()).count());
         if (remaining_ms <= 0) break;
 
         int poll_ms = std::min(remaining_ms, cfg_.kafka_poll_timeout_ms);
@@ -91,7 +82,7 @@ std::vector<KafkaMessage> KafkaConsumer::poll_batch() {
                 break;
             }
             case RdKafka::ERR__TIMED_OUT:
-                // No messages available in this poll window — break to flush batch.
+                // No messages available in this poll window — break to flush batch
                 goto done;
             case RdKafka::ERR__PARTITION_EOF:
                 spdlog::debug("KafkaConsumer: partition {} EOF", msg->partition());
@@ -113,4 +104,4 @@ void KafkaConsumer::commit() {
     }
 }
 
-}  // namespace aegis::pipeline
+}

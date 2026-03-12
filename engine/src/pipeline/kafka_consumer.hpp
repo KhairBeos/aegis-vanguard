@@ -1,7 +1,5 @@
 #pragma once
-// engine/src/pipeline/kafka_consumer.hpp
-// Batch-polling Kafka consumer. The main engine loop calls poll_batch() to
-// receive up to engine_batch_size messages, then processes and commits them.
+// Batch-polling Kafka consumer. The main engine loop calls poll_batch() to receive up to engine_batch_size messages, then processes and commits them.
 
 #include <rdkafkacpp.h>
 
@@ -20,18 +18,16 @@ public:
     explicit KafkaConsumer(const Config& cfg);
     ~KafkaConsumer();
 
-    // Subscribe to the events topic and mark as running.
     void start();
 
-    // Signal graceful shutdown (safe to call from a signal handler via atomic).
     void stop();
 
-    // Poll Kafka and return a batch of up to cfg.engine_batch_size messages.
-    // Blocks for at most cfg.engine_batch_timeout_ms total.
-    // Returns an empty vector when stopped.
+    // Poll Kafka and return a batch of up to cfg.engine_batch_size messages
+    // Blocks for at most cfg.engine_batch_timeout_ms total
+    // Returns an empty vector when stopped
     std::vector<KafkaMessage> poll_batch();
 
-    // Synchronously commit offsets for the last returned batch.
+    // Synchronously commit offsets for the last returned batch
     void commit();
 
     bool is_running() const noexcept { return running_.load(); }
@@ -43,4 +39,4 @@ private:
     std::unique_ptr<RdKafka::Conf>           conf_;
 };
 
-}  // namespace aegis::pipeline
+}

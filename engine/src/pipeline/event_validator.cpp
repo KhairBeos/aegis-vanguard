@@ -1,4 +1,3 @@
-// engine/src/pipeline/event_validator.cpp
 #include "pipeline/event_validator.hpp"
 
 #include <spdlog/spdlog.h>
@@ -23,23 +22,21 @@ ValidationResult EventValidator::validate(const std::string& raw_json) const {
     try {
         doc = json::parse(raw_json);
     } catch (const json::exception& ex) {
-        return ValidationFail{ValidationError::ParseFailed,
-                              std::string("JSON parse: ") + ex.what()};
+        return ValidationFail{ValidationError::ParseFailed, std::string("JSON parse: ") + ex.what()};
     }
 
     if (!doc.is_object()) {
         return ValidationFail{ValidationError::ParseFailed, "root must be a JSON object"};
     }
 
-    // --- Required field presence check ---
+    // Required field presence check
     for (const auto* field : REQUIRED_FIELDS) {
         if (!doc.contains(field)) {
-            return ValidationFail{ValidationError::MissingRequiredField,
-                                  std::string("missing field: ") + field};
+            return ValidationFail{ValidationError::MissingRequiredField, std::string("missing field: ") + field};
         }
     }
 
-    // --- Schema version ---
+    // Schema version
     std::string schema_ver;
     try {
         schema_ver = doc.at("schema_version").get<std::string>();
@@ -47,11 +44,10 @@ ValidationResult EventValidator::validate(const std::string& raw_json) const {
         return ValidationFail{ValidationError::InvalidFieldType, "schema_version must be string"};
     }
     if (schema_ver != SUPPORTED_SCHEMA) {
-        return ValidationFail{ValidationError::SchemaVersionMismatch,
-                              "unsupported schema_version: " + schema_ver};
+        return ValidationFail{ValidationError::SchemaVersionMismatch, std::string("unsupported schema_version: ") + schema_ver};
     }
 
-    // --- Build ParsedEvent ---
+    // Build ParsedEvent
     ParsedEvent ev;
     try {
         ev.schema_version = schema_ver;
@@ -66,14 +62,12 @@ ValidationResult EventValidator::validate(const std::string& raw_json) const {
         ev.trace_id       = doc.value("trace_id", "");
         ev.process_guid   = doc.value("process_guid", "");
     } catch (const json::exception& ex) {
-        return ValidationFail{ValidationError::InvalidFieldType,
-                              std::string("field type error: ") + ex.what()};
+        return ValidationFail{ValidationError::InvalidFieldType, std::string("field type error: ") + ex.what()};
     }
 
     // Minimal non-empty checks for security-sensitive identity fields
     if (ev.event_id.empty() || ev.host.empty() || ev.tenant_id.empty()) {
-        return ValidationFail{ValidationError::MissingRequiredField,
-                              "event_id, host, and tenant_id must be non-empty"};
+        return ValidationFail{ValidationError::MissingRequiredField, std::string("event_id, host, and tenant_id must be non-empty")};
     }
 
     ev.raw_json = raw_json;
@@ -103,7 +97,7 @@ void EventValidator::extract_hot_columns(ParsedEvent& ev,
     } else if (et == "file_open" && payload.contains("file")) {
         const auto& f = payload.at("file");
         ev.user_name = f.value("user_name", "");
-        // process_guid can be in the payload too; prefer top-level
+
         if (ev.process_guid.empty()) {
             ev.process_guid = f.value("process_guid", "");
         }
@@ -114,4 +108,4 @@ void EventValidator::extract_hot_columns(ParsedEvent& ev,
     }
 }
 
-}  // namespace aegis::pipeline
+}

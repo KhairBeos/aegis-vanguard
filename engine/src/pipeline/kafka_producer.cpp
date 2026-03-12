@@ -1,4 +1,3 @@
-// engine/src/pipeline/kafka_producer.cpp
 #include "pipeline/kafka_producer.hpp"
 
 #include <spdlog/spdlog.h>
@@ -11,10 +10,7 @@
 
 namespace aegis::pipeline {
 
-// ---------------------------------------------------------------------------
 // DeliveryReporter
-// ---------------------------------------------------------------------------
-
 void KafkaProducer::DeliveryReporter::event_cb(RdKafka::Event& event) {
     switch (event.type()) {
         case RdKafka::Event::EVENT_ERROR:
@@ -29,10 +25,7 @@ void KafkaProducer::DeliveryReporter::event_cb(RdKafka::Event& event) {
     }
 }
 
-// ---------------------------------------------------------------------------
 // KafkaProducer
-// ---------------------------------------------------------------------------
-
 KafkaProducer::KafkaProducer(const Config& cfg) : cfg_(cfg) {
     std::string err;
     conf_.reset(RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
@@ -45,7 +38,7 @@ KafkaProducer::KafkaProducer(const Config& cfg) : cfg_(cfg) {
     };
 
     set("bootstrap.servers",    cfg.kafka_brokers);
-    set("queue.buffering.max.ms", "50");     // low latency for alerts/dlq
+    set("queue.buffering.max.ms", "50"); // low latency for alerts/dlq
     set("message.send.max.retries", "3");
     set("retry.backoff.ms", "500");
 
@@ -67,7 +60,7 @@ KafkaProducer::~KafkaProducer() {
 }
 
 RdKafka::Topic* KafkaProducer::get_topic(const std::string& name) {
-    // Use a static per-instance map to cache topic handles.
+    // Use a static per-instance map to cache topic handles
     static thread_local std::unordered_map<std::string, std::unique_ptr<RdKafka::Topic>> cache;
     auto it = cache.find(name);
     if (it != cache.end()) return it->second.get();
@@ -90,7 +83,7 @@ bool KafkaProducer::produce(const std::string& topic_name,
     for (int attempt = 1; attempt <= std::max(1, cfg_.engine_retry_max_attempts); ++attempt) {
         producer_->poll(0);
 
-        // Copy value into payload — rdkafka takes ownership when RK_MSG_COPY is set.
+        // Copy value into payload — rdkafka takes ownership when RK_MSG_COPY is set
         RdKafka::ErrorCode rc = producer_->produce(
             topic,
             RdKafka::Topic::PARTITION_UA,
@@ -138,4 +131,4 @@ int KafkaProducer::retry_delay_ms(int attempt) const noexcept {
     return std::min(base_delay * multiplier, 5000);
 }
 
-}  // namespace aegis::pipeline
+}

@@ -1,4 +1,3 @@
-// engine/src/pipeline/dlq_handler.cpp
 #include "pipeline/dlq_handler.hpp"
 
 #include <nlohmann/json.hpp>
@@ -12,15 +11,13 @@ DlqHandler::DlqHandler(const Config& cfg, std::shared_ptr<KafkaProducer> produce
     : cfg_(cfg), producer_(std::move(producer)) {}
 
 bool DlqHandler::publish(const DlqEntry& entry) {
-    // Wrap original payload and error metadata in a structured envelope.
-    // Consumers of the DLQ topic can use this to replay or investigate.
+    // Wrap original payload and error metadata in a structured envelope
     json envelope;
     envelope["ts"]             = entry.ts;
     envelope["error_reason"]   = entry.error_reason;
     envelope["source_topic"]   = entry.source_topic;
     envelope["partition"]      = entry.partition;
     envelope["offset"]         = entry.offset;
-    // Store original payload as-is (may be malformed JSON — store as string).
     envelope["original"]       = entry.raw_message;
 
     try {
@@ -44,4 +41,4 @@ bool DlqHandler::publish_batch(const std::vector<DlqEntry>& entries) {
     return ok;
 }
 
-}  // namespace aegis::pipeline
+}
