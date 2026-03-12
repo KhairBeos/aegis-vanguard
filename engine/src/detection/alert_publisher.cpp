@@ -1,9 +1,6 @@
-// engine/src/detection/alert_publisher.cpp
 #include "detection/alert_publisher.hpp"
-
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
-
 #include <chrono>
 #include <iomanip>
 #include <random>
@@ -13,10 +10,7 @@ namespace aegis::detection {
 
 using json = nlohmann::json;
 
-// ---------------------------------------------------------------------------
 // Alert ID generator  — compact 32-hex UUID4
-// ---------------------------------------------------------------------------
-
 std::string AlertPublisher::generate_alert_id() {
     // RFC4122 UUID v4: random bits with version (4) and variant bits set.
     thread_local std::mt19937_64 rng{
@@ -37,10 +31,7 @@ std::string AlertPublisher::generate_alert_id() {
     return oss.str();
 }
 
-// ---------------------------------------------------------------------------
 // Alert JSON builder
-// ---------------------------------------------------------------------------
-
 std::string AlertPublisher::build_alert_json(const RuleMatch& match) {
     json alert;
     alert["schema_version"] = "v1.1";
@@ -60,21 +51,13 @@ std::string AlertPublisher::build_alert_json(const RuleMatch& match) {
     return alert.dump();
 }
 
-// ---------------------------------------------------------------------------
 // AlertPublisher
-// ---------------------------------------------------------------------------
-
-AlertPublisher::AlertPublisher(const Config&                              cfg,
-                               std::shared_ptr<pipeline::KafkaProducer>  producer,
-                               std::shared_ptr<pipeline::ClickHouseWriter> ch_writer)
-    : cfg_(cfg),
-      producer_(std::move(producer)),
-      ch_writer_(std::move(ch_writer)) {}
+AlertPublisher::AlertPublisher(const Config& cfg, std::shared_ptr<pipeline::KafkaProducer>  producer, std::shared_ptr<pipeline::ClickHouseWriter> ch_writer) : cfg_(cfg), producer_(std::move(producer)), ch_writer_(std::move(ch_writer)) {}
 
 bool AlertPublisher::publish(const RuleMatch& match) {
     const std::string alert_json = build_alert_json(match);
 
-    // 1. Publish to Kafka siem.alerts  (key = host for ordered partitioning)
+    // 1. Publish to Kafka siem.alerts topic
     bool kafka_ok = true;
     try {
         kafka_ok = producer_->produce(cfg_.kafka_topic_alerts, match.host, alert_json);
@@ -104,4 +87,4 @@ bool AlertPublisher::publish_batch(const std::vector<RuleMatch>& matches) {
     return ok;
 }
 
-}  // namespace aegis::detection
+}

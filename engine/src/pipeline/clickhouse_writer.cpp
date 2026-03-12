@@ -1,4 +1,3 @@
-// engine/src/pipeline/clickhouse_writer.cpp
 #include "pipeline/clickhouse_writer.hpp"
 
 #include <httplib.h>
@@ -16,33 +15,24 @@ namespace aegis::pipeline {
 using json = nlohmann::json;
 
 ClickHouseWriter::ClickHouseWriter(const Config& cfg) : cfg_(cfg) {
-    spdlog::info("ClickHouseWriter: target={}:{} db={}",
-                 cfg_.clickhouse_host, cfg_.clickhouse_port, cfg_.clickhouse_db);
+    spdlog::info("ClickHouseWriter: target={}:{} db={}", cfg_.clickhouse_host, cfg_.clickhouse_port, cfg_.clickhouse_db);
 }
 
-// ---------------------------------------------------------------------------
 // Timestamp conversion
-// ---------------------------------------------------------------------------
 
 std::string ClickHouseWriter::to_ch_datetime(const std::string& rfc3339) {
-    // Fast path: take first 19 chars "2026-03-10T12:00:00" and replace T with space.
     if (rfc3339.size() < 19) return "1970-01-01 00:00:00";
     std::string out = rfc3339.substr(0, 19);
     if (out[10] == 'T') out[10] = ' ';
     return out;
 }
 
-// ---------------------------------------------------------------------------
 // HTTP helpers
-// ---------------------------------------------------------------------------
-
 bool ClickHouseWriter::http_insert(const std::string& table, const std::string& body) {
     const int max_attempts = std::max(1, cfg_.engine_retry_max_attempts);
     const int base_delay_ms = std::max(1, cfg_.engine_retry_base_delay_ms);
 
-    // Build query string: INSERT INTO <db>.<table> FORMAT JSONEachRow
-    std::string query = "INSERT INTO " + cfg_.clickhouse_db + "." + table +
-                        " FORMAT JSONEachRow";
+    std::string query = "INSERT INTO " + cfg_.clickhouse_db + "." + table + " FORMAT JSONEachRow";
 
     std::string encoded_query;
     for (char c : query) {
@@ -91,16 +81,12 @@ bool ClickHouseWriter::http_insert(const std::string& table, const std::string& 
     return false;
 }
 
-// ---------------------------------------------------------------------------
 // write_raw_events
-// ---------------------------------------------------------------------------
-
 bool ClickHouseWriter::write_raw_events(const std::vector<ParsedEvent>& events) {
     if (events.empty()) return true;
 
     // Build newline-delimited JSONEachRow body.
-    // Columns: ts, host, source, event_type, process_guid, src_ip, dst_ip, dst_port,
-    //          user_name, event_json
+    // Columns: ts, host, source, event_type, process_guid, src_ip, dst_ip, dst_port, user_name, event_json
     std::string body;
     body.reserve(events.size() * 512);
 
@@ -126,10 +112,7 @@ bool ClickHouseWriter::write_raw_events(const std::vector<ParsedEvent>& events) 
     return ok;
 }
 
-// ---------------------------------------------------------------------------
 // write_alert
-// ---------------------------------------------------------------------------
-
 bool ClickHouseWriter::write_alert(const RuleMatch& match) {
     // Columns: ts, rule_id, severity, risk_score, host, process_guid, summary, context_json
     json row;
@@ -149,4 +132,4 @@ bool ClickHouseWriter::write_alert(const RuleMatch& match) {
     return ok;
 }
 
-}  // namespace aegis::pipeline
+}

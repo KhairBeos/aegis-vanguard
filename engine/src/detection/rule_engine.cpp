@@ -1,4 +1,3 @@
-// engine/src/detection/rule_engine.cpp
 #include "detection/rule_engine.hpp"
 
 #include <algorithm>
@@ -67,9 +66,7 @@ std::string unquote_copy(std::string value) {
     return value;
 }
 
-bool parse_key_value(const std::string& line,
-                     std::string& key,
-                     std::string& value) {
+bool parse_key_value(const std::string& line, std::string& key, std::string& value) {
     const auto pos = line.find(':');
     if (pos == std::string::npos || pos == 0) return false;
     key = trim_copy(line.substr(0, pos));
@@ -103,8 +100,7 @@ int parse_int_or_default(const std::string& value, int default_value) {
     }
 }
 
-std::string join_strings(const std::vector<std::string>& values,
-                         std::string_view delimiter) {
+std::string join_strings(const std::vector<std::string>& values, std::string_view delimiter) {
     std::string out;
     for (std::size_t index = 0; index < values.size(); ++index) {
         if (index > 0) out += delimiter;
@@ -113,9 +109,7 @@ std::string join_strings(const std::vector<std::string>& values,
     return out;
 }
 
-void assign_condition_field(ExternalCondition& cond,
-                            const std::string& key,
-                            const std::string& raw_value) {
+void assign_condition_field(ExternalCondition& cond, const std::string& key, const std::string& raw_value) {
     const std::string value = unquote_copy(raw_value);
     if (key == "path") cond.path = value;
     else if (key == "op") cond.op = detail::to_lower_ascii(value);
@@ -126,17 +120,9 @@ bool condition_complete(const ExternalCondition& cond) {
     return !cond.path.empty() && !cond.op.empty();
 }
 
-std::optional<std::string> resolve_template_value(const std::string& token,
-                                                  const ExternalRuleSpec& spec,
-                                                  const ParsedEvent& ev,
-                                                  const std::string& group_key,
-                                                  std::size_t current_hits);
+std::optional<std::string> resolve_template_value(const std::string& token, const ExternalRuleSpec& spec, const ParsedEvent& ev, const std::string& group_key, std::size_t current_hits);
 
-std::string render_summary_template(std::string template_text,
-                                    const ExternalRuleSpec& spec,
-                                    const ParsedEvent& ev,
-                                    const std::string& group_key,
-                                    std::size_t current_hits) {
+std::string render_summary_template(std::string template_text, const ExternalRuleSpec& spec, const ParsedEvent& ev, const std::string& group_key, std::size_t current_hits) {
     if (template_text.empty()) return {};
 
     static const std::regex placeholder_re(R"(\{\{\s*([^{}]+?)\s*\}\})");
@@ -405,7 +391,6 @@ std::optional<ExternalRuleSpec> parse_sigma_style_rule_file(const std::filesyste
                         current_selection = key;
                         selection_indent = indent;
                         if (!value.empty()) {
-                            // Inline map is unsupported in this lightweight parser.
                             current_selection.clear();
                         }
                         continue;
@@ -534,7 +519,6 @@ std::optional<ExternalRuleSpec> parse_sigma_style_rule_file(const std::filesyste
             append_selection(m[2].str(), compiled);
         } else {
             if (!append_selection(cond, compiled) && !cond.empty()) {
-                // Try exact case-sensitive selection key.
                 append_selection(condition_expr, compiled);
             }
         }
@@ -619,11 +603,7 @@ std::optional<std::string> resolve_field_value(const ParsedEvent& ev,
     return json_node_to_string(*node);
 }
 
-std::optional<std::string> resolve_template_value(const std::string& token,
-                                                  const ExternalRuleSpec& spec,
-                                                  const ParsedEvent& ev,
-                                                  const std::string& group_key,
-                                                  std::size_t current_hits) {
+std::optional<std::string> resolve_template_value(const std::string& token, const ExternalRuleSpec& spec, const ParsedEvent& ev, const std::string& group_key, std::size_t current_hits) {
     if (token == "group_key" || token == "match.group_key") {
         if (!group_key.empty()) return group_key;
         return std::nullopt;
@@ -650,8 +630,7 @@ std::optional<std::string> resolve_template_value(const std::string& token,
     return resolve_field_value(ev, token);
 }
 
-bool evaluate_condition(const ExternalCondition& condition,
-                        const ParsedEvent& ev) {
+bool evaluate_condition(const ExternalCondition& condition, const ParsedEvent& ev) {
     const auto actual = resolve_field_value(ev, condition.path);
     if (!actual.has_value()) return false;
 
@@ -674,8 +653,7 @@ bool evaluate_condition(const ExternalCondition& condition,
     }
     if (condition.op == "regex") {
         try {
-            return std::regex_search(actual_value,
-                                     std::regex(expected_value, std::regex_constants::icase));
+            return std::regex_search(actual_value, std::regex(expected_value, std::regex_constants::icase));
         } catch (...) {
             return false;
         }
@@ -685,8 +663,7 @@ bool evaluate_condition(const ExternalCondition& condition,
 
 class ExternalYamlRule final : public BaseRule {
 public:
-    explicit ExternalYamlRule(ExternalRuleSpec spec)
-        : spec_(std::move(spec)) {}
+    explicit ExternalYamlRule(ExternalRuleSpec spec) : spec_(std::move(spec)) {}
 
     std::string_view id() const noexcept override { return spec_.id; }
     std::string_view name() const noexcept override { return spec_.name; }
@@ -840,11 +817,9 @@ private:
     mutable std::unordered_map<std::string, Bucket> buckets_;
 };
 
-}  // namespace
+}
 
 RuleEngine::RuleEngine() {
-    // Register all built-in rules in priority order.
-    // Higher risk_score rules are evaluated first for early exit potential.
     rules_.push_back(std::make_unique<RansomwareShadowCopyDeleteRule>());
     rules_.push_back(std::make_unique<CorrelatedAuthProcessRarePortRule>());
     rules_.push_back(std::make_unique<CorrelatedAuthToSensitiveFileRule>());
@@ -863,8 +838,7 @@ RuleEngine::RuleEngine() {
 
     spdlog::info("RuleEngine: loaded {} built-in rules", rules_.size());
     for (const auto& r : rules_) {
-        spdlog::debug("  rule id={} name=\"{}\" severity={} risk={}",
-                      r->id(), r->name(), severity_to_string(r->severity()), r->risk_score());
+        spdlog::debug("  rule id={} name=\"{}\" severity={} risk={}", r->id(), r->name(), severity_to_string(r->severity()), r->risk_score());
     }
 }
 
@@ -940,7 +914,6 @@ std::vector<RuleMatch> RuleEngine::evaluate(const ParsedEvent& event) const {
                 matches.push_back(std::move(match.value()));
             }
         } catch (const std::exception& ex) {
-            // Rule evaluation errors must never crash the pipeline.
             spdlog::error("RuleEngine: rule {} evaluation error: {}", rule->id(), ex.what());
         }
     }
@@ -951,11 +924,9 @@ std::vector<RuleMatch> RuleEngine::evaluate_batch(const std::vector<ParsedEvent>
     std::vector<RuleMatch> all_matches;
     for (const auto& ev : events) {
         auto matches = evaluate(ev);
-        all_matches.insert(all_matches.end(),
-                           std::make_move_iterator(matches.begin()),
-                           std::make_move_iterator(matches.end()));
+        all_matches.insert(all_matches.end(), std::make_move_iterator(matches.begin()), std::make_move_iterator(matches.end()));
     }
     return all_matches;
 }
 
-}  // namespace aegis::detection
+}

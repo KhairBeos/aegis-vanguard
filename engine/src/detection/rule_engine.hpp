@@ -1,7 +1,5 @@
 #pragma once
-// engine/src/detection/rule_engine.hpp
-// Owns the ordered list of detection rules and evaluates each ParsedEvent
-// against all rules, collecting zero or more RuleMatch results.
+// Owns the ordered list of detection rules and evaluates each ParsedEvent against all rules, collecting zero or more RuleMatch results.
 
 #include <memory>
 #include <string>
@@ -14,10 +12,8 @@ namespace aegis::detection {
 
 class RuleEngine {
 public:
-    // Initialise with all built-in rules pre-registered.
     RuleEngine();
 
-    // Register an additional rule (useful for testing or plugin rules).
     void add_rule(std::unique_ptr<BaseRule> rule);
 
     // Load external YAML-based rules from a directory.
@@ -38,4 +34,4 @@ private:
     std::vector<std::unique_ptr<BaseRule>> rules_;
 };
 
-}  // namespace aegis::detection
+} 

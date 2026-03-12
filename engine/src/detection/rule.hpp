@@ -37,8 +37,7 @@ inline bool contains_ci(std::string_view haystack, std::string_view needle) {
     return hay.find(ned) != std::string::npos;
 }
 
-inline bool contains_any_ci(std::string_view haystack,
-                            std::initializer_list<std::string_view> needles) {
+inline bool contains_any_ci(std::string_view haystack, std::initializer_list<std::string_view> needles) {
     for (auto n : needles) {
         if (contains_ci(haystack, n)) return true;
     }
@@ -51,21 +50,16 @@ inline bool ends_with_ci(std::string_view value, std::string_view suffix) {
 }
 
 inline bool is_temp_like_path(std::string_view path) {
-    return contains_any_ci(path,
-                           {"/tmp/", "/var/tmp/", "/dev/shm/", "\\temp\\", "\\appdata\\local\\temp\\"});
+    return contains_any_ci(path, {"/tmp/", "/var/tmp/", "/dev/shm/", "\\temp\\", "\\appdata\\local\\temp\\"});
 }
 
 inline bool is_sensitive_file(std::string_view path) {
-    return contains_any_ci(path,
-                           {"/etc/shadow", "/etc/sudoers", "/root/.ssh/", "id_rsa", "\\system32\\config\\sam",
-                            "\\windows\\ntds\\ntds.dit"});
+    return contains_any_ci(path, {"/etc/shadow", "/etc/sudoers", "/root/.ssh/", "id_rsa", "\\system32\\config\\sam", "\\windows\\ntds\\ntds.dit"});
 }
 
 inline bool is_common_benign_port(uint32_t port) {
-    static constexpr std::array<uint32_t, 11> SAFE_PORTS{
-        22, 25, 53, 80, 123, 443, 465, 587, 3389, 8080, 8443};
-    return std::any_of(SAFE_PORTS.begin(), SAFE_PORTS.end(),
-                       [port](uint32_t p) { return p == port; });
+    static constexpr std::array<uint32_t, 11> SAFE_PORTS{ 22, 25, 53, 80, 123, 443, 465, 587, 3389, 8080, 8443};
+    return std::any_of(SAFE_PORTS.begin(), SAFE_PORTS.end(), [port](uint32_t p) { return p == port; });
 }
 
 inline bool suspicious_execution_signal(const nlohmann::json& proc,
@@ -124,7 +118,7 @@ inline std::string fallback_process_key(const nlohmann::json& net, const ParsedE
     return "pid:" + std::to_string(net.value("pid", 0u));
 }
 
-}  // namespace detail
+}
 
 class BaseRule {
 public:
@@ -1262,4 +1256,4 @@ public:
     }
 };
 
-}  // namespace aegis::detection
+}
