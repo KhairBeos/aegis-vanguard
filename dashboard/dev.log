@@ -1,0 +1,11 @@
+  ▲ Next.js 14.2.5
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 3.5s
+ ○ Compiling / ...
+ ✓ Compiled / in 2.2s (271 modules)
+ GET / 200 in 2529ms
+ ○ Compiling /api/alerts ...
+ ✓ Compiled /api/alerts in 4s (71 modules)
+ GET /api/alerts?severity=all&host=all&ruleId=all&q= 200 in 4056ms
