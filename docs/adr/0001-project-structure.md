@@ -41,14 +41,15 @@ Late-stage restructuring would be expensive because each domain has different de
 
 Adopt a modular monorepo layout:
 
-- `collector/` for endpoint collection logic
-- `engine/` for detection and enrichment pipeline
-- `dashboard/` for UI and analyst workflows
+- `collector/` for endpoint collection logic (C++/eBPF)
+- `engine/` for detection and enrichment pipeline (C++)
+- `dashboard/` for UI and analyst workflows (Next.js)
 - `deploy/` for infrastructure definitions and bootstrap scripts
 - `config/` for environment-scoped runtime configuration
 - `rules/` for detection rules and validation assets
 - `shared/` for common contracts (for example protobuf schemas)
 - `tests/` for cross-module integration and end-to-end tests
+- `tools/` for Python-based pipeline daemons and local dev tooling
 
 ## Rationale
 
@@ -76,6 +77,16 @@ For current project state, no migration is required because this ADR defines the
 - Keep infrastructure bootstrap assets under `deploy/`
 - Keep integration and e2e tests in top-level `tests/`
 - Keep API and storage contracts synchronized with `docs/api_spec.md`
+- `tools/` contains Python daemons for local development and container deployment:
+  - `log_generator.py` — generates fake logs in auth.log / syslog / auditd formats
+  - `collector.py` — parses raw logs into structured events (LogCollector class)
+  - `collector_daemon.py` — daemon: polls logs, publishes events to Kafka `siem.events`
+  - `rule_engine.py` — loads YAML rules, evaluates events (RuleEngine class)
+  - `rule_engine_daemon.py` — daemon: consumes `siem.events`, publishes alerts to `siem.alerts`
+  - `Dockerfile.collector` / `Dockerfile.engine` — container images for the two daemons
+- `scripts/` contains demo and replay utilities for local validation:
+  - `demo_stream.py` — continuous demo input for the live pipeline (Mordor/synthetic events → Kafka `siem.events`)
+  - `mordor_pipeline.py` — maps Security-Datasets records into Aegis events for fixture or Kafka replay
 
 ## Related Artifacts
 
@@ -83,9 +94,18 @@ For current project state, no migration is required because this ADR defines the
 - `docs/api_spec.md`
 - `deploy/docker-compose.yml`
 - `deploy/clickhouse/init/001_create_events.sql`
+- `tools/collector_daemon.py`
+- `tools/rule_engine_daemon.py`
 
 ## Follow-up ADRs
 
 - ADR 0002: Data contract versioning policy (`v1.1+`)
 - ADR 0003: ClickHouse hot-column schema strategy
 - ADR 0004: Risk scoring model and calibration
+
+## Changelog
+
+| Date | Change |
+| --- | --- |
+| 2026-03-10 | Initial structure defined |
+| 2026-03-12 | Added `tools/` module with Python daemons (collector_daemon, rule_engine_daemon, log_generator, demo pipeline) |

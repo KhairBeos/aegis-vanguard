@@ -1,0 +1,249 @@
+{
+  "campaign": "windows-mordor-production-line",
+  "manifest": "D:\\Learning\\Security\\SIEM\\aegis-vanguard\\scripts\\mordor_windows_campaign.json",
+  "datasets_root": "D:\\Learning\\Security\\SIEM\\Security-Datasets",
+  "outputs": {
+    "canonical": "D:\\Learning\\Security\\SIEM\\aegis-vanguard\\runtime\\mordor\\windows_campaign.aegis.jsonl",
+    "fixture": "D:\\Learning\\Security\\SIEM\\aegis-vanguard\\runtime\\mordor\\windows_campaign.fixture.jsonl"
+  },
+  "totals": {
+    "records_read": 56690,
+    "records_mapped": 3139,
+    "records_skipped": 53551,
+    "event_type_breakdown": {
+      "auth_failure": 14,
+      "file_open": 1820,
+      "network_connect": 1158,
+      "process_start": 147
+    },
+    "fixture_records": 3139
+  },
+  "datasets": [
+    {
+      "dataset": "datasets/atomic/windows/credential_access/network/purplesharp_2020-11-02102419.json",
+      "path": "D:\\Learning\\Security\\SIEM\\Security-Datasets\\datasets\\atomic\\windows\\credential_access\\network\\purplesharp_2020-11-02102419.json",
+      "targets": [
+        "windows-ntlm-bruteforce-cluster"
+      ],
+      "rule_ids": [
+        "windows-ntlm-brute-force",
+        "auth-brute-force",
+        "auth-password-spray"
+      ],
+      "records_read": 0,
+      "records_mapped": 0,
+      "records_skipped": 0,
+      "event_types": {}
+    },
+    {
+      "dataset": "datasets/atomic/windows/lateral_movement/host/purplesharp_ad_playbook_I_2020-10-22042947.json",
+      "path": "D:\\Learning\\Security\\SIEM\\Security-Datasets\\datasets\\atomic\\windows\\lateral_movement\\host\\purplesharp_ad_playbook_I_2020-10-22042947.json",
+      "targets": [
+        "windows-ntlm-bruteforce-cluster"
+      ],
+      "rule_ids": [
+        "windows-ntlm-brute-force",
+        "auth-brute-force",
+        "auth-password-spray"
+      ],
+      "records_read": 25993,
+      "records_mapped": 1475,
+      "records_skipped": 24518,
+      "event_types": {
+        "auth_failure": 14,
+        "file_open": 1090,
+        "network_connect": 323,
+        "process_start": 48
+      }
+    },
+    {
+      "dataset": "datasets/atomic/windows/credential_access/host/empire_mimikatz_logonpasswords.zip",
+      "path": "D:\\Learning\\Security\\SIEM\\Security-Datasets\\datasets\\atomic\\windows\\credential_access\\host\\empire_mimikatz_logonpasswords.zip",
+      "targets": [
+        "windows-ntlm-bruteforce-cluster"
+      ],
+      "rule_ids": [
+        "windows-ntlm-brute-force",
+        "auth-brute-force",
+        "auth-password-spray"
+      ],
+      "records_read": 6026,
+      "records_mapped": 367,
+      "records_skipped": 5659,
+      "event_types": {
+        "file_open": 64,
+        "network_connect": 301,
+        "process_start": 2
+      }
+    },
+    {
+      "dataset": "datasets/atomic/windows/credential_access/host/psh_lsass_memory_dump_comsvcs.zip",
+      "path": "D:\\Learning\\Security\\SIEM\\Security-Datasets\\datasets\\atomic\\windows\\credential_access\\host\\psh_lsass_memory_dump_comsvcs.zip",
+      "targets": [
+        "windows-lsass-dump-cluster"
+      ],
+      "rule_ids": [
+        "windows-lsass-dump"
+      ],
+      "records_read": 184,
+      "records_mapped": 14,
+      "records_skipped": 170,
+      "event_types": {
+        "file_open": 9,
+        "network_connect": 3,
+        "process_start": 2
+      }
+    },
+    {
+      "dataset": "datasets/atomic/windows/credential_access/host/rdp_interactive_taskmanager_lsass_dump.zip",
+      "path": "D:\\Learning\\Security\\SIEM\\Security-Datasets\\datasets\\atomic\\windows\\credential_access\\host\\rdp_interactive_taskmanager_lsass_dump.zip",
+      "targets": [
+        "windows-lsass-dump-cluster"
+      ],
+      "rule_ids": [
+        "windows-lsass-dump"
+      ],
+      "records_read": 5489,
+      "records_mapped": 313,
+      "records_skipped": 5176,
+      "event_types": {
+        "file_open": 144,
+        "network_connect": 135,
+        "process_start": 34
+      }
+    },
+    {
+      "dataset": "datasets/atomic/windows/credential_access/host/cmd_lsass_memory_dumpert_syscalls.zip",
+      "path": "D:\\Learning\\Security\\SIEM\\Security-Datasets\\datasets\\atomic\\windows\\credential_access\\host\\cmd_lsass_memory_dumpert_syscalls.zip",
+      "targets": [
+        "windows-lsass-dump-cluster"
+      ],
+      "rule_ids": [
+        "windows-lsass-dump"
+      ],
+      "records_read": 118,
+      "records_mapped": 11,
+      "records_skipped": 107,
+      "event_types": {
+        "file_open": 7,
+        "network_connect": 2,
+        "process_start": 2
+      }
+    },
+    {
+      "dataset": "datasets/atomic/windows/lateral_movement/host/empire_psexec_dcerpc_tcp_svcctl.zip",
+      "path": "D:\\Learning\\Security\\SIEM\\Security-Datasets\\datasets\\atomic\\windows\\lateral_movement\\host\\empire_psexec_dcerpc_tcp_svcctl.zip",
+      "targets": [
+        "windows-lateral-movement-cluster"
+      ],
+      "rule_ids": [
+        "network-port-scan",
+        "ext-smb-rdp-lateral-movement"
+      ],
+      "records_read": 4348,
+      "records_mapped": 190,
+      "records_skipped": 4158,
+      "event_types": {
+        "file_open": 86,
+        "network_connect": 91,
+        "process_start": 13
+      }
+    },
+    {
+      "dataset": "datasets/atomic/windows/lateral_movement/host/empire_psremoting_stager.zip",
+      "path": "D:\\Learning\\Security\\SIEM\\Security-Datasets\\datasets\\atomic\\windows\\lateral_movement\\host\\empire_psremoting_stager.zip",
+      "targets": [
+        "windows-lateral-movement-cluster"
+      ],
+      "rule_ids": [
+        "network-port-scan",
+        "ext-smb-rdp-lateral-movement"
+      ],
+      "records_read": 2744,
+      "records_mapped": 164,
+      "records_skipped": 2580,
+      "event_types": {
+        "file_open": 81,
+        "network_connect": 73,
+        "process_start": 10
+      }
+    },
+    {
+      "dataset": "datasets/atomic/windows/lateral_movement/host/empire_smbexec_dcerpc_smb_svcctl.zip",
+      "path": "D:\\Learning\\Security\\SIEM\\Security-Datasets\\datasets\\atomic\\windows\\lateral_movement\\host\\empire_smbexec_dcerpc_smb_svcctl.zip",
+      "targets": [
+        "windows-lateral-movement-cluster"
+      ],
+      "rule_ids": [
+        "network-port-scan",
+        "ext-smb-rdp-lateral-movement"
+      ],
+      "records_read": 7504,
+      "records_mapped": 279,
+      "records_skipped": 7225,
+      "event_types": {
+        "file_open": 196,
+        "network_connect": 63,
+        "process_start": 20
+      }
+    },
+    {
+      "dataset": "datasets/atomic/windows/lateral_movement/host/covenant_psremoting_command.zip",
+      "path": "D:\\Learning\\Security\\SIEM\\Security-Datasets\\datasets\\atomic\\windows\\lateral_movement\\host\\covenant_psremoting_command.zip",
+      "targets": [
+        "windows-lateral-movement-cluster"
+      ],
+      "rule_ids": [
+        "network-port-scan",
+        "ext-smb-rdp-lateral-movement"
+      ],
+      "records_read": 4284,
+      "records_mapped": 326,
+      "records_skipped": 3958,
+      "event_types": {
+        "file_open": 143,
+        "network_connect": 167,
+        "process_start": 16
+      }
+    }
+  ],
+  "targets": [
+    {
+      "name": "windows-ntlm-bruteforce-cluster",
+      "rule_ids": [
+        "windows-ntlm-brute-force",
+        "auth-brute-force",
+        "auth-password-spray"
+      ],
+      "datasets": [
+        "datasets/atomic/windows/credential_access/network/purplesharp_2020-11-02102419.json",
+        "datasets/atomic/windows/lateral_movement/host/purplesharp_ad_playbook_I_2020-10-22042947.json",
+        "datasets/atomic/windows/credential_access/host/empire_mimikatz_logonpasswords.zip"
+      ]
+    },
+    {
+      "name": "windows-lsass-dump-cluster",
+      "rule_ids": [
+        "windows-lsass-dump"
+      ],
+      "datasets": [
+        "datasets/atomic/windows/credential_access/host/psh_lsass_memory_dump_comsvcs.zip",
+        "datasets/atomic/windows/credential_access/host/rdp_interactive_taskmanager_lsass_dump.zip",
+        "datasets/atomic/windows/credential_access/host/cmd_lsass_memory_dumpert_syscalls.zip"
+      ]
+    },
+    {
+      "name": "windows-lateral-movement-cluster",
+      "rule_ids": [
+        "network-port-scan",
+        "ext-smb-rdp-lateral-movement"
+      ],
+      "datasets": [
+        "datasets/atomic/windows/lateral_movement/host/empire_psexec_dcerpc_tcp_svcctl.zip",
+        "datasets/atomic/windows/lateral_movement/host/empire_psremoting_stager.zip",
+        "datasets/atomic/windows/lateral_movement/host/empire_smbexec_dcerpc_smb_svcctl.zip",
+        "datasets/atomic/windows/lateral_movement/host/covenant_psremoting_command.zip"
+      ]
+    }
+  ]
+}

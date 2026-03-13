@@ -23,7 +23,9 @@ docker exec aegis-clickhouse clickhouse-client --query "SHOW TABLES FROM aegis"
 - ClickHouse (storage)
 - Zookeeper + Kafka (event bus)
 - Kafka init job (topic bootstrap, including DLQ)
-- Grafana (observability dashboards)
+- C++ collector service
+- C++ engine service
+- Next.js dashboard
 
 ## Security Baseline
 
@@ -40,16 +42,27 @@ powershell -ExecutionPolicy Bypass -File deploy/scripts/harden_env.ps1
 - ClickHouse HTTP: `8123`
 - ClickHouse native: `9000`
 - Kafka external listener: `9092`
-- Grafana UI: `3000`
+- Dashboard UI: `3000`
 
-## Grafana
+## Mordor Campaign Replay
 
-- URL: `http://localhost:3000`
-- Credentials: from `deploy/env/.env`
-  - `GRAFANA_ADMIN_USER`
-  - `GRAFANA_ADMIN_PASSWORD`
-- Provisioned datasource: ClickHouse (`aegis-clickhouse`)
-- Provisioned dashboard: `Aegis SIEM Overview`
+Prepare a multi-dataset Windows campaign (manifest-driven) from Security-Datasets:
+
+```bash
+python scripts/mordor_pipeline.py prepare --manifest scripts/mordor_windows_campaign.json
+```
+
+Run both ingestion routes (collector fixture path + direct Kafka replay):
+
+```bash
+python scripts/mordor_pipeline.py run --route both --manifest scripts/mordor_windows_campaign.json
+```
+
+Notes:
+
+- `run --route collector` replays through C++ collector using fixture input.
+- `run --route direct` replays canonical Aegis envelopes directly to Kafka topic `siem.events`.
+- Campaign outputs are written under `runtime/mordor/`.
 
 ## Stop and Cleanup
 

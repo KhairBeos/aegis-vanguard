@@ -4,7 +4,7 @@
 
 - Spec version: `v1.1`
 - Status: `draft-ready`
-- Last updated: `2026-03-10`
+- Last updated: `2026-03-12`
 
 ## Design Goals
 
@@ -64,12 +64,14 @@ Recommended hash function: SHA-256 (hex encoded).
 
 ## Supported Event Types (v1.1)
 
-| `event_type` | Description | Payload Contract |
-| --- | --- | --- |
-| `process_start` | Process execution observed | `event.process` |
-| `network_connect` | Outbound network connection | `event.network` |
-| `file_open` | File access operation | `event.file` |
-| `auth_failure` | Authentication failure signal | `event.auth` |
+| `event_type` | Description | Payload Contract | Producer |
+| --- | --- | --- | --- |
+| `process_start` | Process execution observed | `event.process` | eBPF collector / `rule_engine_daemon` |
+| `network_connect` | Outbound network connection | `event.network` | eBPF collector / `log_generator` |
+| `file_open` | File access operation | `event.file` | auditd / `log_generator` |
+| `auth_failure` | Authentication failure signal | `event.auth` | auth.log / `log_generator` |
+| `auth_success` | Successful authentication | `event.auth` | syslog / `log_generator` |
+| `process_execution` | Suspicious command execution | `event.process` | auditd / `log_generator` |
 
 ### `process_start` Payload
 
@@ -248,4 +250,44 @@ Database: `aegis`
 - Additive changes (new optional fields) are allowed within same minor contract.
 - Breaking changes require a major version bump (example `v2.0`).
 - Producers and consumers must log version mismatch explicitly.
+
+---
+
+## Runtime Pipeline (C++)
+
+Current runtime path is fully C++ for both ingestion and detection:
+
+```
+collector (C++)  -> Kafka: siem.events -> engine (C++) -> Kafka: siem.alerts + ClickHouse
+```
+
+Collector runtime source options:
+
+- `source=ebpf` for host/kernel telemetry stream mode.
+- `source=fixture` for deterministic replay (used by Mordor campaign flow).
+
+Engine runtime behavior:
+
+- Consumes canonical envelopes from `siem.events`.
+- Evaluates built-in and external YAML rules.
+- Produces alerts in schema `v1.1` to `siem.alerts` and writes to ClickHouse.
+
+## Mordor Campaign Workflow
+
+Manifest-driven campaign orchestration is defined under `scripts/mordor_windows_campaign.json` and executed by `scripts/mordor_pipeline.py`.
+
+Supported replay directions:
+
+1. `direct`:
+	`canonical envelopes -> Kafka -> engine`
+2. `collector`:
+	`canonical envelopes -> fixture records -> collector(C++) -> Kafka -> engine`
+3. `both`:
+	Runs collector fixture replay and direct replay in sequence.
+
+Generated campaign artifacts are stored under `runtime/mordor/`:
+
+- merged canonical JSONL (`*.aegis.jsonl`)
+- merged collector fixture JSONL (`*.fixture.jsonl`)
+- replay report (`*.report.json`)
 
