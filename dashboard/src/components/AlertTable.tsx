@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useRef } from "react";
 
 import type { DemoAlert } from "@/hooks/useDashboardData";
 
@@ -20,27 +20,7 @@ function statusClass(status: DemoAlert["status"]) {
 }
 
 export function AlertTable({ alerts }: Props) {
-  const tableScrollTopRef = useRef(0);
   const tableWrapRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const node = tableWrapRef.current;
-    if (!node) return;
-
-    const onScroll = () => {
-      tableScrollTopRef.current = node.scrollTop;
-    };
-
-    onScroll();
-    node.addEventListener("scroll", onScroll, { passive: true });
-    return () => node.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useLayoutEffect(() => {
-    const node = tableWrapRef.current;
-    if (!node) return;
-    node.scrollTop = tableScrollTopRef.current;
-  }, [alerts]);
 
   return (
     <section className="panel table-panel">

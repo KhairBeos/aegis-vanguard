@@ -146,6 +146,9 @@ input {
   font-size: 11px;
   color: var(--ink-dim);
   letter-spacing: 0.05em;
+  min-width: 220px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 button {
@@ -318,6 +321,7 @@ input {
   font-size: clamp(26px, 3vw, 38px);
   line-height: 1;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .kpi-subtitle {
@@ -349,6 +353,8 @@ input {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-height: 304px;
+  overflow: auto;
 }
 
 .queue-list li,
@@ -380,7 +386,7 @@ input {
 .breakdown-panel,
 .host-panel,
 .queue-panel {
-  min-height: 280px;
+  height: 360px;
 }
 
 .timeline-grid {
