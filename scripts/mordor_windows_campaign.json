@@ -1,0 +1,44 @@
+{
+  "campaign": "windows-mordor-production-line",
+  "description": "Multi-dataset Windows campaign mapped from OTRF Security-Datasets for engine validation and dashboard forensics.",
+  "security_datasets_root_hint": "../Security-Datasets",
+  "targets": [
+    {
+      "name": "windows-ntlm-bruteforce-cluster",
+      "rule_ids": [
+        "windows-ntlm-brute-force",
+        "auth-brute-force",
+        "auth-password-spray"
+      ],
+      "datasets": [
+        "datasets/atomic/windows/credential_access/network/purplesharp_2020-11-02102419.json",
+        "datasets/atomic/windows/lateral_movement/host/purplesharp_ad_playbook_I_2020-10-22042947.json",
+        "datasets/atomic/windows/credential_access/host/empire_mimikatz_logonpasswords.zip"
+      ]
+    },
+    {
+      "name": "windows-lsass-dump-cluster",
+      "rule_ids": [
+        "windows-lsass-dump"
+      ],
+      "datasets": [
+        "datasets/atomic/windows/credential_access/host/psh_lsass_memory_dump_comsvcs.zip",
+        "datasets/atomic/windows/credential_access/host/rdp_interactive_taskmanager_lsass_dump.zip",
+        "datasets/atomic/windows/credential_access/host/cmd_lsass_memory_dumpert_syscalls.zip"
+      ]
+    },
+    {
+      "name": "windows-lateral-movement-cluster",
+      "rule_ids": [
+        "network-port-scan",
+        "ext-smb-rdp-lateral-movement"
+      ],
+      "datasets": [
+        "datasets/atomic/windows/lateral_movement/host/empire_psexec_dcerpc_tcp_svcctl.zip",
+        "datasets/atomic/windows/lateral_movement/host/empire_psremoting_stager.zip",
+        "datasets/atomic/windows/lateral_movement/host/empire_smbexec_dcerpc_smb_svcctl.zip",
+        "datasets/atomic/windows/lateral_movement/host/covenant_psremoting_command.zip"
+      ]
+    }
+  ]
+}

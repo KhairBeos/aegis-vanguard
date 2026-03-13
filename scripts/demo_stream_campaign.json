@@ -1,0 +1,47 @@
+{
+  "campaign": "demo-stream-rule-mapping",
+  "description": "Rule-to-target mapping used by demo_stream.py when loading pre-mapped *.aegis.jsonl files.",
+  "targets": [
+    {
+      "name": "windows-ntlm-bruteforce-cluster",
+      "rule_ids": [
+        "windows-ntlm-brute-force",
+        "auth-brute-force",
+        "auth-password-spray",
+        "ext-auth-source-bruteforce",
+        "ext-privileged-auth-burst",
+        "ext-auth-admin-failure"
+      ]
+    },
+    {
+      "name": "windows-lsass-dump-cluster",
+      "rule_ids": [
+        "windows-lsass-dump",
+        "ext-sensitive-file-enum"
+      ]
+    },
+    {
+      "name": "windows-lateral-movement-cluster",
+      "rule_ids": [
+        "network-port-scan",
+        "ext-smb-rdp-lateral-movement",
+        "ext-rare-c2-port-egress",
+        "ext-recon-scanner-tool-exec"
+      ]
+    },
+    {
+      "name": "linux-exec-cluster",
+      "rule_ids": [
+        "ext-linux-reverse-shell-one-liner",
+        "ext-temp-dropper-write",
+        "ext-download-chmod-exec",
+        "ext-suspicious-download-exec",
+        "sigma-like-download-exec",
+        "ext-interpreter-tmp-exec",
+        "ext-dns-tunnel-tool-exec",
+        "ext-data-staging-archive",
+        "ext-archive-created-in-tmp"
+      ]
+    }
+  ]
+}

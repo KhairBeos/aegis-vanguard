@@ -9,6 +9,7 @@ Flow covered:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import subprocess
@@ -223,6 +224,10 @@ def prepare_campaign(
     canonical_path = output_dir / f"{campaign_basename}.aegis.jsonl"
     fixture_path = output_dir / f"{campaign_basename}.fixture.jsonl"
     report_path = output_dir / f"{campaign_basename}.report.json"
+    target_canonical_paths = {
+        str(target.get("name", f"target-{index}")): mapped_dir / f"{str(target.get('name', f'target-{index}'))}.aegis.jsonl"
+        for index, target in enumerate(manifest.get("targets", []), start=1)
+    }
 
     dataset_to_targets: Dict[str, list[str]] = defaultdict(list)
     dataset_to_rules: Dict[str, list[str]] = defaultdict(list)
@@ -256,6 +261,9 @@ def prepare_campaign(
     }
 
     event_type_breakdown: Dict[str, int] = defaultdict(int)
+
+    for target_path in target_canonical_paths.values():
+        target_path.write_text("", encoding="utf-8")
 
     with canonical_path.open("w", encoding="utf-8") as canonical_out, fixture_path.open("w", encoding="utf-8") as fixture_out:
         for relative in unique_datasets:
@@ -303,9 +311,17 @@ def prepare_campaign(
                     summary["totals"]["records_skipped"] += 1
                     continue
 
-                canonical_out.write(json.dumps(envelope, separators=(",", ":")) + "\n")
+                encoded_envelope = json.dumps(envelope, separators=(",", ":")) + "\n"
+                canonical_out.write(encoded_envelope)
                 dataset_stats["records_mapped"] += 1
                 summary["totals"]["records_mapped"] += 1
+
+                for target_name in dataset_to_targets[relative]:
+                    target_path = target_canonical_paths.get(target_name)
+                    if target_path is None:
+                        continue
+                    with target_path.open("a", encoding="utf-8") as target_out:
+                        target_out.write(encoded_envelope)
 
                 event_type = str(envelope.get("event_type", "unknown"))
                 dataset_event_types[event_type] += 1
