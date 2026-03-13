@@ -33,6 +33,10 @@ std::unique_ptr<IEventSource> make_source(const CollectorConfig& cfg) {
     return std::make_unique<FixtureEventSource>(cfg.runtime.fixture_path);
   }
   if (cfg.runtime.source_kind == "ebpf") {
+    if (!cfg.runtime.ebpf_enabled) {
+      spdlog::warn("eBPF source requested but ebpf_enabled=false — falling back to synthetic");
+      return std::make_unique<SyntheticEventSource>(cfg);
+    }
     return std::make_unique<LinuxEbpfEventSource>(cfg);
   }
   return std::make_unique<SyntheticEventSource>(cfg);
