@@ -1,0 +1,46 @@
+# AEGIS Collector - eBPF Integration Test Config
+# Use this config to test full source=ebpf pipeline
+
+agent_id: ebpf-integration-test
+hostname: ${HOSTNAME}
+
+kafka:
+  # Test can run in dry_run mode without actual Kafka
+  brokers:
+    - localhost:29092
+  topic: siem.events.test
+
+collection:
+  process_events: true
+  network_events: true
+  file_events: true
+  auth_events: false
+
+runtime:
+  # IMPORTANT: source must be "ebpf" to activate eBPF source adapter
+  source: ebpf
+  
+  # Path where eBPF loader writes JSONL events
+  ebpf_input_path: /var/run/aegis/ebpf-events.jsonl
+  
+  # Alternatively, pipe mode: set to "python3 tools/ebpf-loader/loader.py"
+  # To use command mode instead of file mode
+  ebpf_reader_command: ""
+  
+  # Follow file mode: collector polls file with tail -f semantics
+  ebpf_follow: true
+  
+  # Poll interval when following file
+  poll_interval_ms: 250
+  
+  # Max events to read per poll (0 = unlimited)
+  max_events: 0
+  
+  # Dry run: Don't publish to Kafka, just log events
+  dry_run: false
+  
+  # Tenant ID for multi-tenancy
+  tenant_id: default
+  
+  # Log level: debug, info, warning, error
+  log_level: info

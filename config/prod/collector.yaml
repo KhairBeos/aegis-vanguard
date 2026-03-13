@@ -7,3 +7,17 @@ kafka:
 collection:
   process_events: true
   network_events: true
+  file_events: true
+  auth_events: true
+runtime:
+  source: ebpf
+  ebpf_enabled: true
+  fixture_path:
+  ebpf_input_path: /var/run/aegis/ebpf-events.jsonl
+  ebpf_reader_command:
+  ebpf_follow: true
+  poll_interval_ms: 250
+  max_events: 0
+  dry_run: false
+  tenant_id: default
+  log_level: info

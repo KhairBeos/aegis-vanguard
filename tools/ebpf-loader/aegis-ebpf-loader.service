@@ -1,0 +1,45 @@
+[Unit]
+Description=AEGIS eBPF Userspace Loader - Kernel Event Capture
+Documentation=file:///opt/aegis/tools/ebpf-loader/README.md
+After=network.target
+Before=aegis-collector.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/aegis
+ExecStart=/usr/bin/python3 /opt/aegis/tools/ebpf-loader/loader.py \
+    --output /var/run/aegis/ebpf-events.jsonl \
+    --log-level info \
+    --throttle-ms 100 \
+    --events process_start,network_connect,file_open
+
+# Environment
+Environment="PYTHONUNBUFFERED=1"
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ebpf-loader
+
+# Resource limits
+MemoryLimit=256M
+CPUQuota=50%
+
+# Restart policy
+Restart=on-failure
+RestartSec=5
+StartLimitInterval=60
+StartLimitBurst=5
+
+# Capabilities (minimal)
+AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_RESOURCE CAP_PERFMON
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_RESOURCE CAP_PERFMON CAP_BPF
+
+# Security hardening
+NoNewPrivileges=false
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/run/aegis /var/log/aegis
+
+[Install]
+WantedBy=multi-user.target
