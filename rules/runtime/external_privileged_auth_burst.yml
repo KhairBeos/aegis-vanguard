@@ -1,0 +1,29 @@
+id: ext-privileged-auth-burst
+name: External Privileged Account Authentication Burst
+event_type: auth_failure
+severity: medium
+risk_score: 74
+summary: External rule matched repeated authentication failures for privileged accounts
+summary_template: 'Privileged auth failure burst on {{host}} from {{event.auth.src_ip}} via {{event.auth.method}} ({{match.current_hits}}/{{rule.min_hits}}) user={{event.auth.user_name}}'
+tags: [external, auth, credential-access, brute-force]
+match: any
+min_hits: 3
+window_seconds: 300
+alert_cooldown_seconds: 300
+group_by:
+  - host
+  - event.auth.src_ip
+  - event.auth.method
+conditions:
+  - path: event.auth.user_name
+    op: equals
+    value: root
+  - path: event.auth.user_name
+    op: equals
+    value: admin
+  - path: event.auth.user_name
+    op: equals
+    value: administrator
+  - path: event.auth.user_name
+    op: equals
+    value: ubuntu

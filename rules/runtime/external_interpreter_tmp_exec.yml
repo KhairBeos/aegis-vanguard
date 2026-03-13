@@ -1,0 +1,16 @@
+id: ext-interpreter-tmp-exec
+name: External Interpreter Execution From Temporary Path
+event_type: process_start
+severity: high
+risk_score: 83
+summary: External rule matched interpreter execution from temporary path
+summary_template: 'Interpreter from temp path on {{host}} by {{event.process.user_name}} exe={{event.process.exe}} cmd={{event.process.cmdline}}'
+tags: [external, execution, defense-evasion, linux]
+match: all
+conditions:
+  - path: event.process.exe
+    op: regex
+    value: '^(/tmp/|/var/tmp/|/dev/shm/).+'
+  - path: event.process.name
+    op: regex
+    value: '^(python|python3|perl|bash|sh|zsh)$'

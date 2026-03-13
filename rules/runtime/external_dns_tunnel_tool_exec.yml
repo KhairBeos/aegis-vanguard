@@ -1,0 +1,25 @@
+id: ext-dns-tunnel-tool-exec
+name: External DNS Tunneling Tool Execution
+event_type: process_start
+severity: high
+risk_score: 82
+summary: External rule matched execution of known DNS tunneling tooling
+summary_template: 'Potential DNS tunneling tool on {{host}} by {{event.process.user_name}}: {{event.process.cmdline}}'
+tags: [external, command-and-control, dns, tunneling]
+match: any
+conditions:
+  - path: event.process.name
+    op: equals
+    value: iodine
+  - path: event.process.name
+    op: equals
+    value: dnscat2
+  - path: event.process.name
+    op: equals
+    value: dns2tcp
+  - path: event.process.cmdline
+    op: contains
+    value: dnscat2
+  - path: event.process.cmdline
+    op: contains
+    value: iodine

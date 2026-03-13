@@ -1,0 +1,19 @@
+id: ext-archive-created-in-tmp
+name: External Archive Artifact Created In Temporary Directory
+event_type: file_open
+severity: high
+risk_score: 78
+summary: External rule matched creation of archive artifact in temporary directory
+summary_template: 'Archive artifact created in temp on {{host}} by {{event.file.user_name}} path={{event.file.path}}'
+tags: [external, collection, staging, file]
+match: all
+conditions:
+  - path: event.file.path
+    op: regex
+    value: '^(/tmp/|/var/tmp/|/dev/shm/).+\.(zip|7z|tar|tgz|gz)$'
+  - path: event.file.flags
+    op: contains
+    value: O_CREAT
+  - path: event.file.flags
+    op: contains
+    value: O_WRONLY

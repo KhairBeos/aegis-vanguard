@@ -1,0 +1,22 @@
+id: windows-lsass-dump
+name: LSASS Memory Access - Credential Dumping Attempt
+event_type: file_open
+severity: critical
+risk_score: 95
+summary: Suspected LSASS credential dump via direct memory access (Sysmon EventID 10)
+summary_template: 'LSASS credential dump on {{host}} by user={{event.file.user_name}} pid={{event.file.pid}}'
+tags: [windows, credential-access, lsass, T1003.001, critical, sysmon]
+match: any
+min_hits: 1
+window_seconds: 60
+alert_cooldown_seconds: 300
+group_by:
+  - host
+  - event.file.pid
+conditions:
+  - path: event.file.path
+    op: regex
+    value: '(?i)lsass\.exe$'
+  - path: event.file.path
+    op: regex
+    value: '(?i)(ntds\.dit|SAM|SECURITY|SYSTEM)$'

@@ -1,0 +1,16 @@
+id: ext-sensitive-file-enum
+name: External Sensitive File Enumeration
+event_type: file_open
+severity: medium
+risk_score: 70
+summary: External rule matched sensitive file access attempt
+summary_template: 'Sensitive file access on {{host}} by {{event.file.user_name}} path={{event.file.path}} result={{event.file.result}}'
+tags: [external, discovery, credential-access, file]
+match: all
+conditions:
+  - path: event.file.path
+    op: regex
+    value: '^(/etc/shadow|/etc/sudoers|/etc/passwd|/root/.ssh/.*|.*id_rsa)$'
+  - path: event.file.result
+    op: equals
+    value: success

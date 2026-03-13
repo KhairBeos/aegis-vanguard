@@ -1,0 +1,28 @@
+id: windows-ntlm-brute-force
+name: Windows NTLM / Kerberos Authentication Brute-Force
+event_type: auth_failure
+severity: high
+risk_score: 82
+summary: Repeated Windows authentication failures from same source - brute-force candidate
+summary_template: 'Windows auth brute-force on {{host}} from {{event.auth.src_ip}} method={{event.auth.method}} hits={{match.current_hits}}/{{rule.min_hits}} user={{event.auth.user_name}}'
+tags: [windows, auth, brute-force, credential-access, ntlm, kerberos, T1110]
+match: any
+min_hits: 5
+window_seconds: 300
+alert_cooldown_seconds: 300
+group_by:
+  - host
+  - event.auth.src_ip
+  - event.auth.method
+conditions:
+  # Broad regex matches all Windows logon-type prefixes mordor_mapper produces:
+  # interactive-ntlm, network-ntlm, network-kerberos, domain-ntlm, remote-interactive …
+  - path: event.auth.method
+    op: regex
+    value: '^(interactive|network|remote|domain|batch|service|unlock|cached)'
+  - path: event.auth.method
+    op: contains
+    value: ntlm
+  - path: event.auth.method
+    op: contains
+    value: kerberos

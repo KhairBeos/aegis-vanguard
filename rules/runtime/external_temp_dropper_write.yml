@@ -1,0 +1,22 @@
+id: ext-temp-dropper-write
+name: External Temporary Directory Dropper Write
+event_type: file_open
+severity: high
+risk_score: 81
+summary: External rule matched suspicious writable payload drop in temporary directory
+summary_template: 'Temp dropper write on {{host}} by {{event.file.user_name}} to {{event.file.path}} flags={{event.file.flags}}'
+tags: [external, linux, file, defense-evasion, persistence]
+match: all
+conditions:
+  - path: event.file.path
+    op: regex
+    value: '^(/tmp/|/var/tmp/|/dev/shm/).+'
+  - path: event.file.flags
+    op: contains
+    value: O_CREAT
+  - path: event.file.flags
+    op: contains
+    value: O_WRONLY
+  - path: event.file.result
+    op: equals
+    value: success

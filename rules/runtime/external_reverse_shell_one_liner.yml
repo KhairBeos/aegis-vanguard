@@ -1,0 +1,16 @@
+id: ext-linux-reverse-shell-one-liner
+name: External Linux Reverse Shell One-Liner
+event_type: process_start
+severity: critical
+risk_score: 92
+summary: External rule matched potential reverse shell one-liner execution
+summary_template: 'Potential reverse shell on {{host}} by {{event.process.user_name}}: {{event.process.cmdline}}'
+tags: [external, linux, execution, command-and-control, reverse-shell]
+match: all
+conditions:
+  - path: event.process.name
+    op: regex
+    value: '^(bash|sh|zsh|dash)$'
+  - path: event.process.cmdline
+    op: regex
+    value: '(/dev/tcp/|nc\s+-e|ncat\s+--exec|python3?\s+-c\s+.*socket\.)'

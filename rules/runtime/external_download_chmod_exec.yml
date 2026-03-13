@@ -1,0 +1,16 @@
+id: ext-download-chmod-exec
+name: External Download Chmod Execute Pattern
+event_type: process_start
+severity: high
+risk_score: 84
+summary: External rule matched download to temporary directory followed by chmod execution
+summary_template: 'Download+chmod pattern on {{host}} by {{event.process.user_name}}: {{event.process.cmdline}}'
+tags: [external, execution, download, persistence]
+match: all
+conditions:
+  - path: event.process.cmdline
+    op: regex
+    value: '(curl|wget).*(/tmp/|/var/tmp/|/dev/shm/)'
+  - path: event.process.cmdline
+    op: contains
+    value: chmod +x

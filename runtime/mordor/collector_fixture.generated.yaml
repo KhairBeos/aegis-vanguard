@@ -1,0 +1,22 @@
+agent_id: mordor-fixture-collector
+hostname: KHAIPC
+kafka:
+  brokers:
+    - localhost:9092
+  topic: siem.events
+collection:
+  process_events: true
+  network_events: true
+  file_events: true
+  auth_events: true
+runtime:
+  source: fixture
+  fixture_path: 'D:\Learning\Security\SIEM\aegis-vanguard\runtime\mordor\windows_campaign.sample.fixture.jsonl'
+  ebpf_input_path: /var/run/aegis/ebpf-events.jsonl
+  ebpf_reader_command:
+  ebpf_follow: true
+  poll_interval_ms: 50
+  max_events: 0
+  dry_run: false
+  tenant_id: acme-labs
+  log_level: info

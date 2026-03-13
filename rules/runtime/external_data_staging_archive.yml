@@ -1,0 +1,16 @@
+id: ext-data-staging-archive
+name: External Data Staging Via Archive Utilities
+event_type: process_start
+severity: high
+risk_score: 80
+summary: External rule matched possible data staging/compression of sensitive paths
+summary_template: 'Possible data staging on {{host}} by {{event.process.user_name}}: {{event.process.cmdline}}'
+tags: [external, collection, exfiltration, staging]
+match: all
+conditions:
+  - path: event.process.cmdline
+    op: regex
+    value: '\b(tar|zip|7z)\b'
+  - path: event.process.cmdline
+    op: regex
+    value: '(/etc/|/home/|/var/log/|/root/)'

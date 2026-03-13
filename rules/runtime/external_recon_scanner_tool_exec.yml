@@ -1,0 +1,22 @@
+id: ext-recon-scanner-tool-exec
+name: External Recon Scanner Tool Execution
+event_type: process_start
+severity: medium
+risk_score: 67
+summary: External rule matched network scanner tooling execution
+summary_template: 'Recon scanner process on {{host}} by {{event.process.user_name}}: {{event.process.cmdline}}'
+tags: [external, discovery, recon, network]
+match: any
+conditions:
+  - path: event.process.name
+    op: equals
+    value: nmap
+  - path: event.process.name
+    op: equals
+    value: masscan
+  - path: event.process.name
+    op: equals
+    value: zmap
+  - path: event.process.cmdline
+    op: contains
+    value: --top-ports

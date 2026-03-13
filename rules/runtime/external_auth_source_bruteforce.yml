@@ -1,0 +1,23 @@
+id: ext-auth-source-bruteforce
+name: External Source IP Authentication Brute Force
+event_type: auth_failure
+severity: high
+risk_score: 79
+summary: External rule matched repeated authentication failures from a single source IP
+summary_template: 'Auth brute-force candidate on {{host}} src={{event.auth.src_ip}} method={{event.auth.method}} hits={{match.current_hits}}/{{rule.min_hits}}'
+tags: [external, auth, brute-force, credential-access]
+match: all
+min_hits: 6
+window_seconds: 600
+alert_cooldown_seconds: 600
+group_by:
+  - host
+  - event.auth.src_ip
+  - event.auth.method
+conditions:
+  - path: event.auth.method
+    op: equals
+    value: ssh
+  - path: event.auth.reason
+    op: contains
+    value: invalid

@@ -1,0 +1,27 @@
+id: ext-rare-c2-port-egress
+name: External Rare C2 Port Egress Burst
+event_type: network_connect
+severity: high
+risk_score: 86
+summary: External rule matched repeated outbound traffic to rare C2-associated destination ports
+summary_template: 'Rare egress burst from {{host}} to {{event.network.dst_ip}}:{{event.network.dst_port}} ({{match.current_hits}}/{{rule.min_hits}}) group={{match.group_key}}'
+tags: [external, network, command-and-control, c2]
+match: all
+min_hits: 2
+window_seconds: 300
+alert_cooldown_seconds: 600
+group_by:
+  - host
+  - event.network.process_guid
+  - event.network.dst_ip
+  - event.network.dst_port
+conditions:
+  - path: event.network.direction
+    op: equals
+    value: outbound
+  - path: event.network.protocol
+    op: equals
+    value: tcp
+  - path: event.network.dst_port
+    op: regex
+    value: '^(1337|2222|4444|4445|5555|6666|7777|8444|9001|31337)$'
