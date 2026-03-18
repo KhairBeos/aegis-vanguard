@@ -79,7 +79,7 @@ std::string resolve_hostname_value(const std::string& value) {
   return value;
 }
 
-}  // namespace
+}
 
 CollectorConfig load_config_from_file(const std::string& path) {
   const std::filesystem::path resolved_path = std::filesystem::absolute(resolve_relative_to_repo(path));
@@ -185,4 +185,4 @@ std::string resolve_default_config_path() {
   return resolve_relative_to_repo("config/dev/collector.yaml").string();
 }
 
-}  // namespace aegis::collector
+}

@@ -192,4 +192,4 @@ std::string CanonicalEventBuilder::build_health_event(const HealthStatus& status
   return envelope.dump();
 }
 
-}  // namespace aegis::collector
+}

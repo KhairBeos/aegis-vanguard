@@ -36,4 +36,4 @@ std::optional<SourceRecord> FixtureEventSource::next_event() {
   return records_[cursor_++];
 }
 
-}  // namespace aegis::collector
+} 

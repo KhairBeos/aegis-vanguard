@@ -21,4 +21,4 @@ private:
 
 bool is_collection_enabled(const CollectorConfig& cfg, const SourceRecord& record);
 
-}  // namespace aegis::collector
+} 

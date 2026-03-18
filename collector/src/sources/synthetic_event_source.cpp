@@ -64,4 +64,4 @@ std::optional<SourceRecord> SyntheticEventSource::next_event() {
   return records_[cursor_++];
 }
 
-}  // namespace aegis::collector
+}

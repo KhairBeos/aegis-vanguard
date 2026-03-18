@@ -249,4 +249,4 @@ KafkaEventProducer::Stats KafkaEventProducer::get_stats() const {
 }
 
 
-}  // namespace aegis::collector
+}

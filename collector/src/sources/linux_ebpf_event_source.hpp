@@ -35,4 +35,4 @@ private:
   bool exhausted_{false};
 };
 
-}  // namespace aegis::collector
+}

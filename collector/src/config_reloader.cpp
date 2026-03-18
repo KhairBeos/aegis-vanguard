@@ -100,4 +100,4 @@ CollectorConfig ConfigReloader::reload_config() {
   }
 }
 
-}  // namespace aegis::collector
+}

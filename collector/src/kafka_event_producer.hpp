@@ -96,4 +96,4 @@ private:
   bool is_ready_for_retry(const PublishEvent& event) const;
 };
 
-}  // namespace aegis::collector
+}

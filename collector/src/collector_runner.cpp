@@ -42,7 +42,7 @@ std::unique_ptr<IEventSource> make_source(const CollectorConfig& cfg) {
   return std::make_unique<SyntheticEventSource>(cfg);
 }
 
-}  // namespace
+}
 
 CollectorRunner::CollectorRunner(CollectorConfig cfg, std::string config_path)
     : cfg_(std::move(cfg)),
@@ -76,7 +76,7 @@ int CollectorRunner::run() {
   auto last_retry_check = std::chrono::steady_clock::now();
 
   while (!g_shutdown.load()) {
-    // Check for config hot-reload (SIGHUP)
+    // Check for config hot-reload signal
     if (config_reloader_->check_reload_signal()) {
       try {
         cfg_ = config_reloader_->reload_config();
@@ -205,4 +205,4 @@ int CollectorRunner::run() {
   return 0;
 }
 
-}  // namespace aegis::collector
+}

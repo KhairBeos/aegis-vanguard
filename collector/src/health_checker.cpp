@@ -110,4 +110,4 @@ HealthStatus HealthChecker::get_status() {
   return status;
 }
 
-}  // namespace aegis::collector
+}

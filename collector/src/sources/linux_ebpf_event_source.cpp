@@ -121,4 +121,4 @@ std::optional<SourceRecord> LinuxEbpfEventSource::next_event() {
 #endif
 }
 
-}  // namespace aegis::collector
+}

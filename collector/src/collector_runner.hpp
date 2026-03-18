@@ -22,4 +22,4 @@ private:
   std::unique_ptr<HealthChecker> health_checker_;
 };
 
-}  // namespace aegis::collector
+} 
