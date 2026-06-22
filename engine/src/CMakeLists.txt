@@ -22,9 +22,8 @@ FetchContent_MakeAvailable(json)
 # --- spdlog (header-only, compile-time format) ------------------------------
 FetchContent_Declare(
 	spdlog
-	GIT_REPOSITORY https://github.com/gabime/spdlog.git
-	GIT_TAG        v1.13.0
-	GIT_SHALLOW    TRUE
+	URL      https://github.com/gabime/spdlog/archive/refs/tags/v1.13.0.tar.gz
+	DOWNLOAD_EXTRACT_TIMESTAMP ON
 )
 set(SPDLOG_BUILD_EXAMPLES  OFF CACHE BOOL "" FORCE)
 set(SPDLOG_BUILD_TESTS     OFF CACHE BOOL "" FORCE)
@@ -34,9 +33,8 @@ FetchContent_MakeAvailable(spdlog)
 # --- cpp-httplib (single-header HTTP client for ClickHouse HTTP API) --------
 FetchContent_Declare(
 	httplib
-	GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
-	GIT_TAG        v0.15.3
-	GIT_SHALLOW    TRUE
+	URL      https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.15.3.tar.gz
+	DOWNLOAD_EXTRACT_TIMESTAMP ON
 )
 set(HTTPLIB_REQUIRE_OPENSSL  OFF CACHE BOOL "" FORCE)
 set(HTTPLIB_USE_OPENSSL_IF_AVAILABLE OFF CACHE BOOL "" FORCE)
@@ -45,9 +43,8 @@ FetchContent_MakeAvailable(httplib)
 # --- librdkafka (Kafka C++ client) ------------------------------------------
 FetchContent_Declare(
 	rdkafka
-	GIT_REPOSITORY https://github.com/confluentinc/librdkafka.git
-	GIT_TAG        v2.4.0
-	GIT_SHALLOW    TRUE
+	URL      https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.4.0.tar.gz
+	DOWNLOAD_EXTRACT_TIMESTAMP ON
 )
 set(RDKAFKA_BUILD_EXAMPLES    OFF CACHE BOOL "" FORCE)
 set(RDKAFKA_BUILD_TESTS       OFF CACHE BOOL "" FORCE)

@@ -11,9 +11,8 @@ FetchContent_MakeAvailable(json)
 
 FetchContent_Declare(
 	spdlog
-	GIT_REPOSITORY https://github.com/gabime/spdlog.git
-	GIT_TAG        v1.13.0
-	GIT_SHALLOW    TRUE
+	URL      https://github.com/gabime/spdlog/archive/refs/tags/v1.13.0.tar.gz
+	DOWNLOAD_EXTRACT_TIMESTAMP ON
 )
 set(SPDLOG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SPDLOG_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
@@ -22,9 +21,8 @@ FetchContent_MakeAvailable(spdlog)
 
 FetchContent_Declare(
 	rdkafka
-	GIT_REPOSITORY https://github.com/confluentinc/librdkafka.git
-	GIT_TAG        v2.4.0
-	GIT_SHALLOW    TRUE
+	URL      https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.4.0.tar.gz
+	DOWNLOAD_EXTRACT_TIMESTAMP ON
 )
 set(RDKAFKA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(RDKAFKA_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
