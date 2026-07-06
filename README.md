@@ -1,222 +1,172 @@
-# Aegis-Vanguard SIEM
+# AEGIS-VANGUARD - SOC Detection Lab
 
-**Advanced Distributed Security Information and Event Management System**
+AEGIS-VANGUARD is a personal security lab for learning and demonstrating SOC detection engineering, adversary simulation, and security platform engineering. The goal is to build a small but real end-to-end lab that can collect telemetry, normalize events, run detection rules, show alerts, and measure detection coverage against controlled attack scenarios.
 
-![Platform](https://img.shields.io/badge/platform-Linux%20Telemetry-blue)
-![Core](https://img.shields.io/badge/core-C%2B%2B20-success)
-![Pipeline](https://img.shields.io/badge/pipeline-Kafka%20%7C%20ClickHouse-orange)
+This is a lab project for internship/fresher portfolio work. It is not presented as a production SIEM or enterprise EDR product.
 
-## Abstract
+## What This Project Shows
 
-Aegis-Vanguard is a distributed SIEM research and engineering project focused on high-throughput telemetry processing and low-latency security analytics. The system integrates kernel-level collection (eBPF), distributed event transport (Apache Kafka), stream processing and detection (C++20), and analytical persistence (ClickHouse), with a web-based investigation interface (Next.js). The architecture is designed to reduce ingestion bottlenecks, increase detection throughput, and support reproducible security experiments.
+- Detection engineering with Sigma-like rules, MITRE ATT&CK mapping, and measurable coverage.
+- Adversary simulation using controlled lab scenarios, Atomic Red Team-style tests, and later an Active Directory range.
+- Platform/backend engineering with event pipelines, storage, APIs, and dashboard views.
+- Honest validation through metrics such as detection coverage, false positives, MTTD, and gap analysis.
 
-## Problem Statement
+## Architecture
 
-Conventional SIEM deployments frequently face three practical limitations:
-
-1. High event volume causes ingestion and normalization bottlenecks.
-2. Rule evaluation latency increases as detection logic scales.
-3. Interactive threat investigation becomes expensive on non-OLAP storage.
-
-Aegis-Vanguard addresses these constraints through a modular, performance-oriented pipeline and clearly separated system responsibilities.
-
-## Objectives
-
-1. Build a Linux-first telemetry pipeline using eBPF-based collection.
-2. Implement scalable event transport with Kafka topics.
-3. Develop a multithreaded C++20 processing engine for parsing, enrichment, and rule matching.
-4. Persist and query large event datasets efficiently using ClickHouse.
-5. Provide a dashboard for alert visibility and forensic workflows.
-6. Enable deterministic validation through attack simulation and rule tests.
-
-## Scope
-
-### In Scope
-
-- Endpoint telemetry collection for process and network activity.
-- Stream-based event ingestion and transformation.
-- Rule-based detection workflow with Sigma-compatible structure.
-- Analytical storage and operational dashboard visualization.
-- CI checks for build integrity and rule syntax validation.
-
-### Out of Scope (Current Phase)
-
-- Full production hardening and enterprise tenancy.
-- Cross-region disaster recovery and advanced HA guarantees.
-- Complete SOC case-management functionality.
-
-## System Architecture
-
-```mermaid
-graph TD
-    subgraph "Endpoints"
-        A[eBPF Collector - C++/Rust] -->|Protobuf/JSON| K
-        B[Application Log Tailer] -->|JSON| K
-    end
-
-    subgraph "Event Transport"
-        K{Apache Kafka}
-    end
-
-    subgraph "Processing Core"
-        K --> C[C++20 Engine]
-        C -->|Normalize + Enrich| CH[(ClickHouse)]
-        C -->|Rule Match| AL[Alert Stream]
-    end
-
-    subgraph "Presentation"
-        CH --> UI[Next.js Dashboard]
-        AL --> UI
-    end
+```text
+Range / Datasets / Simulators
+        |
+        v
+Collection + Adapters
+        |
+        v
+Normalization
+        |
+        v
+Kafka event bus
+        |
+        v
+Detection + Correlation
+        |
+        +--> Storage
+        +--> Alert stream
+        |
+        v
+Dashboard + Reports
 ```
 
-## Technology Stack
+## Planned Layers
 
-| Component | Technology |
+| Layer | Purpose |
 | --- | --- |
-| Languages | C++20, Rust (collector path), TypeScript (UI), Python (tooling) |
-| Kernel Observation | eBPF, libbpf |
-| Messaging | Apache Kafka |
-| Storage | ClickHouse, Redis (optional cache) |
-| Frontend | Next.js, TailwindCSS, Recharts |
-| DevOps | Docker, Docker Compose, CMake, GitHub Actions |
+| Range Layer | Active Directory lab, victim host, attacker host, and controlled attack scenarios |
+| Collection Layer | AEGIS telemetry adapters, Sysmon logs, Suricata EVE JSON, Wazuh alerts, and dataset replay |
+| Normalization Layer | Convert source-specific logs into one canonical event format |
+| Detection Layer | Sigma-like rules, YARA/ML experiments, MITRE ATT&CK metadata, severity and risk scoring |
+| Correlation Layer | Link process, file, auth, and network events into higher-confidence findings |
+| Response / Reporting Layer | Dashboard, MITRE coverage heatmap, gap analysis, and demo-ready reports |
+
+## Current Direction
+
+The project is being rebuilt around a clear lab-first workflow:
+
+1. Generate or replay telemetry.
+2. Normalize events into a shared schema.
+3. Publish events into Kafka.
+4. Run detection rules and correlation logic.
+5. Store events and alerts.
+6. Display alerts and coverage in the dashboard.
+7. Measure what was detected, missed, and improved.
+
+The first useful milestone is a vertical slice:
+
+```text
+sample event -> normalize -> Kafka -> detection -> storage -> API/dashboard
+```
+
+## Repository Status During Rebuild
+
+`README.md`, `PROJECT_PLAN.md`, and `AGENTS.md` are the approved source of truth for the rebuild direction.
+
+The current near-term work is Phase 0/Phase 1 alignment. Earlier prototype runtime code has been removed from the tracked repo so the lab can rebuild around the approved small vertical slice.
+
+See `docs/repository-classification.md` for the current baseline folder classification.
+
+## Tech Stack
+
+The stack is intentionally practical for a personal machine with limited RAM.
+
+| Area | Technology |
+| --- | --- |
+| Event pipeline | Kafka single broker |
+| Event analytics | ClickHouse |
+| App metadata | PostgreSQL, only where relational app data is needed |
+| Detection / tooling | Python, YAML rules, MITRE ATT&CK metadata |
+| Dashboard | Next.js / TypeScript |
+| Lab tooling | Docker Compose, VMware, optional cloud burst |
+| Security tools | Suricata, Wazuh, Sysmon, Atomic Red Team-style tests |
 
 ## Repository Structure
 
+Target structure:
+
 ```text
 aegis-vanguard/
-├── collector/                  # Module 1: telemetry collection (C++/eBPF)
-│   ├── src/
-│   ├── ebpf/
-│   ├── include/
-│   ├── tests/
-│   └── CMakeLists.txt
-├── engine/                     # Module 2: parsing, enrichment, detection (C++20)
-│   ├── src/
-│   │   ├── pipeline/
-│   │   ├── detection/
-│   │   └── enrichment/
-│   ├── include/
-│   ├── third_party/
-│   └── CMakeLists.txt
-├── dashboard/                  # Module 3: analyst interface (Next.js)
-│   ├── src/
-│   └── package.json
-├── deploy/                     # Infrastructure manifests and bootstrap assets
-│   ├── docker-compose.yml
-│   ├── env/.env.example
-│   ├── clickhouse/init/
-│   ├── kafka/init/
-│   └── grafana/provisioning/
-├── config/                     # Runtime configuration templates
-│   ├── dev/
-│   └── prod/
-├── rules/                      # Detection rules and validation assets
-│   ├── windows/
-│   ├── linux/
-│   ├── network/
-│   └── validation/
-├── shared/proto/               # Shared event contracts
-├── tests/                      # Cross-module integration and e2e suites
-│   ├── integration/
-│   ├── e2e/
-│   └── fixtures/
-├── scripts/                    # Validation and simulation tools
-├── docs/adr/                   # Architecture decision records
-├── .github/workflows/          # CI definitions
-├── CMakeLists.txt
-└── CMakePresets.json
+├── backend/              # API layer for dashboard, reports, and lab metadata
+├── worker/               # Pipeline workers: consume, normalize, detect, store
+├── normalization/        # Source adapters and canonical schema mapping
+├── detection/            # Rule engine, rule metadata, scoring, MITRE mapping
+├── correlation/          # Multi-event correlation and provenance experiments
+├── dashboard/            # Analyst-facing web UI
+├── deploy/               # Docker Compose and local infra setup
+├── rules/                # Detection rules and validation fixtures
+├── datasets/             # Small local fixtures or pointers to external datasets
+├── range/                # AD lab topology and setup notes
+├── scenarios/            # Attack scenario timeline and replay scripts
+├── mitre/                # Coverage heatmap and gap analysis outputs
+├── docs/                 # Architecture notes and runbooks
+└── PROJECT_PLAN.md       # Development roadmap and portfolio metrics
 ```
 
-## Prerequisites
+Some folders may be created gradually as the lab is rebuilt.
 
-- Docker Engine + Docker Compose v2
-- CMake 3.20+
-- Ninja or Make
-- C++ compiler with C++20 support (GCC, Clang, or MSVC)
-- Python 3.10+
-- Node.js 20+
+## Minimum Demo Goal
 
-## Reproducible Setup
+The first demo should prove the pipeline works end to end:
 
-### 1) Start local infrastructure
+- Ingest three event types: `process_start`, `network_connect`, `auth_failure`.
+- Run three rules: suspicious shell, brute-force authentication, rare port egress.
+- Store raw events and alerts.
+- Show alerts in the dashboard.
+- Explain each alert with MITRE technique metadata.
 
-```bash
-cp deploy/env/.env.example deploy/env/.env
-docker compose --env-file deploy/env/.env -f deploy/docker-compose.yml up -d
+Example normalized event shape:
+
+```json
+{
+  "schema": "lab-event",
+  "event_id": "evt-001",
+  "timestamp": "2026-07-06T10:00:00Z",
+  "host": "victim-01",
+  "source": "sysmon",
+  "event_type": "process_start",
+  "severity": "info",
+  "tenant_id": "lab",
+  "trace_id": "trace-001",
+  "event": {
+    "process": {
+      "pid": 4321,
+      "ppid": 1000,
+      "user_name": "lab\\alice",
+      "image": "powershell.exe",
+      "command_line": "powershell -enc ..."
+    }
+  }
+}
 ```
 
-PowerShell alternative:
+## Metrics
 
-```powershell
-Copy-Item deploy/env/.env.example deploy/env/.env
-docker compose --env-file deploy/env/.env -f deploy/docker-compose.yml up -d
-```
+Do not publish guessed numbers. Fill these only after running real scenarios.
 
-### 2) Build native modules
-
-```bash
-cmake --preset debug
-cmake --build --preset build-debug
-```
-
-### 3) Validate rule syntax
-
-```bash
-pip install pyyaml
-python scripts/validate_rules.py
-```
-
-### 4) Run dashboard in development mode
-
-```bash
-cd dashboard
-npm install
-npm run dev
-```
-
-## Methodology and Data Flow
-
-1. Collect endpoint activity from kernel and host sources.
-2. Normalize into a shared event contract.
-3. Publish into Kafka topic `siem.events`.
-4. Consume and process events in the engine pipeline.
-5. Write processed events and alerts to ClickHouse tables (`raw_events`, `alerts`).
-6. Render alert and timeline views in the dashboard.
-
-## Validation Strategy
-
-- `collector/tests`: unit tests for collection and serialization behavior.
-- `engine` module tests: parser, matcher, and enrichment tests.
-- `tests/integration`: collector -> kafka -> engine -> clickhouse flow tests.
-- `tests/e2e`: attack simulation to alert-generation scenarios.
-- CI baseline: native build + rule syntax checks.
-
-## Current Limitations
-
-- Collector and engine implementations are scaffold-first and still under incremental development.
-- Rule validation currently focuses on syntax; semantic validation is planned.
-- Production observability, fault-tolerance, and multi-tenant features are roadmap items.
+| Metric | How to measure |
+| --- | --- |
+| MITRE ATT&CK coverage | Detected techniques / total techniques in the scenario |
+| False positive rate | Alerts fired during baseline benign activity |
+| MTTD | Alert timestamp minus attack-step timestamp |
+| Gap closed | Detection gaps fixed / detection gaps found |
 
 ## Roadmap
 
-1. Phase 1: Telemetry ingestion and ClickHouse persistence.
-2. Phase 2: Sigma-compatible matching and severity scoring.
-3. Phase 3: Forensics-oriented dashboard workflows.
-4. Phase 4: Multi-tenant controls, RBAC, and retention policies.
+- [ ] Align README, project plan, and folder structure with the lab direction.
+- [ ] Build the minimum event schema and normalization adapters.
+- [ ] Implement the first detection rules with MITRE metadata.
+- [ ] Wire the event pipeline through Kafka and storage.
+- [ ] Build dashboard views for alerts, timeline, and rule coverage.
+- [ ] Add Suricata and Wazuh as comparison sources.
+- [ ] Add AD range and controlled attack scenarios.
+- [ ] Produce MITRE gap analysis and portfolio demo material.
 
-## Documentation Index
+## Ethics
 
-- `docs/api_spec.md`: event and storage contracts.
-- `docs/adr/`: architecture decisions and rationale.
-- `deploy/README.md`: local deployment notes.
-
-## Contribution Guidelines
-
-1. Create a feature branch.
-2. Ensure build and validation checks pass locally.
-3. Submit a pull request with implementation summary and test evidence.
-
-## Ethics and Legal Notice
-
-This repository is intended for academic, learning, and authorized security research purposes only. Do not use this software for unauthorized access, disruption, or offensive activity.
+All attack simulation must run only in an isolated lab that you own or are explicitly authorized to test. Do not target third-party systems. The project is for learning, research, and portfolio demonstration.

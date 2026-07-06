@@ -36,6 +36,7 @@ deploy/env/.env*
 data/
 logs/
 deploy/backups/
+runtime/*
 
 # IDE
 .vscode/
