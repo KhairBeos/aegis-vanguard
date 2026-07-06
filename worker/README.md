@@ -1,14 +1,21 @@
 # Worker
 
-This folder is reserved for Phase 1 pipeline workers.
+This folder documents worker boundaries for the local pipeline.
 
-Near-term responsibilities:
+Phase 3A does not implement real Kafka producer/consumer workers yet. It defines the responsibilities that Phase 3B should implement after dependency approval.
 
-- read sample/raw events
-- normalize into the canonical `lab-event` shape
-- document the approved Kafka topic flow
-- document raw event storage
+Near-term boundaries:
+
+- fixture producer: read local raw fixtures and publish to `raw.telemetry`
+- normalizer worker: consume `raw.telemetry`, normalize to `lab-event`, publish to `normalized.events`
+- storage writer: persist raw and normalized evidence to ClickHouse
+- future alert publisher: consume `normalized.events`, reuse Phase 2 detection, publish to `security.alerts`
 
 Keep this local-first and lightweight.
 
-Current Phase 1 implementation lives in `normalization/` until a worker process is actually needed.
+Current executable behavior still lives in:
+
+- `normalization/normalize.py`
+- `detection/detect.py`
+
+See `worker/phase-3-pipeline-plan.md` for the Phase 3A worker contract.
