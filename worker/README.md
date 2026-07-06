@@ -2,11 +2,13 @@
 
 This folder is reserved for Phase 1 pipeline workers.
 
-Near-term worker responsibilities:
+Near-term responsibilities:
 
 - read sample/raw events
 - normalize into the canonical `lab-event` shape
-- publish to approved Kafka topics
-- store raw event evidence
+- document the approved Kafka topic flow
+- document raw event storage
 
 Keep this local-first and lightweight.
+
+Current Phase 1 implementation lives in `normalization/` until a worker process is actually needed.

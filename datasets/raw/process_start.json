@@ -1,0 +1,17 @@
+{
+  "raw_event_id": "raw-process-001",
+  "source": "sample",
+  "kind": "process_start",
+  "observed_at": "2026-07-06T10:00:00Z",
+  "host": "victim-01",
+  "tenant_id": "lab",
+  "trace_id": "trace-process-001",
+  "severity": "info",
+  "data": {
+    "pid": 4321,
+    "ppid": 1000,
+    "user": "lab\\alice",
+    "image": "powershell.exe",
+    "cmd": "powershell -NoProfile"
+  }
+}

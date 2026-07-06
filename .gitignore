@@ -20,6 +20,7 @@ dashboard/.next/
 __pycache__/
 *.pyc
 .venv/
+.tmp/
 
 # Local env
 deploy/env/.env*

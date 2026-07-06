@@ -1,0 +1,19 @@
+{
+  "schema": "lab-event",
+  "event_id": "evt-auth-001",
+  "timestamp": "2026-07-06T10:02:00Z",
+  "host": "victim-01",
+  "source": "sample",
+  "event_type": "auth_failure",
+  "severity": "medium",
+  "tenant_id": "lab",
+  "trace_id": "trace-auth-001",
+  "event": {
+    "auth": {
+      "user_name": "lab\\alice",
+      "src_ip": "10.10.10.77",
+      "auth_method": "password",
+      "failure_reason": "invalid_password"
+    }
+  }
+}

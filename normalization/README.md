@@ -1,21 +1,44 @@
 # Normalization
 
-Phase 1 will use this folder for canonical event schema work and source adapters.
+Phase 1 uses this folder for canonical event schema work and source adapters.
 
-Near-term purpose:
+## Current Scope
 
-- Define the approved `lab-event` shape from `PROJECT_PLAN.md`.
-- Map sample source events into canonical events.
-- Keep adapters small and testable.
+- `schema/canonical_event.schema.json`: small explicit canonical event schema.
+- `adapters/sample_adapter.py`: maps local sample events to canonical events.
+- `normalize.py`: stdlib CLI for one-file normalization and fixture checks.
 
-Out of scope for Phase 0A:
+## Run
 
-- No normalization code yet.
-- No new Python packages.
-- No Kafka producer or storage logic changes.
+On Windows, prefer `py`. If `py` is not available, use `python` or the available Python interpreter path in the current environment.
 
-Planned Phase 1 success check:
+Normalize one raw sample:
+
+```powershell
+py normalization/normalize.py datasets/raw/process_start.json
+```
+
+Write normalized output to a file:
+
+```powershell
+py normalization/normalize.py datasets/raw/process_start.json --out .tmp/process_start.normalized.json
+```
+
+Check all Phase 1 fixtures:
+
+```powershell
+py normalization/normalize.py --check
+```
+
+## Out Of Scope
+
+- No Kafka publish/consume yet.
+- No dashboard.
+- No detection rules.
+- No external telemetry integrations.
+
+Phase 1 success check:
 
 ```text
-sample event -> normalized event -> Kafka -> stored raw event
+3 raw samples -> 3 canonical events matching expected fixtures
 ```
