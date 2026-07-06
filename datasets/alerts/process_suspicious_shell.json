@@ -1,0 +1,32 @@
+{
+  "schema": "lab-alert",
+  "alert_id": "alert-suspicious-shell-encoded-command-evt-process-suspicious-001",
+  "timestamp": "2026-07-06T10:05:00Z",
+  "rule_id": "suspicious-shell-encoded-command",
+  "rule_name": "Suspicious encoded PowerShell command",
+  "severity": "high",
+  "risk_score": 80,
+  "tenant_id": "lab",
+  "trace_id": "trace-process-suspicious-001",
+  "event_id": "evt-process-suspicious-001",
+  "host": "victim-01",
+  "event_type": "process_start",
+  "mitre": {
+    "tactics": [
+      "execution"
+    ],
+    "techniques": [
+      "T1059.001"
+    ]
+  },
+  "evidence": {
+    "matched_fields": {
+      "event.process.image": "powershell.exe",
+      "event.process.command_line": "powershell.exe -NoProfile -enc SQBFAFgA"
+    },
+    "matched_values": [
+      "-enc"
+    ],
+    "reason": "process image indicated PowerShell and command line contained an encoded-command indicator"
+  }
+}

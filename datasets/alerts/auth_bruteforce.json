@@ -1,0 +1,34 @@
+{
+  "schema": "lab-alert",
+  "alert_id": "alert-authentication-bruteforce-evt-auth-burst-001-evt-auth-burst-003",
+  "timestamp": "2026-07-06T10:12:30Z",
+  "rule_id": "authentication-bruteforce",
+  "rule_name": "Authentication brute force",
+  "severity": "high",
+  "risk_score": 75,
+  "tenant_id": "lab",
+  "trace_id": "trace-auth-burst-001",
+  "event_id": "evt-auth-burst-001",
+  "host": "victim-01",
+  "event_type": "auth_failure",
+  "mitre": {
+    "tactics": [
+      "credential-access"
+    ],
+    "techniques": [
+      "T1110"
+    ]
+  },
+  "evidence": {
+    "event_ids": [
+      "evt-auth-burst-001",
+      "evt-auth-burst-002",
+      "evt-auth-burst-003"
+    ],
+    "count": 3,
+    "window_seconds": 300,
+    "src_ip": "10.10.10.77",
+    "user_name": "lab\\alice",
+    "reason": "three authentication failures matched the same tenant, host, source IP, and user within five minutes"
+  }
+}

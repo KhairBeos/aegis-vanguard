@@ -1,0 +1,23 @@
+{
+  "schema": "lab-event",
+  "event_id": "evt-network-rare-port-001",
+  "timestamp": "2026-07-06T10:20:00Z",
+  "host": "victim-01",
+  "source": "sample",
+  "event_type": "network_connect",
+  "severity": "info",
+  "tenant_id": "lab",
+  "trace_id": "trace-network-rare-port-001",
+  "event": {
+    "network": {
+      "pid": 4444,
+      "process_image": "powershell.exe",
+      "src_ip": "10.10.10.5",
+      "src_port": 50124,
+      "dst_ip": "203.0.113.25",
+      "dst_port": 4444,
+      "protocol": "tcp",
+      "direction": "outbound"
+    }
+  }
+}

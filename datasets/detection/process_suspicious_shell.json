@@ -1,0 +1,20 @@
+{
+  "schema": "lab-event",
+  "event_id": "evt-process-suspicious-001",
+  "timestamp": "2026-07-06T10:05:00Z",
+  "host": "victim-01",
+  "source": "sample",
+  "event_type": "process_start",
+  "severity": "medium",
+  "tenant_id": "lab",
+  "trace_id": "trace-process-suspicious-001",
+  "event": {
+    "process": {
+      "pid": 4444,
+      "ppid": 1000,
+      "user_name": "lab\\alice",
+      "image": "powershell.exe",
+      "command_line": "powershell.exe -NoProfile -enc SQBFAFgA"
+    }
+  }
+}

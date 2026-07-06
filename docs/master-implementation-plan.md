@@ -175,6 +175,8 @@ Phase 1 normalization check passed.
 
 ### Phase 2 - Detection rules and alert contract
 
+Status: current for offline fixture-based detection.
+
 Purpose:
 
 - create the minimal rule format
@@ -185,9 +187,9 @@ Purpose:
   - brute-force authentication
   - rare port egress
 
-Expected files:
+Current files:
 
-- `rules/*.yml` or `rules/*.yaml`
+- `rules/*.json`
 - `rules/README.md`
 - `detection/README.md`
 - `detection/alert_schema.json`
@@ -670,28 +672,24 @@ Do not ask Codex to implement multiple major phases in one prompt.
 
 ## 12. Next immediate step
 
-The next immediate step is Phase 2 planning only.
+After Phase 2 is committed, the next immediate step is Phase 3 planning only.
 
-Phase 2 planning should define:
+Phase 3 planning should define:
 
-- alert schema
-- minimal rule YAML format
-- three rule fixtures
-- detection script boundary
-- MITRE metadata shape
-- expected alerts
-- verification command
+- minimal local Kafka setup
+- minimal ClickHouse setup
+- raw event publish path
+- normalized event publish path
+- raw and normalized storage path
+- local verification command
+- resource-safe run/stop workflow
 
-Phase 2 implementation should wait until the Phase 2 plan is approved.
+Phase 3 implementation should wait until the Phase 3 plan is approved.
 
-Suggested Phase 2 success check:
+Suggested Phase 3 success check:
 
 ```text
-normalized suspicious fixture -> detection rule match -> expected alert fixture
+sample raw event -> raw.telemetry -> normalized.events -> raw_telemetry storage row
 ```
 
-Suggested Phase 2 verification command:
-
-```powershell
-py detection/detect.py --check
-```
+Phase 3 planning must choose the exact verification command before implementation.

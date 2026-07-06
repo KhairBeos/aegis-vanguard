@@ -1,0 +1,40 @@
+{
+  "id": "suspicious-shell-encoded-command",
+  "name": "Suspicious encoded PowerShell command",
+  "description": "Detects PowerShell execution with encoded-command indicators in the command line.",
+  "enabled": true,
+  "event_type": "process_start",
+  "severity": "high",
+  "risk_score": 80,
+  "mitre": {
+    "tactics": [
+      "execution"
+    ],
+    "techniques": [
+      "T1059.001"
+    ]
+  },
+  "tags": [
+    "windows",
+    "powershell",
+    "execution"
+  ],
+  "detection": {
+    "type": "field_contains_any",
+    "field": "event.process.command_line",
+    "values": [
+      "-enc",
+      "-encodedcommand",
+      "frombase64string"
+    ],
+    "requires": [
+      {
+        "field": "event.process.image",
+        "contains_any": [
+          "powershell",
+          "pwsh"
+        ]
+      }
+    ]
+  }
+}

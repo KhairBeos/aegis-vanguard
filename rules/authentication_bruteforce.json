@@ -1,0 +1,33 @@
+{
+  "id": "authentication-bruteforce",
+  "name": "Authentication brute force",
+  "description": "Detects repeated authentication failures from the same source IP against the same user and host.",
+  "enabled": true,
+  "event_type": "auth_failure",
+  "severity": "high",
+  "risk_score": 75,
+  "mitre": {
+    "tactics": [
+      "credential-access"
+    ],
+    "techniques": [
+      "T1110"
+    ]
+  },
+  "tags": [
+    "windows",
+    "authentication",
+    "bruteforce"
+  ],
+  "detection": {
+    "type": "threshold_count",
+    "group_by": [
+      "tenant_id",
+      "host",
+      "event.auth.src_ip",
+      "event.auth.user_name"
+    ],
+    "threshold": 3,
+    "window_seconds": 300
+  }
+}

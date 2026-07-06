@@ -1,0 +1,38 @@
+{
+  "id": "rare-port-egress",
+  "name": "Rare port egress",
+  "description": "Detects outbound network connections to destination ports outside the small approved common-port list.",
+  "enabled": true,
+  "event_type": "network_connect",
+  "severity": "medium",
+  "risk_score": 55,
+  "mitre": {
+    "tactics": [
+      "command-and-control"
+    ],
+    "techniques": [
+      "T1571"
+    ]
+  },
+  "tags": [
+    "network",
+    "egress",
+    "rare-port"
+  ],
+  "detection": {
+    "type": "port_not_in",
+    "field": "event.network.dst_port",
+    "allowed_ports": [
+      53,
+      80,
+      123,
+      443
+    ],
+    "requires": [
+      {
+        "field": "event.network.direction",
+        "equals": "outbound"
+      }
+    ]
+  }
+}
