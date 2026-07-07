@@ -1,324 +1,152 @@
-# AEGIS-VANGUARD - Development Plan
+# AEGIS-VANGUARD Project Plan (v2 — Real-First, Full Local)
+
+## Why v2 Exists
+
+The first version of this project relied on hand-crafted fixture events labeled `Offline verified`, which created the appearance of detection capability without ever proving it against real telemetry. v2 removes that failure mode by making **live, real telemetry the only source of truth from Phase 1 onward**, and by running entirely on local infrastructure (VirtualBox + Docker) instead of a promotional cloud credit with an uncertain expiry.
 
 ## Goal
 
-AEGIS-VANGUARD is a personal SOC detection lab for internship/fresher portfolio work. The project focuses on three practical skills:
+Prove, with real timestamped evidence, the full path from a controlled MITRE ATT&CK technique to a validated detection — using the same building blocks a real SOC uses (ECS, Sigma, MITRE ATT&CK, Atomic Red Team) — sized to run entirely on a 16GB laptop.
 
-1. Detection Engineering
-2. Adversary Simulation
-3. Platform / Backend Engineering
+## Design Principles
 
-The project should stay honest and demoable. Every major feature should be backed by a runnable scenario, visible alert, or measurable metric.
-
-## Design Constraints
-
-- Personal machine with about 16 GB RAM.
-- Prefer local-first setup.
-- Do not require enterprise-grade HA, multi-region deployment, or production hardening.
-- Avoid running every lab component at the same time.
-- Build small vertical slices before adding more tools.
+1. **Real telemetry from day one.** Fixtures/unit tests exist only to check parsing and rule syntax, and are explicitly never cited as detection evidence.
+2. **Standards over invented formats.** ECS for data, Sigma for detection logic, MITRE ATT&CK for mapping.
+3. **Fully local, fully isolated.** Windows victim VM on a VirtualBox host-only network; no cloud hosting, no public IP ever involved in attack emulation.
+4. **Resource-staged, not resource-parallel.** Only the components needed for the current phase/session run at once (see Resource Modes in README).
+5. **No invented metrics.** Coverage %, false positive rate, and MTTD are `Not measured yet` until a real scenario log with timestamps exists.
 
 ## Core Story
 
-The lab answers one question:
+> Given a specific MITRE ATT&CK technique, executed for real against an isolated Windows VM, what does my pipeline detect, what does it miss, and what do I change to close the gap?
 
-> If I simulate an attack in a controlled environment, what does my detection pipeline catch, what does it miss, and how do I improve it?
+## Environment Setup (Phase 0 detail)
 
-This is stronger than only showing a dashboard. The project should demonstrate the full loop:
+- **Victim VM**: Windows 10/11, VirtualBox, host-only adapter (no bridged/NAT to the internet during scenario sessions). Install Sysmon (with a well-known community config, e.g. SwiftOnSecurity's, documented as a dependency) and Elastic Agent enrolled to a local Fleet server.
+- **Docker host**: same laptop, Docker Desktop or Docker Engine. Services brought up via `docker compose --profile <name>` so only the needed group runs (see profiles below).
+- **Networking**: Elastic Agent on the victim VM reaches the Fleet server/Elasticsearch container via a host-only or NAT network route reachable only from the VM and host — never exposed to the internet.
 
-```text
-attack / dataset replay
-        -> telemetry
-        -> normalization
-        -> detection
-        -> alert
-        -> MITRE mapping
-        -> gap analysis
-        -> rule improvement
-```
-
-## Target Architecture
-
-```text
-Range / Datasets / Simulators
-        |
-        v
-Collection Sources
-  - Sysmon
-  - Suricata EVE JSON
-  - Wazuh alerts
-  - Atomic Red Team-style logs
-  - Security dataset replay
-        |
-        v
-Normalization Adapters
-        |
-        v
-Kafka Topics
-  - raw.telemetry
-  - normalized.events
-  - security.alerts
-        |
-        v
-Detection + Correlation
-  - Sigma-like rules
-  - MITRE metadata
-  - threshold rules
-  - multi-event correlation
-        |
-        v
-Storage + Dashboard
-  - ClickHouse for events and alerts
-  - PostgreSQL only for app metadata if needed
-  - Dashboard for alerts, timeline, coverage, and gaps
-```
-
-## Canonical Event Direction
-
-All sources should map into one canonical event shape before detection. Keep the schema small at first.
-
-```json
-{
-  "schema": "lab-event",
-  "event_id": "evt-001",
-  "timestamp": "2026-07-06T10:00:00Z",
-  "host": "victim-01",
-  "source": "sysmon",
-  "event_type": "process_start",
-  "severity": "info",
-  "tenant_id": "lab",
-  "trace_id": "trace-001",
-  "event": {
-    "process": {
-      "pid": 4321,
-      "ppid": 1000,
-      "user_name": "lab\\alice",
-      "image": "powershell.exe",
-      "command_line": "powershell -enc ..."
-    }
-  }
-}
-```
-
-Initial event types:
-
-- `process_start`
-- `network_connect`
-- `auth_failure`
-
-Later event types:
-
-- `file_write`
-- `dns_query`
-- `security_alert`
-- `process_access`
-
-## Initial Rule Set
-
-Start with a small rule set that is easy to test and explain.
-
-| Rule | Event source | MITRE example | Purpose |
-| --- | --- | --- | --- |
-| Suspicious shell / encoded command | process_start | T1059 | Detect suspicious interpreter execution |
-| Authentication brute force | auth_failure | T1110 | Detect repeated failed logins |
-| Rare port egress | network_connect | T1071 / T1571 | Detect uncommon outbound network activity |
-| Sensitive file access | file event | T1005 | Detect suspicious access to sensitive files |
-| Download then execute | process + network/file | T1105 + T1059 | Correlate payload download and execution |
-
-Rule metadata should include:
+Recommended `docker-compose.yml` profile groups:
 
 ```yaml
-id: suspicious-shell-encoded-command
-name: Suspicious encoded PowerShell command
-severity: high
-risk_score: 80
-mitre:
-  tactics:
-    - execution
-  techniques:
-    - T1059.001
-tags:
-  - windows
-  - powershell
+# profile: elastic  -> elasticsearch, kibana, fleet-server
+# profile: wazuh     -> wazuh-manager, wazuh-indexer, wazuh-dashboard
+# profile: suricata  -> suricata (lightweight, can join "elastic" sessions)
+# profile: kafka      -> kafka, zookeeper (stretch goal, own session)
 ```
 
-## Resource Plan
+## Phase Roadmap
 
-Do not run all components at once.
+### Phase 0: Environment Setup
 
-### Mode A - Daily Detection Stack
-
-Use this while developing the pipeline.
-
-| Component | Expected role |
+| Item | Detail |
 | --- | --- |
-| Kafka single broker | Event bus |
-| ClickHouse | Event and alert analytics |
-| Backend/API | Dashboard data and reports |
-| Dashboard | Analyst view |
-| Worker/detection engine | Normalize, detect, store |
+| Goal | Stand up the isolated Windows victim VM and the local Docker host, with networking verified. |
+| Deliverables | VirtualBox VM (host-only network), Sysmon installed, Docker Compose skeleton with profiles, `docs/phase-0-environment.md` recording exact versions and network config. |
+| Success check | Victim VM can reach the Docker host's Elasticsearch container port and nothing else; host cannot reach the internet from the VM during a scenario session. |
+| Status | `Future` |
+| Gaps | Not started. |
 
-### Mode B - Attack Simulation Session
+### Phase 1: Live ECS Telemetry Ingestion
 
-Use this only when validating scenarios.
-
-| Component | Expected role |
+| Item | Detail |
 | --- | --- |
-| Windows victim | Sysmon / Wazuh agent telemetry |
-| Optional domain controller | Active Directory scenario |
-| Attacker VM or controlled tools | Atomic-style tests / later C2 scenario |
-| Suricata | Network telemetry |
+| Goal | Get real Sysmon telemetry from the victim VM into Elasticsearch, ECS-mapped, with no fixture involved. |
+| Deliverables | Elastic Agent enrolled and shipping data; `normalization/ecs_mapping.md` documenting field mapping decisions and any deviations. |
+| Success check | Manually trigger a benign action on the victim VM (e.g. launch `cmd.exe`) and confirm the resulting ECS event appears in Elasticsearch within seconds, with a logged timestamp in `docs/phase-1-verification.md`. |
+| Status | `Future` |
+| Gaps | Not started. This replaces the old fixture-based "Offline verified" claim entirely — first proof point must be a real, manually-triggered event. |
 
-If local RAM is not enough, use a short cloud burst for the range and shut it down after testing.
+### Phase 2: Sigma Detection Against Live Data
 
-## Development Phases
+| Item | Detail |
+| --- | --- |
+| Goal | Write Sigma rules, compile with `pySigma`, and run them against the live Elasticsearch index — not against fixture files. |
+| Deliverables | 3–5 Sigma rules in `rules/*.yml` covering common techniques (e.g. encoded PowerShell, suspicious parent-child process, LOLBin abuse). Unit tests for rule YAML syntax only. |
+| Success check | Manually trigger the exact behavior a rule targets (e.g. run `powershell -enc ...` on the victim) and confirm a real alert fires against the live index, timestamped in `docs/phase-2-verification.md`. |
+| Status | `Future` |
+| Gaps | Not started. Unit tests here are labeled `Unit tested`, never `Live verified` — that label is reserved for the manual trigger + real alert step. |
 
-### Phase 0 - Documentation and Repo Alignment
+### Phase 3: Controlled Atomic Red Team Scenarios + First Coverage Numbers
 
-Goal: make the repo match the lab direction.
+| Item | Detail |
+| --- | --- |
+| Goal | Run real Atomic Red Team tests for a small set of MITRE techniques matching the rules already written, and record what's detected vs. missed. |
+| Deliverables | `scenarios/` runbook per technique (technique id, atomic test number, expected telemetry, expected rule), `docs/phase-3-scenario-log.md` with attack/telemetry/alert timestamps per run, first entries in `mitre/coverage.md`. |
+| Success check | For each executed technique: attack execution timestamp, telemetry arrival timestamp, and alert timestamp (if detected) are all linked in the scenario log. |
+| Status | `Future` |
+| Gaps | This is the highest-value phase for interview credibility — prioritize it right after Phase 2, don't defer it to "later." |
 
-Deliverables:
+### Phase 4: Suricata (Network Telemetry)
 
-- Standard `README.md`
-- Updated `PROJECT_PLAN.md`
-- Clear folder structure
-- Removed confusing draft docs
+| Item | Detail |
+| --- | --- |
+| Goal | Add Suricata as a second real telemetry source (network layer), ECS-mapped into the same Elasticsearch index. |
+| Deliverables | Suricata EVE JSON → ECS pipeline, a rule/scenario pairing that specifically needs network visibility (e.g. C2 beaconing pattern via Atomic Red Team's network tests). |
+| Success check | A real Suricata alert for a manually-triggered network pattern appears in the same index, alongside host-based events. |
+| Status | `Future` |
+| Gaps | Runs in the same Docker session as the Elastic stack (lightweight enough, per resource budget). Do not start before Phase 3 has at least one full scenario log. |
 
-### Phase 1 - Minimal Event Pipeline
+### Phase 5: Wazuh (Host Log / FIM)
 
-Goal: prove the pipeline with local sample events.
+| Item | Detail |
+| --- | --- |
+| Goal | Add Wazuh for host-based log collection and file integrity monitoring as a complementary, real telemetry source. |
+| Deliverables | Wazuh agent on the victim VM, Wazuh → ECS adapter or direct correlation notes, a scenario pairing that benefits from FIM (e.g. persistence via scheduled task or registry run key). |
+| Success check | A real Wazuh alert for a manually-triggered FIM-relevant change is recorded, linked to the same scenario log format used in Phase 3. |
+| Status | `Future` |
+| Gaps | **Run in its own Docker session** — do not run Wazuh's indexer alongside the Elasticsearch stack (RAM budget, see README). Sequence: stop `elastic` profile, start `wazuh` profile, test, then switch back. |
 
-Deliverables:
+### Phase 6: Kafka Event-Streaming Layer (Stretch Goal)
 
-- Canonical event schema
-- Sample events for `process_start`, `network_connect`, `auth_failure`
-- Normalization code
-- Kafka topic setup
-- Storage table for raw events
+| Item | Detail |
+| --- | --- |
+| Goal | Insert Kafka as a transport layer between telemetry sources and storage, to demonstrate event-streaming architecture skill. |
+| Deliverables | Kafka topics for raw/normalized/alert events, producer/consumer workers. |
+| Success check | A real event from any Phase 1–5 source flows through Kafka into storage with no data loss, logged. |
+| Status | `Future` (optional) |
+| Gaps | Only attempt after Phases 1–5 form a working, evidence-backed loop. This phase adds architecture breadth, not detection-engineering depth — treat it as a bonus, not a blocker for portfolio readiness. |
 
-Success check:
+### Phase 7: Portfolio Packaging
 
-```text
-sample event -> normalized event -> Kafka -> stored raw event
-```
+| Item | Detail |
+| --- | --- |
+| Goal | Package the lab into an interview-ready demo. |
+| Deliverables | Demo runbook, screen recordings of at least 2–3 full scenario runs (attack → telemetry → alert, shown live), final `docs/portfolio-report.md` with real MITRE coverage numbers and honest gaps, interview talking points. |
+| Success check | A reviewer can watch a recording or follow the runbook and independently verify every claim against a linked evidence file. |
+| Status | `Future` |
+| Gaps | Waits on Phases 1–5 at minimum. |
 
-### Phase 2 - Detection Rules
+## Metrics (populate only from real scenario logs)
 
-Goal: generate real alerts from normalized events.
-
-Deliverables:
-
-- Rule format with MITRE metadata
-- First three detection rules
-- Alert schema
-- Alert storage
-- Rule validation script
-
-Success check:
-
-```text
-known suspicious event -> matching rule -> alert with risk_score and MITRE technique
-```
-
-### Phase 3 - Dashboard
-
-Goal: show useful SOC views, not just raw tables.
-
-Deliverables:
-
-- Alert list
-- Severity and risk summary
-- Timeline
-- Rule coverage section
-- Empty/loading/error states
-
-Success check:
-
-```text
-run sample scenario -> open dashboard -> see alert timeline and rule metadata
-```
-
-### Phase 4 - Suricata and Wazuh Integration
-
-Goal: compare custom detection with existing security tools.
-
-Deliverables:
-
-- Suricata EVE JSON adapter
-- Wazuh alert adapter
-- Source comparison view
-- Mapping from external alerts to canonical event/alert format
-
-Success check:
-
-```text
-same scenario -> AEGIS alert + Suricata/Wazuh observation -> comparison report
-```
-
-### Phase 5 - Lab Range and Attack Scenarios
-
-Goal: validate detection against controlled attack flows.
-
-Deliverables:
-
-- `range/README.md`
-- One Windows victim setup
-- Optional AD setup
-- Scenario timeline
-- Atomic Red Team-style tests or equivalent safe commands
-
-Success check:
-
-```text
-scenario step timestamp -> telemetry timestamp -> alert timestamp -> MTTD
-```
-
-### Phase 6 - Gap Analysis and Portfolio Report
-
-Goal: make the project explainable in interviews.
-
-Deliverables:
-
-- MITRE coverage matrix
-- Gap analysis report
-- Before/after rule improvement notes
-- Demo script
-- Short STAR story for interview
-
-Success check:
-
-```text
-scenario techniques -> detected / missed / fixed -> final report
-```
-
-## Metrics
-
-Only fill these after running real scenarios.
-
-| Metric | How to measure | Why it matters |
+| Metric | Status | Measurement method |
 | --- | --- | --- |
-| Detection coverage | Detected MITRE techniques / total techniques in scenario | Shows rule effectiveness |
-| False positive rate | Alerts during benign baseline activity | Shows alert quality |
-| MTTD | Alert time - attack step time | Shows detection latency |
-| Gap closed | Fixed gaps / found gaps | Shows iteration and engineering maturity |
+| MITRE technique coverage | `Not measured yet` | Detected techniques ÷ techniques executed via real Atomic Red Team runs |
+| False positive rate | `Not measured yet` | Alerts fired during a defined benign-activity window on the live victim VM |
+| MTTD | `Not measured yet` | Alert timestamp − attack execution timestamp, averaged across scenario runs |
+| Gaps found / closed | `Not measured yet` | Count of scenario misses, then count resolved by a rule/telemetry change, each with a before/after log |
 
-## Interview Story
+## Interview Story Template
 
-Use this structure when explaining the project:
+- **Situation**: My first version of this lab used fixture data to "verify" detection, which I recognized didn't actually prove anything. I rebuilt it around real telemetry only.
+- **Task**: Prove, with timestamped evidence, that a written Sigma rule detects a real, executed MITRE ATT&CK technique.
+- **Action**: Built an isolated Windows VM lab with Sysmon + Elastic Agent, wrote ECS-mapped Sigma rules, and ran Atomic Red Team tests against it, logging every run.
+- **Result**: [Fill in with actual current phase — e.g. "3 of 5 written rules are live-verified against real Atomic Red Team executions; the other 2 are known gaps with a documented plan to close them."]
 
-- Situation: I wanted a lab that tests whether my detection logic works against realistic attack behavior.
-- Task: Build a pipeline that collects telemetry, detects suspicious behavior, and measures detection gaps.
-- Action: Implement normalization, rules, MITRE mapping, dashboard views, and controlled scenarios.
-- Result: Show measured coverage, false positives, MTTD, and improvements after adding rules.
+## Risks and Controls
 
-## Risks
+| Risk | Control |
+| --- | --- |
+| Silent regression to fixture-based claims | Any status label of `Live verified` must link to a scenario log file with three timestamps (attack, telemetry, alert). PR/commit review checklist includes this. |
+| RAM exhaustion from running everything at once | Docker Compose profiles enforce staged startup; README resource table is the reference budget. |
+| Unsafe attack emulation | Victim VM network is host-only, never bridged to the internet during scenario sessions. |
+| Scope creep before core loop works | Suricata (Phase 4), Wazuh (Phase 5), and Kafka (Phase 6) are explicitly gated behind a working Phase 3 scenario log. |
+| Metric fabrication | Metrics table stays `Not measured yet` until scenario logs exist; no percentage is written without a linked file. |
 
-- Scope creep: AD, Suricata, Wazuh, C2, graph correlation, and dashboard can become too much if done together.
-- Overclaiming: do not say a capability exists until it has a runnable demo or test.
-- Resource limits: keep heavy range components off by default.
-- Data contract drift: every adapter must map into the same canonical event schema.
-- Unsafe simulation: keep all attack testing inside isolated, authorized lab networks.
+## Next Immediate Actions
 
-## Best Practice
-
-Build one vertical slice first. A small pipeline that runs correctly is better than a large architecture that only exists in docs.
+1. Set up the VirtualBox victim VM and confirm network isolation (Phase 0).
+2. Enroll Elastic Agent and get the first real ECS event flowing (Phase 1).
+3. Write and live-verify 3–5 Sigma rules against manually-triggered behavior (Phase 2).
+4. Run the first Atomic Red Team scenario and produce the first real scenario log + coverage entry (Phase 3) — this is the single most important milestone for interview credibility.
+5. Only after Phase 3 has at least one full logged scenario: add Suricata, then Wazuh, then (optionally) Kafka.

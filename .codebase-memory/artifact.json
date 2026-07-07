@@ -1,0 +1,11 @@
+{
+    "schema_version": 1,
+    "commit": "",
+    "indexed_at": "2026-07-06T04:18:07Z",
+    "project": "D-Learning-Security-SIEM",
+    "nodes": 4413,
+    "edges": 6490,
+    "original_size": 6094848,
+    "compressed_size": 1062603,
+    "compression_level": 9
+}
