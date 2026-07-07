@@ -1,6 +1,6 @@
-# Phase 3A Pipeline Worker Plan
+# Phase 3 Pipeline Worker Plan
 
-Phase 3A defines worker boundaries only. It does not implement real Kafka or ClickHouse workers yet.
+Phase 3A defined the local infrastructure contract. Phase 3B adds small one-shot workers for Kafka and ClickHouse.
 
 ## Target Flow
 
@@ -11,8 +11,10 @@ datasets/raw/*.json
   -> normalizer worker
   -> normalized.events
   -> storage writer
-  -> raw_telemetry / normalized_events
+  -> normalized_events
 ```
+
+`raw_telemetry` remains part of the storage contract, but Phase 3B writes only `normalized_events` to keep the worker slice small.
 
 ## Fixture Producer
 
@@ -27,10 +29,11 @@ Future input example:
 py worker/fixture_producer.py --sample datasets/raw/process_start.json
 ```
 
-Phase 3A status:
+Phase 3B status:
 
-- Documented only.
-- No Kafka client dependency is added yet.
+- Implemented in `worker/fixture_producer.py`.
+- Uses `kafka-python`.
+- Uses `raw_event_id` or `event_id` as Kafka key.
 
 ## Normalizer Worker
 
@@ -46,29 +49,59 @@ Future input example:
 py worker/normalizer_worker.py --once
 ```
 
-Phase 3A status:
+Phase 3B status:
 
-- Documented only.
+- Implemented in `worker/normalizer_worker.py`.
+- Reuses `normalization/adapters/sample_adapter.py`.
+- Publishes to `normalized.events`.
 - Existing normalization contract remains `py normalization/normalize.py --check`.
 
 ## Storage Writer
 
 Purpose:
 
-- Store raw source JSON and canonical normalized JSON in ClickHouse.
-- Write to `raw_telemetry`.
-- Optionally write canonical-only rows to `normalized_events`.
+- Consume one canonical event from `normalized.events`.
+- Store the canonical event in ClickHouse `normalized_events`.
 
-Future input example:
+Input example:
 
 ```powershell
 py worker/storage_writer.py --once
 ```
 
-Phase 3A status:
+Phase 3B status:
 
-- Documented only.
+- Implemented in `worker/storage_writer.py`.
+- Uses ClickHouse HTTP with Python standard library `urllib`.
+- Does not add a ClickHouse client library.
 - ClickHouse table contracts live in `deploy/clickhouse/init/001_events.sql`.
+
+## Smoke Check
+
+Purpose:
+
+- Publish one raw fixture.
+- Consume and normalize it.
+- Publish the canonical event.
+- Consume and store it.
+- Query ClickHouse for the stored `event_id`.
+
+Input example:
+
+```powershell
+py worker/pipeline_smoke_check.py --sample datasets/raw/process_start.json
+```
+
+Expected output:
+
+```text
+OK produced raw.telemetry raw-process-001
+OK normalized.events evt-process-001
+OK stored normalized_events evt-process-001
+Phase 3B pipeline smoke check passed.
+```
+
+Repeated smoke checks may insert duplicate demo rows into `normalized_events`.
 
 ## Future Alert Publisher
 
@@ -79,18 +112,22 @@ Purpose:
 - Publish `lab-alert` records to `security.alerts`.
 - Store alerts only after alert storage is explicitly approved.
 
-Phase 3A status:
+Current status:
 
-- Reserved for Phase 3B/Phase 4.
-- No alert storage table is created in Phase 3A.
+- Reserved for a later approved phase.
+- No alert storage table exists.
+- No messages are published to `security.alerts`.
 
-## Dependency Gate
+## Dependency Boundary
 
-Real workers should not be implemented until dependencies are approved.
+Approved for Phase 3B:
 
-Expected future choices:
+- Kafka: `kafka-python`
+- ClickHouse: HTTP via Python standard library `urllib`
 
-- Kafka client library for producer/consumer behavior.
-- ClickHouse client library or a small approved HTTP writer.
+Not approved yet:
 
-Do not use subprocess wrappers around Docker CLI as a long-term worker implementation.
+- ClickHouse Python client library
+- Alert publisher
+- `security_alerts` table
+- Dashboard/backend integration
