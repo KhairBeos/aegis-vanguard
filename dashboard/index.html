@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AEGIS-VANGUARD SOC Lab</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">AEGIS-VANGUARD</p>
+        <h1>SOC detection lab dashboard</h1>
+        <p class="subtle">
+          Local Phase 4 view over stored normalized events, rule metadata, and fixture alerts.
+        </p>
+      </div>
+      <div class="status-stack" aria-live="polite">
+        <span class="source-label source-stored">stored pipeline data</span>
+        <span class="source-label source-fixture">fixture alerts</span>
+        <span class="source-label source-metadata">rule metadata</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel" aria-labelledby="overview-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="overview-title">Overview</h2>
+            <p class="subtle">Counts come only from the available local data sources.</p>
+          </div>
+          <button id="refresh-button" type="button">Refresh</button>
+        </div>
+        <div id="summary-state" class="state">Loading summary...</div>
+        <div id="summary-grid" class="metric-grid" hidden></div>
+      </section>
+
+      <section class="layout-grid">
+        <div class="panel" aria-labelledby="events-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="events-title">Normalized events</h2>
+              <p class="subtle">Stored rows from ClickHouse `normalized_events`.</p>
+            </div>
+            <span class="source-label source-stored">stored</span>
+          </div>
+          <div id="events-state" class="state">Loading events...</div>
+          <div class="table-wrap" id="events-table-wrap" hidden>
+            <table>
+              <thead>
+                <tr>
+                  <th>Event ID</th>
+                  <th>Timestamp</th>
+                  <th>Host</th>
+                  <th>Source</th>
+                  <th>Type</th>
+                  <th>Severity</th>
+                </tr>
+              </thead>
+              <tbody id="events-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <aside class="panel detail-panel" aria-labelledby="detail-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="detail-title">Event detail</h2>
+              <p class="subtle">Select an event to inspect canonical JSON.</p>
+            </div>
+          </div>
+          <div id="event-detail" class="state">No event selected.</div>
+        </aside>
+      </section>
+
+      <section class="layout-grid">
+        <div class="panel" aria-labelledby="rules-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="rules-title">Rule metadata</h2>
+              <p class="subtle">Local JSON rules, not a large production rule pack.</p>
+            </div>
+            <span class="source-label source-metadata">metadata</span>
+          </div>
+          <div id="rules-state" class="state">Loading rules...</div>
+          <div id="rules-list" class="list" hidden></div>
+        </div>
+
+        <div class="panel" aria-labelledby="alerts-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="alerts-title">Fixture alerts</h2>
+              <p class="subtle">Phase 2 expected alert fixtures. These are not ClickHouse alert rows.</p>
+            </div>
+            <span class="source-label source-fixture">fixture</span>
+          </div>
+          <div id="alerts-state" class="state">Loading fixture alerts...</div>
+          <div id="alerts-list" class="list" hidden></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="pipeline-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="pipeline-title">Pipeline status</h2>
+            <p class="subtle">Use this to explain what the current local demo proves.</p>
+          </div>
+        </div>
+        <div class="status-grid">
+          <div>
+            <h3>Phase 3B smoke command</h3>
+            <pre><code>py worker/pipeline_smoke_check.py --sample datasets/raw/process_start.json</code></pre>
+          </div>
+          <div>
+            <h3>Proves</h3>
+            <p>One raw fixture can move through Kafka, normalization, and ClickHouse `normalized_events`.</p>
+          </div>
+          <div>
+            <h3>Does not prove</h3>
+            <p>No alert publisher, no `security_alerts` table, no production readiness, and no real-world coverage.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

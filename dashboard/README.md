@@ -1,5 +1,36 @@
 # Dashboard
 
-This folder is reserved for the analyst-facing UI.
+Phase 4B adds a dependency-free static SOC lab dashboard served by the local Python API.
 
-Phase 0 keeps this as a clean placeholder. Build the dashboard only after the Phase 1 event pipeline has a stable API or fixture contract.
+## Current Views
+
+- Overview summary with real counts from available local sources.
+- Normalized event list from ClickHouse `normalized_events`.
+- Event detail with canonical event JSON.
+- Rule metadata list from `rules/*.json`.
+- Fixture alert list from `datasets/alerts/*.json`.
+- Pipeline status and Phase 3B smoke command.
+
+The dashboard clearly labels:
+
+- stored pipeline data
+- fixture alerts
+- rule metadata
+
+It does not claim alert storage exists. It does not claim production readiness or real-world detection coverage.
+
+## Run
+
+Start the API:
+
+```powershell
+py backend/server.py
+```
+
+Open:
+
+```text
+http://localhost:8000/
+```
+
+If ClickHouse is not running, event panels show empty/error guidance while fixture alerts and rule metadata still load.

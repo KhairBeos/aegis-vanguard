@@ -238,7 +238,7 @@ Phase 3 should use a single Kafka broker, one ClickHouse node, and short-lived l
 
 Purpose:
 
-- expose stored alerts and event evidence through a minimal backend API
+- expose stored event evidence and fixture alert evidence through a minimal backend API
 - build a dashboard that shows useful SOC views, not a marketing page
 
 Expected views:
@@ -265,6 +265,7 @@ run sample scenario -> open dashboard -> see alert timeline and rule metadata
 ```
 
 Phase 4 must not invent metrics. It may show counts from stored demo data only.
+Until an alert publisher and alert storage table exist, alert views must be labeled as fixture data.
 
 ### Phase 5 - Controlled scenarios and source adapters
 
