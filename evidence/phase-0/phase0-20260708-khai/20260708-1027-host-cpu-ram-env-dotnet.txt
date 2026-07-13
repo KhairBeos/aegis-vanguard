@@ -1,0 +1,10 @@
+﻿Lab session id: phase0-20260708-khai
+Captured at: 2026-07-08 10:27:10 +07:00
+Evidence item: host-cpu-ram-env-dotnet
+
+COMPUTERNAME=KHAIPC
+PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 154 Stepping 3, GenuineIntel
+NUMBER_OF_PROCESSORS=16
+TotalPhysicalMemory=16849293312
+AvailablePhysicalMemory=3501207552
+

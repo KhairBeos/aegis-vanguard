@@ -1,0 +1,26 @@
+Lab session id: phase0-20260708-khai
+Captured at: 2026-07-13 12:12 +07:00
+Evidence item: Docker daemon readiness
+Command: docker info
+Selected command output:
+
+Client:
+ Version:    29.5.3
+ Context:    desktop-linux
+ Debug Mode: false
+
+Server:
+ Containers: 0
+  Running: 0
+  Paused: 0
+  Stopped: 0
+ Images: 0
+ Server Version: 29.5.3
+ Storage Driver: overlayfs
+ Operating System: Docker Desktop
+ OSType: linux
+ Architecture: x86_64
+ CPUs: 16
+ Total Memory: 7.601GiB
+ Name: docker-desktop
+ Swarm: inactive

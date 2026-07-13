@@ -1,0 +1,18 @@
+Lab session id: phase0-20260708-khai
+Captured at: 2026-07-13 14:12:50 +07:00
+Evidence item: Final scoped host ICMP firewall rule review
+Commands: Get-NetFirewallRule; Get-NetFirewallPortFilter; Get-NetFirewallAddressFilter; Get-NetFirewallInterfaceFilter
+
+Display name: AEGIS Host-Only ICMPv4 In
+Enabled: True
+Direction: Inbound
+Action: Allow
+Profile: Any
+Protocol: ICMPv4
+ICMP type: 8 (Echo Request)
+Remote address: 192.168.15.0/255.255.255.0
+Interface alias: Ethernet
+Target adapter alias: Ethernet
+Rule interface matches target adapter: True
+
+Result: The rule permits only inbound ICMPv4 Echo Request from 192.168.15.0/24 on the Windows interface alias mapped to VirtualBox Host-Only Ethernet Adapter #2. This is a scoped lab rule, not a global firewall disablement.

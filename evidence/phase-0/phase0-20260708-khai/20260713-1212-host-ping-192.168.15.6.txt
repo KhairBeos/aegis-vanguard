@@ -1,0 +1,11 @@
+Lab session id: phase0-20260708-khai
+Captured at: 2026-07-13 12:12 +07:00
+Evidence item: host-to-victim reachability check
+Command: ping.exe -n 2 -w 1000 192.168.15.6
+
+Pinging 192.168.15.6 with 32 bytes of data:
+Request timed out.
+Request timed out.
+
+Ping statistics for 192.168.15.6:
+    Packets: Sent = 2, Received = 0, Lost = 2 (100% loss),

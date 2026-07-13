@@ -1,0 +1,27 @@
+Lab session id: phase0-20260708-khai
+Captured at: 2026-07-13 12:12 +07:00
+Evidence item: victim VM configuration, CPU, RAM, storage attachment, and network adapters
+Command: VBoxManage showvminfo AEGIS-WIN-VICTIM-01 --machinereadable
+Selected command output:
+
+name="AEGIS-WIN-VICTIM-01"
+ostype="Windows 10 (64-bit)"
+UUID="bf5856ce-e6d7-47e7-b68f-b3d830b8f7d8"
+memory=6144
+cpus=3
+VMState="running"
+"SATA-0-0"="D:\\Resources\\VirtualBox VMs\\AEGIS-WIN-VICTIM-01\\Snapshots\\{912dcf0b-c88e-42a1-8fb4-37ca24078cd9}.vdi"
+"SATA-ImageUUID-0-0"="912dcf0b-c88e-42a1-8fb4-37ca24078cd9"
+hostonlyadapter1="VirtualBox Host-Only Ethernet Adapter #2"
+cableconnected1="on"
+nic1="hostonly"
+nic2="none"
+nic3="none"
+nic4="none"
+nic5="none"
+nic6="none"
+nic7="none"
+nic8="none"
+SnapshotName="clean-windows-baseline"
+CurrentSnapshotName="clean-windows-baseline"
+GuestOSType="Windows10_64"

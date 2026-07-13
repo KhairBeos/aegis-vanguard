@@ -1,0 +1,115 @@
+=== HOSTNAME / TIME ===
+AEGIS-WIN-VICTIM-01
+2026-07-13 14:23:15 +07:00
+
+=== IPCONFIG ALL ===
+
+Windows IP Configuration
+
+   Host Name . . . . . . . . . . . . : AEGIS-WIN-VICTIM-01
+   Primary Dns Suffix  . . . . . . . : 
+   Node Type . . . . . . . . . . . . : Hybrid
+   IP Routing Enabled. . . . . . . . : No
+   WINS Proxy Enabled. . . . . . . . : No
+
+Ethernet adapter Ethernet:
+
+   Connection-specific DNS Suffix  . : 
+   Description . . . . . . . . . . . : Intel(R) PRO/1000 MT Desktop Adapter
+   Physical Address. . . . . . . . . : 08-00-27-4A-26-18
+   DHCP Enabled. . . . . . . . . . . : Yes
+   Autoconfiguration Enabled . . . . : Yes
+   Link-local IPv6 Address . . . . . : fe80::2766:fd49:e964:b88c%6(Preferred) 
+   IPv4 Address. . . . . . . . . . . : 192.168.15.6(Preferred) 
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+   Lease Obtained. . . . . . . . . . : Monday, July 13, 2026 1:53:44 PM
+   Lease Expires . . . . . . . . . . : Monday, July 13, 2026 2:29:29 PM
+   Default Gateway . . . . . . . . . : 
+   DHCP Server . . . . . . . . . . . : 192.168.15.2
+   DHCPv6 IAID . . . . . . . . . . . : 101187623
+   DHCPv6 Client DUID. . . . . . . . : 00-01-00-01-31-E0-5F-7B-08-00-27-4A-26-18
+   DNS Servers . . . . . . . . . . . : fec0:0:0:ffff::1%1
+                                       fec0:0:0:ffff::2%1
+                                       fec0:0:0:ffff::3%1
+   NetBIOS over Tcpip. . . . . . . . : Enabled
+
+=== IPV4 ROUTE TABLE ===
+===========================================================================
+Interface List
+  6...08 00 27 4a 26 18 ......Intel(R) PRO/1000 MT Desktop Adapter
+  1...........................Software Loopback Interface 1
+===========================================================================
+
+IPv4 Route Table
+===========================================================================
+Active Routes:
+Network Destination        Netmask          Gateway       Interface  Metric
+        127.0.0.0        255.0.0.0         On-link         127.0.0.1    331
+        127.0.0.1  255.255.255.255         On-link         127.0.0.1    331
+  127.255.255.255  255.255.255.255         On-link         127.0.0.1    331
+     192.168.15.0    255.255.255.0         On-link      192.168.15.6    281
+     192.168.15.6  255.255.255.255         On-link      192.168.15.6    281
+   192.168.15.255  255.255.255.255         On-link      192.168.15.6    281
+        224.0.0.0        240.0.0.0         On-link         127.0.0.1    331
+        224.0.0.0        240.0.0.0         On-link      192.168.15.6    281
+  255.255.255.255  255.255.255.255         On-link         127.0.0.1    331
+  255.255.255.255  255.255.255.255         On-link      192.168.15.6    281
+===========================================================================
+Persistent Routes:
+  None
+
+=== DNS CONFIGURATION ===
+
+InterfaceAlias              ServerAddresses
+--------------              ---------------
+Ethernet                    {}             
+Loopback Pseudo-Interface 1 {}             
+
+
+
+=== FIREWALL PROFILES ===
+
+Name    Enabled DefaultInboundAction DefaultOutboundAction
+----    ------- -------------------- ---------------------
+Domain    False        NotConfigured         NotConfigured
+Private   False        NotConfigured         NotConfigured
+Public    False        NotConfigured         NotConfigured
+
+
+
+=== PING HOST 192.168.15.1 ===
+
+Pinging 192.168.15.1 with 32 bytes of data:
+Reply from 192.168.15.1: bytes=32 time<1ms TTL=128
+Reply from 192.168.15.1: bytes=32 time<1ms TTL=128
+Reply from 192.168.15.1: bytes=32 time=1ms TTL=128
+Reply from 192.168.15.1: bytes=32 time<1ms TTL=128
+
+Ping statistics for 192.168.15.1:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 1ms, Average = 0ms
+
+=== PING INTERNET 8.8.8.8 ===
+
+Pinging 8.8.8.8 with 32 bytes of data:
+PING: transmit failed. General failure. 
+PING: transmit failed. General failure. 
+PING: transmit failed. General failure. 
+PING: transmit failed. General failure. 
+
+Ping statistics for 8.8.8.8:
+    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),
+
+=== PUBLIC IP REQUEST ===
+curl.exe :   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+At line:1 char:1
++ curl.exe --connect-timeout 10 --max-time 15 https://api.ipify.org 2>& ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (  % Total    % ...  Time  Current:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: 
+api.ipify.org

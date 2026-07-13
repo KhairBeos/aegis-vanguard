@@ -1,0 +1,15 @@
+Lab session id: phase0-20260708-khai
+Captured at: 2026-07-13 14:13:44 +07:00
+Evidence item: Final guest OS and NIC properties visible through VirtualBox Guest Additions
+Command: VBoxManage guestproperty enumerate AEGIS-WIN-VICTIM-01
+
+Guest Additions: 7.2.4
+Guest network adapter count: 1
+Guest NIC status: Up
+Guest NIC MAC: 0800274A2618
+Guest IPv4 address: 192.168.15.6
+Guest IPv4 netmask: 255.255.255.0
+Guest OS product: Windows 10
+Guest OS release/build: 10.0.19045.3803
+
+Result: VirtualBox Guest Additions independently reports the expected Windows build and guest address 192.168.15.6/24. Guest properties do not expose the Windows route table, DNS configuration, firewall profiles, or public-IP request result.

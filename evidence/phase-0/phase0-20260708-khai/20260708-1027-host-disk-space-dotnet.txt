@@ -1,0 +1,12 @@
+﻿Lab session id: phase0-20260708-khai
+Captured at: 2026-07-08 10:27:10 +07:00
+Evidence item: host-disk-space-dotnet
+
+
+Name DriveType    TotalSize AvailableFreeSpace
+---- ---------    --------- ------------------
+C:\      Fixed 249031553024        21375897600
+D:\      Fixed 261991952384        38272032768
+
+
+

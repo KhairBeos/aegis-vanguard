@@ -1,0 +1,16 @@
+Lab session id: phase0-20260708-khai
+Captured at: 2026-07-13 12:36:22 +07:00
+Evidence item: post-change scope and service-state verification
+
+Active IPv4 networks after remediation:
+- VMware VMnet1: 192.168.88.1/24
+- VMware VMnet8: 192.168.213.1/24
+- WSL/Hyper-V: 172.24.32.1/20
+- VirtualBox target adapter: 192.168.15.1/24
+- Physical Wi-Fi: 192.168.6.28/24; gateway 192.168.6.1
+
+VBoxManage list natnets: no NAT networks listed.
+VM showvminfo: adapter 1 host-only; adapters 2-8 disabled.
+docker ps running container rows: 0.
+
+Only the approved host-only adapter IPv4 address/prefix changed. No gateway, DNS, manual route, DHCP, VM adapter, firewall, Docker, NAT, or bridged setting was changed.

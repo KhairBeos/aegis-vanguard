@@ -1,0 +1,22 @@
+Lab session id: phase0-20260708-khai
+Captured at: 2026-07-13 12:33:52 +07:00
+Evidence item: pre-change 192.168.15.0/24 overlap check
+Commands: Get-NetIPConfiguration; Get-NetIPAddress; Get-NetRoute; Get-NetAdapter; docker network inspect
+
+Active host networks:
+- VMware VMnet1: 192.168.88.1/24
+- VMware VMnet8: 192.168.213.1/24
+- WSL/Hyper-V: 172.24.32.1/20
+- VirtualBox target adapter: 169.254.218.41/16
+- Physical Wi-Fi: 192.168.6.28/24; gateway 192.168.6.1
+
+Docker networks:
+- bridge: 172.17.0.0/16
+- host: no IPAM subnet
+- none: no IPAM subnet
+
+OverlapAddressCount=0
+OverlapRouteCount=0
+ActiveVpnLikeAdapterCount=0
+
+Result: no current host adapter, route, active VPN-like adapter, WSL network, VMware network, physical LAN, or Docker network overlaps 192.168.15.0/24.

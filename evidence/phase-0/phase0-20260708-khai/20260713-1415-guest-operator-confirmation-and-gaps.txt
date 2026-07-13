@@ -1,0 +1,23 @@
+Lab session id: phase0-20260708-khai
+Recorded at: 2026-07-13 14:15 +07:00
+Evidence item: Guest-side observations supplied by the operator and remaining raw-evidence gaps
+Source: User-provided task context for the final Phase 0 evidence review. This file records the supplied observations without representing them as captured command output.
+
+Operator-confirmed guest observations:
+- Guest IPv4 address: 192.168.15.6/24
+- Guest can ping host-only address 192.168.15.1
+- Guest cannot reach 8.8.8.8
+- Guest default gateway is absent
+- VM Adapter 1 is host-only; adapters 2-8 are disabled
+- NAT and bridged networking are disabled
+
+Not supplied as raw guest command evidence and not accessible through authenticated guest commands in this task:
+- Full ipconfig /all output
+- Full route table proving no other internet-capable default route
+- Guest DNS configuration
+- Active Windows Firewall profile state
+- Guest public-IP request failure or no-public-IP output
+
+No guest credentials were requested or recorded. No guest, VM, DHCP, routing, or firewall setting was changed.
+
+Result: The operator observations support bidirectional lab-subnet reachability, absent default gateway, and failed 8.8.8.8 reachability. Mandatory route-table, DNS, firewall-profile, and public-IP evidence remains unavailable, so final isolation evidence is incomplete.

@@ -1,0 +1,21 @@
+Lab session id: phase0-20260708-khai
+Captured at: 2026-07-13 14:14:16 +07:00
+Evidence item: Final Docker Desktop daemon and empty-container review
+Commands: docker context show; docker context ls; docker --context desktop-linux version; docker --context desktop-linux info; docker --context desktop-linux ps --no-trunc
+
+Active context: desktop-linux
+Docker Desktop: 4.79.0
+Client version: 29.5.3
+Engine version: 29.5.3
+Engine OS/architecture: linux/amd64
+Storage driver: overlayfs
+Containers: 0
+Running containers: 0
+docker version exit code: 0
+docker info exit code: 0
+docker ps exit code: 0
+
+Container list:
+CONTAINER ID   IMAGE   COMMAND   CREATED   STATUS   PORTS   NAMES
+
+Result: Docker Desktop and the desktop-linux daemon are ready, and no SIEM or other containers are running.

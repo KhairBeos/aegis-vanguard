@@ -1,0 +1,18 @@
+﻿Lab session id: phase0-20260708-khai
+Captured at: 2026-07-08 10:26:19 +07:00
+Evidence item: virtualbox-hostonly-adapters
+
+Name:            VirtualBox Host-Only Ethernet Adapter #2
+GUID:            436cf3cb-3e34-4173-8687-a7e6a35f7f91
+DHCP:            Disabled
+IPAddress:       169.254.218.41
+NetworkMask:     255.255.0.0
+IPV6Address:     fe80::4467:c39a:7bdb:2414
+IPV6NetworkMaskPrefixLength: 64
+HardwareAddress: 0a:00:27:00:00:09
+MediumType:      Ethernet
+Wireless:        No
+Status:          Up
+VBoxNetworkName: HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter #2
+
+

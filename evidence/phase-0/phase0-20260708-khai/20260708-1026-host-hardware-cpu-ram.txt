@@ -1,0 +1,20 @@
+﻿Lab session id: phase0-20260708-khai
+Captured at: 2026-07-08 10:26:17 +07:00
+Evidence item: host-hardware-cpu-ram
+
+Get-CimInstance : Access denied 
+At line:21 char:51
++ ... host-hardware-cpu-ram' { Get-CimInstance Win32_ComputerSystem | Selec ...
++                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : PermissionDenied: (root\cimv2:Win32_ComputerSystem:String) [Get-CimInstance], CimExcepti 
+   on
+    + FullyQualifiedErrorId : HRESULT 0x80041003,Microsoft.Management.Infrastructure.CimCmdlets.GetCimInstanceCommand
+ 
+Get-CimInstance : Access denied 
+At line:21 char:152
++ ... l, Name, TotalPhysicalMemory; Get-CimInstance Win32_Processor | Selec ...
++                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : PermissionDenied: (root\cimv2:Win32_Processor:String) [Get-CimInstance], CimException
+    + FullyQualifiedErrorId : HRESULT 0x80041003,Microsoft.Management.Infrastructure.CimCmdlets.GetCimInstanceCommand
+ 
+

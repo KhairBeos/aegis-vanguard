@@ -1,0 +1,5 @@
+﻿Lab session id: phase0-20260708-khai
+Captured at: 2026-07-08 10:36:14 +07:00
+Evidence item: virtualbox-natnets
+
+

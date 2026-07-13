@@ -1,0 +1,22 @@
+Lab session id: phase0-20260708-khai
+Recorded at: 2026-07-13 14:49:23 +07:00
+Evidence item: Post-hardening guest firewall and isolation evidence availability
+
+User-reported action:
+- The user manually re-enabled the Domain, Private, and Public Windows Firewall profiles inside AEGIS-WIN-VICTIM-01.
+
+Evidence availability at review time:
+- No new raw guest evidence file was present in evidence/phase-0/phase0-20260708-khai/.
+- The newest raw guest command file remained 20260713-guest-isolation-evidence.txt, which records the pre-hardening state with all three profiles disabled.
+- Authenticated guest command credentials or an authenticated guest execution channel were not supplied to Codex.
+
+Post-hardening values not recorded:
+- Get-NetFirewallProfile output
+- Domain, Private, and Public enabled states
+- Default inbound and outbound actions
+- Guest-to-host ping to 192.168.15.1
+- Guest-to-8.8.8.8 result
+- Guest public-IP request result
+- Guest timestamp and hostname paired with the post-hardening checks
+
+Result: The user-reported change is recorded, but the profiles cannot be documented as enabled without raw evidence. Guest-to-host connectivity and continued internet isolation also remain unverified after hardening. No guest or host setting was changed by Codex.

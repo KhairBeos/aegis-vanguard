@@ -1,0 +1,20 @@
+Lab session id: phase0-20260708-khai
+Captured at: 2026-07-13 14:49:23 +07:00
+Evidence item: Read-only host and VirtualBox network recheck after user-performed guest firewall hardening
+Commands: VBoxManage showvminfo AEGIS-WIN-VICTIM-01 --machinereadable; VBoxManage list natnets; ping.exe -n 4 192.168.15.6
+
+VM network configuration:
+- Adapter 1: hostonly
+- Host-only interface: VirtualBox Host-Only Ethernet Adapter #2
+- Cable connected: on
+- Adapters 2-8: none
+
+VirtualBox NAT network output line count: 0
+
+Host-to-guest ping:
+- Packets sent: 4
+- Packets received: 0
+- Packets lost: 4 (100% loss)
+- Exit code: 1
+
+Result: VM adapter isolation and NAT absence remain verified, but host-to-guest ICMP no longer succeeds after the manual guest firewall hardening. No VM, network, route, DHCP, DNS, or firewall setting was changed by this capture.

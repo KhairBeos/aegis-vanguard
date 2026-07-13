@@ -1,0 +1,17 @@
+Lab session id: phase0-20260708-khai
+Captured at: 2026-07-13 12:12 +07:00
+Evidence item: Docker client, Desktop, and Engine version
+Command: docker version
+
+Client:
+ Version:           29.5.3
+ API version:       1.54
+ OS/Arch:           windows/amd64
+ Context:           desktop-linux
+
+Server: Docker Desktop 4.79.0 (230596)
+ Engine:
+  Version:          29.5.3
+  API version:      1.54 (minimum version 1.40)
+  OS/Arch:          linux/amd64
+  Experimental:     false

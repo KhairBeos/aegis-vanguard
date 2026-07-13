@@ -1,0 +1,16 @@
+Lab session id: phase0-20260708-khai
+Captured at: 2026-07-13 12:12 +07:00
+Evidence item: victim VM disk configuration
+Command: VBoxManage showmediuminfo disk 912dcf0b-c88e-42a1-8fb4-37ca24078cd9
+
+UUID:           912dcf0b-c88e-42a1-8fb4-37ca24078cd9
+Parent UUID:    0c127ebe-652e-4f4a-a1a0-521be942ee09
+State:          locked write
+Type:           normal (differencing)
+Location:       D:\Resources\VirtualBox VMs\AEGIS-WIN-VICTIM-01\Snapshots\{912dcf0b-c88e-42a1-8fb4-37ca24078cd9}.vdi
+Storage format: VDI
+Format variant: differencing default
+Capacity:       61440 MBytes
+Size on disk:   149 MBytes
+Encryption:     disabled
+In use by VMs:  AEGIS-WIN-VICTIM-01 (UUID: bf5856ce-e6d7-47e7-b68f-b3d830b8f7d8)

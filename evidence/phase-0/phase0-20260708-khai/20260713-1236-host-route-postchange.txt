@@ -1,0 +1,15 @@
+Lab session id: phase0-20260708-khai
+Captured at: 2026-07-13 12:36:22 +07:00
+Evidence item: connected host route after remediation
+Commands: Get-NetRoute; route print 192.168.15.0
+
+DestinationPrefix: 192.168.15.0/24
+NextHop: 0.0.0.0
+State: Alive
+
+Route print:
+Network Destination: 192.168.15.0
+Netmask: 255.255.255.0
+Gateway: On-link
+Interface: 192.168.15.1
+Persistent routes: None
