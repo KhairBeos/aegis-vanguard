@@ -25,14 +25,15 @@ The goal is portfolio-scale evidence, not enterprise-scale coverage.
 
 ## Environment Setup (Phase 0 detail)
 
-- **Victim VM**: Windows 10/11, VirtualBox, host-only adapter (no bridged/NAT to the internet during scenario sessions). Install Sysmon with a documented community config and Elastic Agent enrolled to a local Fleet server.
+- **Victim VM**: Existing isolated Windows VM on a host-only adapter. Phase 1 installs one standalone Elastic Agent 9.4.3 for Application, Security, and System; Sysmon, PowerShell, Defender, and Atomic Red Team remain deferred.
 - **Docker host**: same laptop, Docker Desktop or Docker Engine. Services brought up via `docker compose --profile <name>` so only the needed group runs.
-- **Networking**: Elastic Agent on the victim VM reaches the Fleet server/Elasticsearch container via a host-only or NAT network route reachable only from the VM and host, never exposed to the internet.
+- **Networking**: The standalone Agent reaches Elasticsearch directly over the existing host-only network. Kibana is host-loopback-only. Fleet Server, port `8220`, NAT, bridged networking, public binds, and public exposure are excluded from Phase 1.
+- **Future management option**: Fleet may be added later when centralized management or multiple endpoints justify it.
 
 Recommended future `docker-compose.yml` profile groups:
 
 ```yaml
-# profile: elastic   -> elasticsearch, kibana, fleet-server
+# profile: elastic   -> elasticsearch, kibana
 # profile: wazuh     -> wazuh-manager, wazuh-indexer, wazuh-dashboard
 # profile: suricata  -> suricata (lightweight, can join "elastic" sessions)
 # profile: kafka     -> kafka, zookeeper (stretch goal, own session)
@@ -45,20 +46,20 @@ Recommended future `docker-compose.yml` profile groups:
 | Item | Detail |
 | --- | --- |
 | Goal | Stand up the isolated Windows victim VM and local Docker host, with networking verified before any attack emulation. |
-| Deliverables | VirtualBox VM (host-only network), Sysmon installed, Docker Compose skeleton with profiles, `docs/phase-0-environment.md` recording exact versions and network config. |
-| Success check | Victim VM can reach the Docker host's Elasticsearch/Fleet endpoint and nothing attack-related is exposed to the public internet. |
-| Status | `Future` |
-| Gaps | Not started. |
+| Deliverables | Isolated VirtualBox VM, verified host-only network and firewall baseline, ready Docker host with zero containers, and `docs/phase-0-environment.md` containing linked evidence. |
+| Success check | Bidirectional host-only communication and guest internet isolation are verified; no Phase 1 service is running or publicly exposed. |
+| Status | `Implemented` |
+| Gaps | Phase 0 is complete. Elastic, Agent, and telemetry work begins only after the Phase 1 pre-implementation gates pass. |
 
-### Phase 1: Live Telemetry Ingestion + ECS Normalization
+### Phase 1: Live Telemetry Ingestion + ECS Verification
 
 | Item | Detail |
 | --- | --- |
-| Goal | Get real Sysmon telemetry from the victim VM into Elasticsearch and document ECS field mapping decisions with no fixture involved. |
-| Deliverables | Elastic Agent enrolled and shipping data; `normalization/ecs_mapping.md` documenting field mapping decisions, deviations, and source fields. |
-| Success check | Manually trigger a benign action on the victim VM, such as launching `cmd.exe`, and confirm the resulting ECS event appears in Elasticsearch with a logged timestamp in `docs/phase-1-verification.md`. |
+| Goal | Ingest real Application, Security, and System events through one standalone Elastic Agent; use Elastic integrations and ingest pipelines to parse and align them to ECS; store and expose them in Elasticsearch; and prove searchability and ECS verification in Kibana without fixture data. |
+| Deliverables | Elasticsearch, Kibana, and standalone Elastic Agent pinned to `9.4.3`; Agent artifact verified with the official checksum and, only when Elastic publishes one for that exact artifact, its official signature-verification mechanism; `normalization/ecs_mapping.md`; and `docs/phase-1-verification.md`. |
+| Success check | Confirm recent real events from Application, Security, and System are searchable through Kibana from Elasticsearch with consistent host/Agent identity, source timestamps, and applicable ECS fields. Phase 1 makes no detection, alerting, coverage, or `Live verified` claim. |
 | Status | `Future` |
-| Gaps | Not started. This replaces the old fixture-based `Offline verified` claim entirely; the first proof point must be a real, manually triggered event. |
+| Gaps | Not started. Fleet, Sysmon, PowerShell, Defender, Sigma, detection, alerting, and Atomic Red Team are deferred. |
 
 ### Phase 2: Sigma Detection + Alert Generation
 
@@ -179,7 +180,7 @@ Phase 3 produces the evidence bundle; Phase 4 turns those evidence bundles into 
 
 - **Situation**: My first version of this lab used fixture data to "verify" detection, which I recognized did not actually prove detection capability.
 - **Task**: Rebuild it as a local SIEM-like SOC lab that proves each detection claim with real telemetry and timestamped evidence.
-- **Action**: Build an isolated Windows VM lab with Sysmon + Elastic Agent, normalize events to ECS, write Sigma rules, run Atomic Red Team tests, and record the alert triage and investigation trail.
+- **Action**: Start with Application, Security, and System through a standalone Elastic Agent, use Elastic integrations and ingest pipelines for ECS alignment, verify searchable events in Kibana, then add Sysmon, Sigma detection, alerting, and Atomic Red Team validation in later phases.
 - **Result**: Fill in only with the actual current phase, such as: "One technique is live-verified with attack, telemetry, and alert timestamps; the next gap is documented in `coverage.md`."
 
 ## Risks and Controls
@@ -195,9 +196,9 @@ Phase 3 produces the evidence bundle; Phase 4 turns those evidence bundles into 
 
 ## Next Immediate Actions
 
-1. Create Phase 0 documentation and evidence templates.
-2. Set up the VirtualBox victim VM and confirm network isolation (Phase 0).
-3. Enroll Elastic Agent and get the first real ECS event flowing (Phase 1).
+1. Preserve the completed Phase 0 environment and isolation baseline.
+2. Complete the Phase 1 OS-support, resource, version, network, certificate, and secret-handling gates.
+3. Deploy Elastic Stack 9.4.3 and install one standalone Elastic Agent 9.4.3 for Application, Security, and System.
 4. Write and live-verify the first Sigma alert against manually triggered behavior (Phase 2).
 5. Run one Atomic Red Team scenario and produce the first scenario log, triage note, MITRE mapping, coverage entry, and documented gap or validation note (Phase 3 MVP).
 6. Only after the MVP checkpoint: expand MITRE coverage/gap analysis, then add Suricata, Wazuh, and optionally Kafka.

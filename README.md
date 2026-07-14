@@ -5,15 +5,17 @@ AEGIS-VANGUARD is a fully local SIEM-like SOC lab and mini-SIEM-style SOC detect
 This is **not** a production SIEM, **not** a commercial SIEM, **not** a commercial EDR, **not** an enterprise SOC platform, and **not** a claim of enterprise-scale coverage. It is a fresher/portfolio project designed to answer one question honestly: *given a specific attack technique, executed for real in an isolated lab, what does my pipeline actually detect, what evidence supports that alert, and what does it miss?*
 
 ```text
-Atomic Red Team execution (isolated Windows victim VM)
-  -> collect telemetry (Sysmon + Elastic Agent first)
-  -> normalize event data to ECS (Elasticsearch)
-  -> apply Sigma detection rules
-  -> generate MITRE ATT&CK-mapped alerts
-  -> triage alert evidence
-  -> investigate related events
-  -> update MITRE coverage
-  -> document gaps and rule improvements
+Phase 1 baseline Windows event logs (Application, Security, System)
+  -> standalone Elastic Agent 9.4.3
+  -> Elastic integrations and ingest pipelines parse and align events to ECS
+  -> Elasticsearch 9.4.3 stores and exposes events
+  -> Kibana 9.4.3 search and ECS verification
+
+Later phases
+  -> add Sysmon, PowerShell, and Defender telemetry
+  -> apply Sigma detection rules and generate alerts
+  -> run controlled Atomic Red Team validation
+  -> triage evidence, update MITRE coverage, and document gaps
 ```
 
 ## Design Principle: No Fixture-Based Capability Claims
@@ -25,8 +27,8 @@ The previous iteration of this project relied on hand-crafted fixture events to 
 
 ## What This Project Demonstrates
 
-- Telemetry ingestion from an isolated Windows victim VM, starting with **Sysmon + Elastic Agent**.
-- **Elastic Common Schema (ECS)** normalization so host and later network/FIM events can be compared consistently.
+- Telemetry ingestion from an isolated Windows victim VM, starting with **Application, Security, and System through one standalone Elastic Agent 9.4.3**; Sysmon is deferred.
+- Elastic integrations and ingest pipelines parse and align events to **Elastic Common Schema (ECS)**; Elasticsearch stores and exposes them, and Kibana provides search and ECS verification.
 - Detection logic written as **Sigma rules**, compiled with `pySigma`, and run against live telemetry.
 - Alert generation from Sigma matches against real events, not replayed fixtures.
 - A SOC-style triage workflow for reviewing alert context, severity, source telemetry, linked rule, and MITRE technique.
@@ -41,8 +43,8 @@ The previous iteration of this project relied on hand-crafted fixture events to 
 
 | SIEM capability | AEGIS-VANGUARD component |
 | --- | --- |
-| Log/telemetry collection | Planned Sysmon + Elastic Agent path from an isolated Windows victim VM; Suricata and Wazuh are later planned sources |
-| Normalization | Planned ECS field mapping documented from real source events |
+| Log/telemetry collection | Planned standalone Elastic Agent path for Application, Security, and System; Sysmon, PowerShell, Defender, Suricata, and Wazuh are later planned sources |
+| Normalization | Planned Elastic integrations and ingest pipelines parse and align real source events to ECS; Elasticsearch stores and exposes the events, and Kibana is used for search and ECS verification |
 | Detection | Planned Sigma detection workflow using `pySigma` against live Elasticsearch data |
 | Alert generation | Planned alert store / alert index populated only from live detection results |
 | Triage | Planned backend API and SOC triage dashboard for alert review |
@@ -55,23 +57,27 @@ The previous iteration of this project relied on hand-crafted fixture events to 
 ```mermaid
 flowchart LR
   subgraph victim[Isolated Windows Victim VM - VirtualBox, host-only network]
-    atomic[Atomic Red Team]
-    sysmon[Sysmon]
-    agent[Elastic Agent]
+    logs[Application / Security / System]
+    agent[Standalone Elastic Agent 9.4.3]
+    laterTelemetry[Deferred: Sysmon / PowerShell / Defender]
+    atomic[Atomic Red Team - deferred]
   end
 
   subgraph host[Laptop - Docker, run in stages per Resource Modes]
-    es[(Elasticsearch)]
-    kibana[Kibana - planned]
-    sigma[Sigma detection workflow - planned via pySigma]
+    ingest[Elastic integrations + ingest pipelines - parse and align to ECS]
+    es[(Elasticsearch 9.4.3 - store and expose events)]
+    kibana[Kibana 9.4.3 - search and ECS verification]
+    sigma[Sigma detection workflow - deferred]
     alerts[(Alert Store / alert index - planned)]
     api[Backend API - planned]
     dashboard[SOC triage dashboard - planned]
   end
 
-  atomic --> sysmon --> agent --> es
+  logs --> agent --> ingest --> es
+  laterTelemetry -. later phases .-> agent
+  atomic -. later validation .-> laterTelemetry
   es --> kibana
-  es --> sigma
+  es -. later phases .-> sigma
   sigma --> alerts
   alerts --> api
   api --> dashboard
@@ -79,13 +85,13 @@ flowchart LR
   triage --> report[MITRE coverage + gap analysis]
 ```
 
-The first core telemetry path is Sysmon + Elastic Agent + Elasticsearch. Suricata and Wazuh join as additional ECS-mapped sources in later phases, after the first live-verified detection loop exists. See `PROJECT_PLAN.md`.
+The Phase 1 telemetry path is Application, Security, and System through one standalone Elastic Agent and Elastic integrations/ingest pipelines into Elasticsearch, with Kibana used for search and ECS verification. Fleet remains a future option for centralized management or multiple endpoints. Sysmon and other telemetry or detection components remain deferred. See `PROJECT_PLAN.md`.
 
 ## Environment
 
 | Component | Where it runs | Why |
 | --- | --- | --- |
-| Windows victim VM (Sysmon, Atomic Red Team target) | **Local VirtualBox**, host-only isolated network | Needs a real Windows host and true network isolation; no cloud VPS can safely or cheaply run this |
+| Windows victim VM (standalone Elastic Agent; later Sysmon and Atomic Red Team target) | **Local VirtualBox**, host-only isolated network | Needs a real Windows host and true network isolation; no cloud VPS can safely or cheaply run this |
 | Elastic stack, Sigma detection workflow, planned backend, planned dashboard | **Local Docker**, same laptop | Runs in stages per Resource Mode, never all containers alive at once (see below) |
 
 No cloud hosting is used. This keeps the isolated-lab safety guarantee simple: nothing attack-related ever touches the public internet, and the project does not depend on a promotional cloud credit with an uncertain expiry.
@@ -98,7 +104,7 @@ Only run what the current task needs. Approximate RAM cost per component:
 | --- | --- | --- |
 | Host OS + tools | 3GB | Always on |
 | Windows victim VM | 4GB | On only during Phase 1+/scenario sessions |
-| Elasticsearch + Kibana + Fleet | 4-5GB | On during ingestion/detection dev and scenario sessions |
+| Elasticsearch 9.4.3 + Kibana 9.4.3 | 3.5-4.5GB planned | Verify the actual budget during the Phase 1 preflight; start manually only for the required session |
 | Suricata | ~1GB | Can run alongside Elastic stack after the first live loop is proven |
 | Wazuh manager + indexer | ~4GB | **Do not run alongside the Elastic stack**; stop one before starting the other |
 | Kafka | ~1.5-2GB | Optional stretch goal, added last, its own session |
@@ -114,7 +120,7 @@ Only run what the current task needs. Approximate RAM cost per component:
 
 ## Current Implementation Status
 
-This repository currently contains the initial project documentation and roadmap. Implementation artifacts are planned phase by phase; no detection, alert, coverage, or dashboard capability is claimed until the corresponding live evidence exists.
+This repository currently contains the completed Phase 0 lab foundation with linked evidence, plus the project documentation and roadmap. Phase 1 implementation remains future work; no detection, alert, coverage, or dashboard capability is claimed until the corresponding live evidence exists.
 
 | Label | Meaning |
 | --- | --- |
@@ -126,8 +132,8 @@ This repository currently contains the initial project documentation and roadmap
 
 | Area | Status | Planned evidence/artifact |
 | --- | --- | --- |
-| Local SIEM lab foundation | `Future` | `docs/phase-0-environment.md` |
-| Live telemetry ingestion + ECS normalization | `Future` | `normalization/ecs_mapping.md`, `docs/phase-1-verification.md` |
+| Local SIEM lab foundation | `Implemented` | `docs/phase-0-environment.md` |
+| Live telemetry ingestion + ECS verification | `Future` | `normalization/ecs_mapping.md`, `docs/phase-1-verification.md` |
 | Sigma detection + alert generation | `Future` | `rules/*.yml`, `docs/phase-2-verification.md` |
 | SOC triage workflow + first Atomic Red Team validation | `Future` | `scenarios/`, `docs/phase-3-scenario-log.md` |
 | MITRE coverage matrix + gap analysis | `Not measured yet` | `mitre/coverage.md`, populated only after scenario runs |
@@ -139,8 +145,8 @@ This repository currently contains the initial project documentation and roadmap
 The runnable quickstart will be added only after the matching files and scripts exist. The intended workflow is:
 
 1. Build the isolated local lab foundation.
-2. Confirm real Sysmon telemetry reaches Elasticsearch through Elastic Agent.
-3. Normalize the event fields to ECS and document mapping decisions.
+2. Confirm Application, Security, and System telemetry reaches Elasticsearch through one standalone Elastic Agent 9.4.3 and the approved Elastic integrations/ingest pipelines.
+3. Confirm searchability and ECS verification in Kibana, and document mapping decisions without making a detection, alerting, coverage, or `Live verified` claim.
 4. Add Sigma rules and generate alerts from live events.
 5. Run Atomic Red Team scenarios on the isolated victim VM.
 6. Triage alerts, investigate supporting events, and update MITRE coverage and gap notes.

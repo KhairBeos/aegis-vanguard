@@ -1,0 +1,152 @@
+Lab session id: phase0-20260708-khai
+Capture start: 2026-07-14 11:18:42 +07:00
+Capture end: 2026-07-14 11:18:51 +07:00
+Evidence item: Phase 0 host-only connectivity and firewall revalidation
+Source: Approved read-only commands in the actual host user session
+
+Sanitization:
+- No credentials, tokens, private keys, licensing identifiers, or guest secrets are included.
+- VirtualBox output is limited to VM state and complete NIC fields required by the approved plan.
+- Firewall output is limited to profiles, the exact approved rule, and its associated filters.
+
+Command/source labels:
+- Get-Date
+- VBoxManage showvminfo AEGIS-WIN-VICTIM-01 --machinereadable (required VM/NIC fields only)
+- VBoxManage list natnets
+- VBoxManage guestproperty get AEGIS-WIN-VICTIM-01 <approved supplemental property>
+- Get-NetAdapter -IncludeHidden (exact interface-description match)
+- Get-NetIPAddress -InterfaceIndex <discovered-index> -AddressFamily IPv4
+- Get-NetRoute -AddressFamily IPv4 (all 192.168.15.0/24 matches)
+- Get-NetNeighbor -InterfaceIndex <discovered-index> -AddressFamily IPv4
+- Get-NetFirewallProfile
+- Get-NetFirewallRule -DisplayName "AEGIS Host-Only ICMPv4 In" plus address/interface/port filters
+- Get-NetTCPConnection -State Listen (ports 9200, 5601, and 8220 only)
+
+=== VIRTUALBOX VM AND COMPLETE NIC CONFIGURATION ===
+name="AEGIS-WIN-VICTIM-01"
+VMState="running"
+hostonlyadapter1="VirtualBox Host-Only Ethernet Adapter #2"
+macaddress1="0800274A2618"
+cableconnected1="on"
+nic1="hostonly"
+nictype1="82540EM"
+nic2="none"
+nic3="none"
+nic4="none"
+nic5="none"
+nic6="none"
+nic7="none"
+nic8="none"
+
+=== VIRTUALBOX NAT NETWORKS ===
+No output returned; configured NAT network count: 0.
+No VM NIC field reported a NAT or bridged attachment.
+
+=== SUPPLEMENTAL GUEST PROPERTIES ===
+/VirtualBox/GuestInfo/Net/0/V4/IP: Value: 192.168.15.6
+/VirtualBox/GuestInfo/Net/0/Status: Value: Up
+/VirtualBox/GuestAdd/Version: Value: 7.2.4
+/VirtualBox/GuestInfo/OS/LoggedInUsers: Value: 1
+
+These values are supplemental only. No current guest-local output was available to establish the authoritative guest IPv4 address or interface identity.
+
+=== HOST-ONLY ADAPTER DISCOVERY ===
+MATCH_COUNT=1
+Name: Ethernet
+ifIndex: 9
+Status: Up
+MacAddress: 0A-00-27-00-00-09
+InterfaceDescription: VirtualBox Host-Only Ethernet Adapter #2
+
+The alias Ethernet was discovered from the exact interface-description match; it was not assumed.
+
+=== HOST IPV4 ADDRESS ===
+InterfaceAlias: Ethernet
+InterfaceIndex: 9
+IPAddress: 192.168.15.1
+PrefixLength: 24
+PrefixOrigin: Manual
+SuffixOrigin: Manual
+AddressState: Preferred
+
+=== ALL MATCHING HOST ROUTES FOR 192.168.15.0/24 ===
+MATCHING_ROUTE_COUNT=1
+InterfaceAlias: Ethernet
+InterfaceIndex: 9
+DestinationPrefix: 192.168.15.0/24
+NextHop: 0.0.0.0
+RouteMetric: 256
+Protocol: Local
+State: Alive
+
+Route correlation: the matching route is on-link through the uniquely discovered VirtualBox host-only interface index 9. No competing matching route was returned.
+
+=== PRE-TEST HOST NEIGHBOUR STATE ===
+InterfaceAlias InterfaceIndex IPAddress       LinkLayerAddress        State
+Ethernet                    9 169.254.169.254 00-00-00-00-00-00 Unreachable
+Ethernet                    9 192.168.15.255  FF-FF-FF-FF-FF-FF   Permanent
+Ethernet                    9 192.168.15.6    08-00-27-4A-26-18       Stale
+Ethernet                    9 224.0.0.22      01-00-5E-00-00-16   Permanent
+Ethernet                    9 224.0.0.251     01-00-5E-00-00-FB   Permanent
+Ethernet                    9 224.0.0.252     01-00-5E-00-00-FC   Permanent
+Ethernet                    9 239.255.255.250 01-00-5E-7F-FF-FA   Permanent
+
+=== HOST FIREWALL PROFILES ===
+Name    Enabled DefaultInboundAction DefaultOutboundAction
+Domain  True    NotConfigured        NotConfigured
+Private True    NotConfigured        NotConfigured
+Public  True    NotConfigured        NotConfigured
+
+=== EXACT HOST FIREWALL RULE ===
+EXACT_RULE_COUNT=1
+DisplayName: AEGIS Host-Only ICMPv4 In
+Enabled: True
+Direction: Inbound
+Action: Allow
+Profile: Any
+
+Address filter:
+LocalAddress: Any
+RemoteAddress: 192.168.15.0/255.255.255.0
+
+Interface filter:
+InterfaceAlias: Ethernet
+FILTER_ALIAS_MATCHES_DISCOVERED_ADAPTER=True
+DISCOVERED_FIREWALL_INTERFACE_INDEX=9
+
+Port/ICMP filter:
+Protocol: ICMPv4
+IcmpType: 8
+LocalPort: RPC
+RemotePort: Any
+
+=== CURRENT LISTENERS ===
+Ports checked: 9200, 5601, 8220
+LISTENER_COUNT=0
+
+=== GUEST-LOCAL READINESS, ADDRESS, INTERFACE, ROUTE, DNS, PROFILE, AND FIREWALL CHECKS ===
+Not run. No authenticated guest-command channel or current guest-local export was supplied or documented. The approved plan forbids using Guest Properties as authoritative or changing state to gain access.
+
+=== CONNECTIVITY METHODOLOGY ===
+Warm-up host-to-guest ping: not run.
+Host-to-guest validation sets: not run.
+Guest-to-host validation sets: not run.
+Additional validation set: not applicable.
+Post-test neighbour state: not captured because the ping sequence did not begin.
+
+Reason: the authoritative current guest-local IPv4 address and interface identity could not be established before testing. No address was guessed, and no ARP, firewall, route, interface, or VM state was changed.
+
+=== GUEST INTERNET-ISOLATION NEGATIVE TESTS ===
+IPv4 route table/default route: not captured.
+Ping to 8.8.8.8: not run.
+Bounded public-IP request: not run.
+
+Reason: current guest-local command access was unavailable. Historical isolation evidence was preserved but was not substituted for current raw output.
+
+=== OBSERVED CAUSE ===
+Not conclusively determined. Current host evidence proves a healthy, uniquely identified host-only interface, an on-link route, a matching exact host ICMP rule, a running host-only-only VM, and a stale neighbour entry for the supplemental address. It does not prove the current guest-local address, guest firewall/profile/rule state, bidirectional connectivity, or Internet isolation.
+
+=== STATE-CHANGE GUARDRAIL ===
+No VM, adapter, cable, IP, DHCP, DNS, gateway, route, ARP/neighbour, firewall, NAT, bridged, snapshot, resource, Docker, WSL, listener, Agent, or implementation state was changed.
+
+VERDICT: Insufficient evidence

@@ -144,3 +144,141 @@
 - **Files changed**: `docs/phase-0-environment.md` and `CONTEXT.md`; evidence files were read only and remain unchanged.
 - **Guardrails preserved**: No firewall, network, DHCP, DNS, route, VM, Docker, or implementation setting changed; no SIEM service started; no source, Docker Compose, Elastic/Fleet/Kibana, Sigma, or Atomic artifact was created; no detection, coverage, metric, alerting, or `Live verified` claim was added; metrics remain `Not measured yet`.
 - **Next step**: Prepare the Phase 1 Docker/Elastic implementation plan.
+
+## 2026-07-13 - Phase 1 Step 0 Documentation Alignment Preparation
+
+- **Task performed**: Completed the approved read-only README/PROJECT_PLAN architecture-alignment analysis and prepared a minimal proposed documentation diff; neither target document was edited.
+- **Files read**: `AGENTS.md`, `README.md`, `PROJECT_PLAN.md`, `CONTEXT.md`, `docs/phase-0-environment.md`, and the approved corrected Phase 1 plan.
+- **Conflicts identified**: Existing Phase 1 wording still makes Fleet enrollment, Fleet Server, Sysmon-first collection, and detection-oriented actions part of the initial path, and Phase 0 roadmap wording incorrectly treats Sysmon/Compose/Fleet reachability as completed Phase 0 deliverables.
+- **Architecture decision preserved**: Phase 1 uses Elastic Stack `9.4.3` with Elasticsearch, Kibana, and one standalone Elastic Agent; initial telemetry is Application, Security, and System; Fleet remains a future centralized-management option; Sysmon, PowerShell, Defender, Sigma, detection, alerting, and Atomic Red Team remain deferred.
+- **Files changed**: `CONTEXT.md` only.
+- **Guardrails preserved**: No implementation file, container, image, certificate, secret, firewall rule, VM setting, or Elastic Agent state changed; Phase 0 evidence remained read-only and untouched; no detection or `Live verified` claim was introduced.
+- **Current status**: The minimal README/PROJECT_PLAN wording proposal is ready for review; Phase 1 implementation has not started.
+- **Next approval required**: Explicit approval of the proposed minimal `README.md` and `PROJECT_PLAN.md` diff before either file is edited.
+
+## 2026-07-13 - Phase 1 Step 0 Documentation Alignment Applied
+
+- **Task performed**: Applied the approved minimal Phase 1 architecture-alignment wording to the public README and engineering roadmap, including the corrected Kibana ECS-verification responsibility.
+- **Files read**: `AGENTS.md`, `CONTEXT.md`, `README.md`, `PROJECT_PLAN.md`, the approved corrected Phase 1 plan, and the approved documentation diff.
+- **Files changed**: `README.md`, `PROJECT_PLAN.md`, and `CONTEXT.md` only.
+- **Architecture alignment**: Phase 1 remains future work using Elasticsearch, Kibana, and one standalone Elastic Agent pinned to `9.4.3`; Elastic integrations/ingest pipelines produce parsed ECS-aligned events, Elasticsearch stores/exposes them, and Kibana supports search and ECS verification for Application, Security, and System.
+- **Deferrals preserved**: Fleet remains a future centralized-management option; Fleet Server, Sysmon, PowerShell, Defender, Sigma, detection, alerting, and Atomic Red Team remain deferred.
+- **Phase 0 status preserved**: Phase 0 remains complete with linked evidence; its evidence files were not edited.
+- **Guardrails preserved**: No implementation artifact, container, image, certificate, secret, firewall/network rule, VM setting, or Elastic Agent state changed; NAT, bridged networking, public exposure, and port `8220` remain absent; no detection, alerting, coverage, or `Live verified` claim was introduced for Phase 1.
+- **Current status**: Step 0 documentation alignment is complete; Phase 1 implementation has not started.
+- **Next step**: Prepare and review the Phase 1 OS/support and resource preflight task.
+
+## 2026-07-13 - Phase 1 Step 1 Read-Only Preflight Plan
+
+- **Task performed**: Prepared the approval-gated, read-only execution plan for Windows support and host/Docker/VM resource preflight; no preflight command was run.
+- **Files read**: `AGENTS.md`, `README.md`, `PROJECT_PLAN.md`, `CONTEXT.md`, `docs/phase-0-environment.md`, the approved corrected Phase 1 plan, and relevant Phase 0 host, VM, Docker, disk, RAM, and listener evidence.
+- **Preflight scope planned**: Capture the victim Windows edition/build/architecture/license/ESU and vendor/Elastic support state, then measure host, VM, Docker, storage, `vm.max_map_count`, image/container, and required-port capacity using read-only commands.
+- **Decisions still required**: Approve the measurement thresholds and, after evidence capture, select the exact Windows support outcome and any separately approved resource remediation or unsupported isolated-lab exception.
+- **Files changed**: `CONTEXT.md` only.
+- **Guardrails preserved**: No host, Docker, VirtualBox, guest, Windows Update, network, firewall, image, container, Agent, deployment, or Phase 0 evidence state changed; no Phase 1 evidence folder was created.
+- **Current status**: Step 1 is planned only; Phase 1 implementation remains unstarted.
+- **Next approval required**: Approve the read-only Step 1 preflight plan before any host, Docker, VirtualBox, or guest command is executed.
+
+## 2026-07-14 - Phase 1 Step 1 Read-Only Preflight Plan Revision
+
+- **Plan revision performed**: Corrected the approval-gated Windows support and host/Docker/VM resource preflight plan without running any preflight command or creating evidence.
+- **Files read**: `AGENTS.md`, `README.md`, `PROJECT_PLAN.md`, `CONTEXT.md`, `docs/phase-0-environment.md`, the approved Phase 1 architecture plan, the current Step 1 plan, and current official Microsoft and Elastic support guidance.
+- **Command corrections**: Replaced invalid combined CIM syntax with separate commands and syntax-reviewed every proposed PowerShell command.
+- **ESU/support decision correction**: Removed the premature ESU activation ID; separated activation, edition/lifecycle, applicable ESU status, servicing build, and Elastic compatibility while excluding sensitive licensing data.
+- **Resource evidence correction**: Separated host RAM, VM RAM, Docker engine-visible memory, container use, Docker/WSL state, backing storage, WSL filesystem space, and `vm.max_map_count` evidence.
+- **Files changed**: `CONTEXT.md` only.
+- **Guardrails preserved**: No host, guest, VM, Docker, WSL, firewall, network, Windows, repository implementation, Phase 0 evidence, or Phase 1 evidence state changed.
+- **Current status**: Step 1 remains plan-only; Phase 1 implementation has not started.
+- **Next approval required**: Approve the corrected read-only Step 1 preflight plan before any host, Docker, VirtualBox, WSL, or guest command is executed.
+
+## 2026-07-14 - Phase 1 Step 1 Windows and Resource Preflight
+
+- **Task performed**: Executed the approved read-only Windows-support and host/VM/Docker resource preflight and recorded a sanitized six-file evidence bundle.
+- **Files read**: `AGENTS.md`, `README.md`, `PROJECT_PLAN.md`, `CONTEXT.md`, `docs/phase-0-environment.md`, the approved Phase 1 architecture plan, the corrected Step 1 plan, relevant Phase 0 evidence, and current official Microsoft and Elastic guidance.
+- **Evidence created**: `evidence/phase-1/phase1-preflight-20260714-0925-khai/` containing session metadata, Windows support, host/VM resources, Docker/kernel/storage, port, and decision records.
+- **Windows verdict**: `Insufficient evidence`; the VM remained powered off and no authenticated guest channel was available to verify exact edition/channel, current build and UBR, x64 status, licensing, applicable ESU status, or servicing state.
+- **Resource verdict**: `Resource remediation approval required`; host available RAM is below the approved threshold even with the VM off, Docker's host backing drive is below the free-space threshold, and `vm.max_map_count` is below the required value; Docker architecture/memory/inventory/internal-disk and port checks passed.
+- **Guardrails preserved**: No VM, Windows, host, Docker, WSL, firewall, network, Agent, image, container, certificate, secret, implementation file, or Phase 0 evidence state changed; no Phase 1 implementation or detection, alerting, coverage, or `Live verified` claim was introduced.
+- **Current status**: Step 1 evidence capture is complete but its Windows and resource gates block Phase 1 implementation.
+- **Next approval required**: Capture the missing sanitized guest evidence and separately approve any resource-remediation plan before implementation.
+
+## 2026-07-14 - Phase 1 Step 1 Running-VM Recheck
+
+- **Task performed**: Reviewed the Step 1 bundle, refreshed official Microsoft/Elastic guidance, and captured the approved read-only host/VM/Docker measurement while the user-started victim VM was running; the expected guest raw evidence file was absent.
+- **Evidence reviewed/created**: Reviewed `00` through `05`; created `07-host-ram-with-vm-running.txt`; updated `05-preflight-decision.md`. `06-guest-windows-preflight-sanitized.txt` could not be reviewed because it was not present.
+- **Windows verdict**: `Insufficient evidence`; current sanitized edition/build/UBR/x64/licensing/ESU/servicing evidence remains unavailable.
+- **Resource verdict**: `Resource remediation approval required`; available host RAM is 2.16 GiB with the VM running, Docker backing storage remains below 20 GiB, and `vm.max_map_count` remains below 1048576.
+- **Unresolved**: VirtualBox now reports 4096 MiB VM RAM instead of the earlier 6144 MiB; Codex made no VM change, and retained drift requires a separately approved Phase 0 evidence amendment.
+- **Files changed**: Added `07-host-ram-with-vm-running.txt`, updated `05-preflight-decision.md`, and appended `CONTEXT.md` only.
+- **Guardrails preserved**: No VM, Docker, WSL, container, service, firewall, network, Windows, licensing, Agent, implementation, or Phase 0 evidence state was changed; no sensitive guest data was copied because the guest file was absent.
+- **Current Phase 1 status**: Step 1 remains blocked; Phase 1 implementation has not started.
+- **Next approval required**: Supply the missing sanitized guest evidence, then approve the Windows disposition, resource-remediation plan, and any required Phase 0 evidence amendment.
+
+## 2026-07-14 - Phase 1 Step 1 Windows Support Verdict Finalized
+
+- **Task performed**: Reviewed the supplied sanitized guest Windows evidence against current official Microsoft lifecycle/licensing/ESU guidance and the Elastic support matrix, then finalized only the Windows-support verdict.
+- **Evidence reviewed**: `06-guest-windows-preflight-sanitized.txt` plus the existing Step 1 evidence and decision records.
+- **Windows verdict**: `Unsupported isolated-lab exception required`; Windows 10 Pro 22H2 x64 build 19045.3803 uses the RETAIL channel, reports licensing Notification rather than Licensed, has no returned ESU product/status, and is outside Microsoft general support without proven active ESU.
+- **Resource verdict**: `Resource remediation approval required` remains unchanged for host available RAM, Docker-backing storage, and `vm.max_map_count`.
+- **Unresolved approvals**: Windows isolated-lab exception versus rebuild/upgrade, resource remediation, and confirmation of the current 4096 MiB VM allocation with a Phase 0 evidence amendment if retained.
+- **Files changed**: Updated `05-preflight-decision.md` and appended `CONTEXT.md` only; the raw guest evidence remained read-only.
+- **Guardrails preserved**: No Windows, ESU, licensing, VM, Docker, WSL, kernel, storage, firewall, network, Agent, implementation, or Phase 0 evidence state changed; no sensitive licensing data was copied.
+- **Current Phase 1 status**: Step 1 analysis is complete, but Phase 1 implementation remains blocked by approvals and failed resource gates.
+- **Next approval required**: Decide whether to approve the unsupported isolated-lab Windows exception before resource-remediation planning.
+
+## 2026-07-14 - Windows Exception Approval and Phase 0 Resource Amendment
+
+- **Task performed**: Recorded the approved unsupported isolated-lab Windows exception and amended the Phase 0 VM resource record using a fresh read-only VirtualBox capture.
+- **Exception approved**: Windows 10 Pro 22H2 build 19045.3803 x64 is accepted only for this isolated, host-only, non-production lab; no Microsoft-supported or production-ready claim is allowed, and rebuild/upgrade remains the fallback if Agent incompatibility or instability occurs.
+- **VM allocation confirmed**: `AEGIS-WIN-VICTIM-01` intentionally uses 4096 MiB RAM and 3 vCPUs, returning to the original 4 GiB lab target; the historical 6144 MiB evidence remains preserved.
+- **Evidence created**: `evidence/phase-0/phase0-20260708-khai/20260714-1023-phase0-vm-resource-amendment.txt`.
+- **Files changed**: Added the Phase 0 evidence record; updated `docs/phase-0-environment.md`, `05-preflight-decision.md`, and `CONTEXT.md` only.
+- **Phase 0 status**: Resource amendment recorded, but completion is reopened because two current host-to-guest ping attempts returned 100% loss despite unchanged host-only-only adapters, absent NAT/bridged adapters, guest IP/link visibility, and the current baseline snapshot; firewall/connectivity requires fresh revalidation.
+- **Resource blockers unchanged**: Host available RAM 2.16 GiB versus 5 GiB, Docker-backing storage 16.69 GiB versus 20 GiB, and `vm.max_map_count` 262144 versus 1048576.
+- **Guardrails preserved**: No VM resource/state, snapshot, disk, network, firewall, DHCP, DNS, route, Windows, licensing, Docker, WSL, Agent, implementation, or historical evidence was changed.
+- **Current status**: Windows exception approved; Phase 0 amended but connectivity/firewall revalidation is incomplete; Phase 1 remains blocked by Phase 0 and resource remediation.
+- **Next step**: Revalidate Phase 0 host-only connectivity/firewall, then prepare the resource-remediation plan.
+
+## 2026-07-14 - Phase 0 Connectivity and Firewall Revalidation Plan
+
+- **Task planned**: Prepared an approval-gated, read-only execution plan to diagnose the current host-to-guest ICMP failure and revalidate the accepted Phase 0 host-only baseline.
+- **Files and evidence read**: Reviewed `AGENTS.md`, `README.md`, `PROJECT_PLAN.md`, `CONTEXT.md`, `docs/phase-0-environment.md`, the fresh VM resource amendment, the earlier successful host/network/firewall evidence, and the Phase 1 preflight decision.
+- **Revalidation scope**: Current VM readiness and address, VirtualBox/host-only adapter and route state, host and guest firewall profiles/rule filters, repeated bidirectional ICMP, and guest Internet-isolation negative tests; no resource-remediation planning is included.
+- **Current Phase 0 state**: Reopened pending fresh linked proof of bidirectional host-only connectivity, enabled/scoped firewall state, absent default Internet route, failed Internet access, and absent NAT/bridged networking.
+- **Current Phase 1 state**: Blocked by Phase 0 revalidation and the unchanged RAM, Docker-storage, and `vm.max_map_count` resource gates; the isolated-lab Windows exception remains approved.
+- **Files changed**: Appended this planning entry to `CONTEXT.md` only; no evidence file was created.
+- **Guardrails preserved**: No host, VM, VirtualBox, firewall, network, DHCP, DNS, route, Docker, WSL, resource, Agent, implementation, or existing raw-evidence state was queried or changed during planning.
+- **Next approval required**: Approve the Phase 0 read-only connectivity and firewall revalidation plan before any host, VirtualBox, or guest command is run.
+
+## 2026-07-14 - Phase 0 Connectivity Revalidation Plan Revision
+
+- **Plan revision performed**: Corrected the approval-gated, read-only Phase 0 connectivity/firewall plan without executing any diagnostic command or creating evidence.
+- **Files and evidence read**: Re-read `AGENTS.md`, `README.md`, `PROJECT_PLAN.md`, `CONTEXT.md`, `docs/phase-0-environment.md`, the current plan, the earlier successful host/guest firewall-connectivity records, and the latest failed-ping resource amendment.
+- **Dynamic interface correction**: The host adapter must be uniquely resolved by interface description and then correlated by interface index; the guest adapter must be resolved from its authoritative guest-local `192.168.15.0/24` address. No host or guest alias is assumed, and Guest Properties is supplemental only.
+- **Ping correction**: Added a timestamped warm-up set, five-second wait, two validation sets in each direction, pre/post neighbour capture, and a required third validation set after any validation loss; warm-up loss alone does not fail the verdict.
+- **DNS and isolation correction**: Guest DNS is recorded but is not a failure by itself; isolation depends on no IPv4 default route, no NAT/bridged VM adapter, failed external connectivity/public-IP retrieval, and no unexpected public path.
+- **Current status**: Phase 0 remains reopened; Phase 1 remains blocked by Phase 0 revalidation and the unchanged resource-remediation gates.
+- **Files changed**: Appended this revision entry to `CONTEXT.md` only; no evidence file was created or changed.
+- **Guardrails preserved**: No host, VirtualBox, guest, VM, firewall, network, ARP/neighbour, route, DHCP, DNS, Docker, WSL, resource, Agent, implementation, Phase 1, or existing evidence state was queried or changed.
+- **Next approval required**: Approve the corrected read-only revalidation plan before any host, VirtualBox, or guest command is run.
+
+## 2026-07-14 - Phase 0 Connectivity and Firewall Revalidation
+
+- **Task performed**: Executed the approved read-only host/VirtualBox revalidation and applied the approved stop condition before guest-local or connectivity testing.
+- **Evidence created**: `evidence/phase-0/phase0-20260708-khai/20260714-1118-phase0-connectivity-firewall-revalidation.txt`.
+- **Cause finding**: Not conclusively determined; current host-only adapter, on-link route, exact host ICMP rule, VM NIC isolation, and listener checks pass, but no authenticated guest-local output was available.
+- **Phase 0 verdict**: `Insufficient evidence`; current guest address/interface, firewall state, bidirectional validation, route table, and Internet-isolation negatives remain unproven.
+- **Phase 1 blocking state**: Phase 1 remains blocked by reopened Phase 0 verification and the unchanged RAM, Docker-storage, and `vm.max_map_count` resource gates.
+- **Files changed**: Added the single approved evidence file; updated `docs/phase-0-environment.md`, `05-preflight-decision.md`, and `CONTEXT.md` only.
+- **Guardrails preserved**: No host, VM, adapter, cable, IP, DHCP, DNS, gateway, route, ARP/neighbour, firewall, NAT, bridged, snapshot, resource, Docker, WSL, listener, Agent, implementation, Phase 1, or existing raw-evidence state was changed.
+- **Next approval required**: Supply current guest-local command output or an approved authenticated read-only guest channel to capture the missing Phase 0 connectivity evidence.
+
+## 2026-07-14 - Final Phase 0 Closure and Phase 1 Gate Split
+
+- **Final evidence reviewed**: `20260714-host-to-guest-final-validation.txt`, `20260714-phase0-guest-connectivity-revalidation.txt`, `20260714-1118-phase0-connectivity-firewall-revalidation.txt`, and the preserved snapshot/resource amendment.
+- **Phase 0 verdict**: `Phase 0 complete`; both host-to-guest and guest-to-host validation sets passed with 0% loss, and current firewall, routing, NAT/bridged, and Internet-isolation evidence passes. Earlier failed pings remain preserved and were not reproduced after guest readiness and current interface/firewall validation; no more specific cause is claimed.
+- **Files changed**: `docs/phase-0-environment.md`, `evidence/phase-1/phase1-preflight-20260714-0925-khai/05-preflight-decision.md`, and `CONTEXT.md` only; raw evidence remained read-only.
+- **Resource-gate distinction**: Non-runtime Phase 1 scaffolding, Compose/configuration authoring, TLS design, and secret-handling work may proceed; runtime startup and live ingestion remain gated by resource provisioning and revalidation, including adequate storage and `vm.max_map_count >= 1048576`. The resource gate is not passed.
+- **Guardrails preserved**: No network, firewall, VM, Docker, WSL, disk, kernel, image, container, Agent, deployment, implementation, or historical evidence state changed; no detection, alerting, coverage, or `Live verified` claim was added.
+- **Current status**: Phase 0 complete; non-runtime Phase 1 implementation may begin; runtime startup remains resource-gated.
+- **Next step**: Prepare Phase 1 secure repository scaffolding implementation.

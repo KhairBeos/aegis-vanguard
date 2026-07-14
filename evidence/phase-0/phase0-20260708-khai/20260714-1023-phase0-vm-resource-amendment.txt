@@ -1,0 +1,37 @@
+Lab session id: phase0-20260708-khai
+Captured at: 2026-07-14 10:23:15 +07:00
+Evidence item: Operator-approved victim VM resource amendment and isolation-preserving VirtualBox configuration recheck
+Source: Read-only VirtualBox CLI queries on the host
+
+Commands:
+- VBoxManage showvminfo AEGIS-WIN-VICTIM-01 --machinereadable
+- VBoxManage showmediuminfo disk <attached-medium> (output filtered to type, capacity, and size on disk)
+- VBoxManage snapshot AEGIS-WIN-VICTIM-01 list --machinereadable
+- VBoxManage list natnets
+
+Sanitized output:
+- VM name: AEGIS-WIN-VICTIM-01
+- VM state: running
+- RAM: 4096 MiB
+- vCPUs: 3
+- Disk type: normal differencing VDI
+- Disk capacity: 61440 MiB
+- Disk size on host at capture: 4959 MiB
+- Adapter 1: host-only / VirtualBox Host-Only Ethernet Adapter #2 / cable connected
+- Adapters 2-8: disabled
+- Current snapshot: clean-windows-baseline
+- Configured VirtualBox NAT network lines: 0
+- Bridged VM adapters: none
+
+Historical trace:
+- The previous 6144 MiB allocation remains recorded in 20260713-1413-virtualbox-vm-final.txt and was not edited.
+- The user approved the current 4096 MiB allocation as an intentional adjustment back to the original 4 GiB lab target; vCPU remains 3.
+
+Post-capture verification:
+- Guest Additions reports IPv4 address 192.168.15.6 and network status Up.
+- Two host-to-guest ping attempts each returned 0/4 replies (100% loss).
+- Docker reports zero running containers.
+
+Conclusion: The current VM resource allocation is 4096 MiB RAM and 3 vCPUs. The attached disk capacity, host-only-only adapter configuration, current baseline snapshot, and absence of NAT/bridged VM networking remain consistent with the Phase 0 isolation design. However, Phase 0 completion cannot remain claimed until the current host-to-guest reachability/firewall regression is resolved or explicitly accounted for with fresh evidence.
+
+Limitations and guardrails: Existing raw guest firewall and internet-isolation evidence remains historical authority but does not supersede the current failed host-to-guest check. No VM resource, state, disk, snapshot, adapter, NAT, bridged, firewall, network, Docker, or guest setting was changed by this capture or verification.

@@ -1,0 +1,245 @@
+=== PHASE 0 GUEST REVALIDATION ===
+
+=== SESSION ===
+Hostname: AEGIS-WIN-VICTI
+
+Timestamp: 2026-07-14 11:48:57 +07:00
+
+PowerShell: 5.1.19041.3803
+
+Administrator: True
+
+
+=== HOST-ONLY ADDRESS DISCOVERY ===
+
+IPAddress    PrefixLength InterfaceAlias InterfaceIndex AddressState
+---------    ------------ -------------- -------------- ------------
+192.168.15.6           24 Ethernet                   10    Preferred
+
+
+
+Selected guest IP: 192.168.15.6
+
+Selected interface: Ethernet
+
+Selected interface index: 10
+
+
+=== ADAPTER AND NETWORK CONFIGURATION ===
+
+
+Name                 : Ethernet
+InterfaceDescription : Intel(R) PRO/1000 MT Desktop Adapter
+ifIndex              : 10
+Status               : Up
+MacAddress           : 08-00-27-4A-26-18
+LinkSpeed            : 1 Gbps
+
+
+
+
+
+
+InterfaceAlias     : Ethernet
+InterfaceIndex     : 10
+IPv4Address        : {192.168.15.6}
+IPv4DefaultGateway : 
+DNSServer          : {MSFT_DNSClientServerAddress (Name = "10", CreationClassName = "", SystemCreationClassName = "", SystemName = "23"), MSFT_DNSClientServerAddress (Name = "10", CreationClassName = "", SystemCreationClassName = "", SystemName = "2")}
+NetProfile         : MSFT_NetConnectionProfile (InstanceID = "{932B30EF-9658-4C8A-AA32-90EED9780692}")
+
+
+
+
+
+
+Name             : Unidentified network
+InterfaceAlias   : Ethernet
+InterfaceIndex   : 10
+NetworkCategory  : Public
+IPv4Connectivity : NoTraffic
+IPv6Connectivity : NoTraffic
+
+
+
+
+
+=== FIREWALL PROFILES ===
+
+Name    Enabled DefaultInboundAction DefaultOutboundAction
+----    ------- -------------------- ---------------------
+Domain     True                Block                 Allow
+Private    True                Block                 Allow
+Public     True                Block                 Allow
+
+
+
+
+=== EXACT GUEST ICMP RULE ===
+
+
+DisplayName : AEGIS Guest Host-Only ICMPv4 In
+Enabled     : True
+Direction   : Inbound
+Action      : Allow
+Profile     : Public
+
+
+
+
+
+
+LocalAddress  : 192.168.15.6
+RemoteAddress : 192.168.15.0/255.255.255.0
+
+
+
+
+
+
+InterfaceAlias : Ethernet
+
+
+
+
+
+
+Protocol   : ICMPv4
+IcmpType   : 8
+LocalPort  : RPC
+RemotePort : Any
+
+
+
+
+
+=== IPV4 ROUTES ===
+
+InterfaceAlias              InterfaceIndex DestinationPrefix  NextHop RouteMetric Protocol State
+--------------              -------------- -----------------  ------- ----------- -------- -----
+Loopback Pseudo-Interface 1              1 127.0.0.0/8        0.0.0.0         256    Local Alive
+Loopback Pseudo-Interface 1              1 127.0.0.1/32       0.0.0.0         256    Local Alive
+Loopback Pseudo-Interface 1              1 127.255.255.255/32 0.0.0.0         256    Local Alive
+Ethernet                                10 192.168.15.0/24    0.0.0.0         256    Local Alive
+Ethernet                                10 192.168.15.255/32  0.0.0.0         256    Local Alive
+Ethernet                                10 192.168.15.6/32    0.0.0.0         256    Local Alive
+Loopback Pseudo-Interface 1              1 224.0.0.0/4        0.0.0.0         256    Local Alive
+Ethernet                                10 224.0.0.0/4        0.0.0.0         256    Local Alive
+Loopback Pseudo-Interface 1              1 255.255.255.255/32 0.0.0.0         256    Local Alive
+Ethernet                                10 255.255.255.255/32 0.0.0.0         256    Local Alive
+
+
+
+===========================================================================
+Interface List
+ 10...08 00 27 4a 26 18 ......Intel(R) PRO/1000 MT Desktop Adapter
+  1...........................Software Loopback Interface 1
+===========================================================================
+
+IPv4 Route Table
+===========================================================================
+Active Routes:
+Network Destination        Netmask          Gateway       Interface  Metric
+        127.0.0.0        255.0.0.0         On-link         127.0.0.1    331
+        127.0.0.1  255.255.255.255         On-link         127.0.0.1    331
+  127.255.255.255  255.255.255.255         On-link         127.0.0.1    331
+     192.168.15.0    255.255.255.0         On-link      192.168.15.6    281
+     192.168.15.6  255.255.255.255         On-link      192.168.15.6    281
+   192.168.15.255  255.255.255.255         On-link      192.168.15.6    281
+        224.0.0.0        240.0.0.0         On-link         127.0.0.1    331
+        224.0.0.0        240.0.0.0         On-link      192.168.15.6    281
+  255.255.255.255  255.255.255.255         On-link         127.0.0.1    331
+  255.255.255.255  255.255.255.255         On-link      192.168.15.6    281
+===========================================================================
+Persistent Routes:
+  None
+
+Default IPv4 route count: 0
+
+
+=== GUEST TO HOST PING ===
+Warm-up ping:
+
+
+Pinging 192.168.15.1 with 32 bytes of data:
+Reply from 192.168.15.1: bytes=32 time=2ms TTL=128
+Reply from 192.168.15.1: bytes=32 time=1ms TTL=128
+Reply from 192.168.15.1: bytes=32 time=1ms TTL=128
+Reply from 192.168.15.1: bytes=32 time=1ms TTL=128
+
+Ping statistics for 192.168.15.1:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 1ms, Maximum = 2ms, Average = 1ms
+
+Validation ping 1:
+
+
+Pinging 192.168.15.1 with 32 bytes of data:
+Reply from 192.168.15.1: bytes=32 time=1ms TTL=128
+Reply from 192.168.15.1: bytes=32 time=1ms TTL=128
+Reply from 192.168.15.1: bytes=32 time=1ms TTL=128
+Reply from 192.168.15.1: bytes=32 time=1ms TTL=128
+
+Ping statistics for 192.168.15.1:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 1ms, Maximum = 1ms, Average = 1ms
+
+Validation ping 2:
+
+
+Pinging 192.168.15.1 with 32 bytes of data:
+Reply from 192.168.15.1: bytes=32 time=1ms TTL=128
+Reply from 192.168.15.1: bytes=32 time=1ms TTL=128
+Reply from 192.168.15.1: bytes=32 time=1ms TTL=128
+Reply from 192.168.15.1: bytes=32 time=1ms TTL=128
+
+Ping statistics for 192.168.15.1:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 1ms, Maximum = 1ms, Average = 1ms
+
+
+=== INTERNET ISOLATION ===
+Ping 8.8.8.8:
+
+
+Pinging 8.8.8.8 with 32 bytes of data:
+PING: transmit failed. General failure. 
+PING: transmit failed. General failure. 
+PING: transmit failed. General failure. 
+PING: transmit failed. General failure. 
+
+Ping statistics for 8.8.8.8:
+    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),
+
+External ping exit code: 1
+
+Public IP request using IPv4:
+
+curl.exe :   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+At line:1 char:13
++ $publicIp = & curl.exe -4 `
++             ~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (  % Total    % ...  Time  Current:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: api.ipify.org
+
+Public IP request exit code: 6
+
+
+=== SUMMARY ===
+Guest IP: 192.168.15.6
+
+Interface: Ethernet / index 10
+
+Default IPv4 route count: 0
+
+Exact guest ICMP rule count: 1
+
+External ping exit code: 1
+
+Public IP request exit code: 6
