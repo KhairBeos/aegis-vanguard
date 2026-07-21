@@ -61,6 +61,8 @@ Recommended future `docker-compose.yml` profile groups:
 | Status | `Future` |
 | Gaps | Not started. Fleet, Sysmon, PowerShell, Defender, Sigma, detection, alerting, and Atomic Red Team are deferred. |
 
+The failed Phase 1 resource gates block image acquisition, certificate and secret generation, service startup, package installation, firewall changes, Agent installation, and live ingestion. They do not block separately approved repository authoring or non-runtime static validation.
+
 ### Phase 2: Sigma Detection + Alert Generation
 
 | Item | Detail |

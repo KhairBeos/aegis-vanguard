@@ -33,6 +33,16 @@ deploy/env/.env*
 *.p12
 *.pfx
 
+# Phase 1 generated TLS and local credentials
+deploy/tls/.runtime-staging/
+deploy/tls/generated/
+deploy/secrets/*
+!deploy/secrets/README.md
+deploy/kibana/config/kibana.keystore
+
+# Standalone Agent policies are generated from Kibana and may contain credentials
+deploy/elastic-agent/runtime/
+
 # Runtime data
 data/
 logs/

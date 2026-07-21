@@ -53,7 +53,7 @@ Out of scope:
 | Windows 10/11 victim VM | Yes | Generates real endpoint telemetry in later phases | `AEGIS-WIN-VICTIM-01 / running / Windows 10 build 10.0.19045.3803 / 3 CPU / 4096 MiB RAM / 61440 MiB disk` | `evidence/phase-0/phase0-20260708-khai/20260714-1023-phase0-vm-resource-amendment.txt`, `evidence/phase-0/phase0-20260708-khai/20260713-1413-virtualbox-vm-final.txt`, `evidence/phase-0/phase0-20260708-khai/20260713-1413-victim-guest-properties-final.txt`, `evidence/phase-0/phase0-20260708-khai/20260713-post-firewall-evidence.txt`, `evidence/phase-0/phase0-20260708-khai/20260713-1504-post-firewall-remediation-host-vm-docker-recheck.txt` | Current 4096 MiB/3-vCPU configuration is operator-approved and historical 6144 MiB evidence remains linked; current host-to-guest connectivity/firewall validation passes |
 | Host-only network | Yes | Isolates victim VM from public networks | `VirtualBox Host-Only Ethernet Adapter #2 / 192.168.15.1 / 255.255.255.0` | `evidence/phase-0/phase0-20260708-khai/20260714-1118-phase0-connectivity-firewall-revalidation.txt`, `evidence/phase-0/phase0-20260708-khai/20260714-host-to-guest-final-validation.txt`, `evidence/phase-0/phase0-20260708-khai/20260714-phase0-guest-connectivity-revalidation.txt` | Current host and guest addressing, routing, firewall, bidirectional connectivity, and isolation checks pass |
 | Docker Desktop or Docker Engine | Yes | Runs future local SIEM services | `Docker Desktop 4.79.0 / Engine 29.5.3 / context desktop-linux / 0 running containers` | `evidence/phase-0/phase0-20260708-khai/20260713-1504-post-firewall-remediation-host-vm-docker-recheck.txt` | Docker daemon is reachable; no SIEM services or other containers are running |
-| Future Elastic/Kibana/Fleet containers | No, planned | Later telemetry ingestion and review stack | `Not created yet` | `<future path>` | Do not create in Phase 0 |
+| Future Elasticsearch/Kibana containers plus standalone Elastic Agent | No, planned | Later telemetry ingestion and review stack | `Not created yet` | `<future path>` | Do not create in Phase 0 |
 
 ## Network isolation checklist
 
@@ -85,7 +85,7 @@ Final isolation verification is `Complete`. Current host and guest evidence prov
 | Docker Desktop / Docker Engine | `Docker Desktop 4.79.0; Engine 29.5.3` | `docker version`; `docker context ls`; `docker info`; `docker ps --no-trunc` | `evidence/phase-0/phase0-20260708-khai/20260713-1414-docker-final.txt` | `Recorded` | Active context is `desktop-linux`; daemon is reachable; running containers: 0 |
 | Elastic image tag | `<future value>` | `<future source>` | `<future path>` | `Future` | Record only when planned containers are created |
 | Kibana image tag | `<future value>` | `<future source>` | `<future path>` | `Future` | Record only when planned containers are created |
-| Fleet image/tag or integration version | `<future value>` | `<future source>` | `<future path>` | `Future` | Record only when planned Fleet work starts |
+| System integration package version | `<future value>` | `<future source>` | `<future path>` | `Future` | Record only during the approved Phase 1 package-install session |
 
 ## VM configuration table
 
@@ -160,8 +160,8 @@ Phase 0 is ready to close only when:
 
 | Gap / pending item | Owner | Needed before | Notes |
 | --- | --- | --- | --- |
-| Elastic/Kibana/Fleet container plan | `<name>` | Phase 1 planning | Do not create containers in Phase 0 |
-| First real telemetry path | `<name>` | Phase 1 | Requires live Sysmon/Elastic Agent evidence |
+| Elasticsearch/Kibana plus standalone-Agent implementation plan | `<name>` | Phase 1 planning | Do not create containers in Phase 0 |
+| First real telemetry path | `<name>` | Phase 1 | Requires live Application, Security, and System telemetry through the standalone Elastic Agent |
 | First `Live verified` scenario | `<name>` | Phase 3 | Requires real telemetry, linked timestamps, source evidence, and a sufficient evidence verdict |
 
 ## Phase 0 completion checklist
