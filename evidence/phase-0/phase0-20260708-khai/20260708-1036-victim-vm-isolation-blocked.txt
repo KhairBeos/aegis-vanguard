@@ -1,8 +1,0 @@
-﻿Lab session id: phase0-20260708-khai
-Captured at: 2026-07-08 10:36:15 +07:00
-Evidence item: victim-vm-isolation-blocked
-
-Victim VM guest and isolation checks blocked: VBoxManage list vms returned no registered VM entries during this read-only evidence pass.
-Not performed: guest Windows version/build, VM CPU/RAM/disk showvminfo, snapshot list, VM network adapter settings, victim ipconfig /all, victim default gateway/DNS, victim public IP check, and host-to-VM reachability.
-No VM/network configuration was changed.
-

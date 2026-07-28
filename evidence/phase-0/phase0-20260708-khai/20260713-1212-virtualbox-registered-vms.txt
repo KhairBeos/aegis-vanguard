@@ -1,6 +1,0 @@
-Lab session id: phase0-20260708-khai
-Captured at: 2026-07-13 12:12 +07:00
-Evidence item: registered VirtualBox VM list
-Command: VBoxManage list vms
-
-"AEGIS-WIN-VICTIM-01" {bf5856ce-e6d7-47e7-b68f-b3d830b8f7d8}

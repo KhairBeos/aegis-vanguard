@@ -1,8 +1,0 @@
-﻿Lab session id: phase0-20260708-khai
-Captured at: 2026-07-08 10:29:28 +07:00
-Evidence item: host-user-session
-
-USERNAME=Khai
-USERDOMAIN=KHAIPC
-COMPUTERNAME=KHAIPC
-PWD=D:\Learning\Security\SIEM\aegis-vanguard

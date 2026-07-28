@@ -1,6 +1,0 @@
-﻿Lab session id: phase0-20260708-khai
-Captured at: 2026-07-08 10:26:18 +07:00
-Evidence item: virtualbox-version
-
-7.2.4r170995
-

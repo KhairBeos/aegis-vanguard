@@ -1,679 +1,157 @@
-# AGENTS.md — Project AI Agent Rules
+# AGENTS.md
 
-> Purpose: This file tells AI coding agents (Codex, Antigravity, Claude-like agents, Aider, etc.) how to work in this repository.
->
-> Style: plan-first, skill-aware, safe-by-default, minimal changes.
->
-> Core rule: **Do not modify code before understanding the project, choosing the right skill/workflow, and presenting a plan for approval.**
-
----
-
-## 0. Required Behavior
-
-Before doing any non-trivial task, the agent must:
-
-1. Read this `AGENTS.md`.
-2. Identify the task type.
-3. Select the most appropriate skill/tool workflow.
-4. Read the relevant files.
-5. Summarize the current flow.
-6. Propose a minimal plan.
-7. Wait for explicit approval before editing code.
-
-For simple questions or explanations, the agent may answer directly after reading the relevant context.
+> File cấu hình hành vi cho AI coding agent (Claude Code, Codex, Antigravity, Aider, Cursor...).
+> Đặt tại root của mọi project. Agent PHẢI đọc file này trước khi thực hiện bất kỳ task nào.
+> File này là bản chuẩn dùng chung — không chứa thông tin riêng của bất kỳ project cụ thể nào.
+> Nếu 1 project cần rule riêng, tạo thêm `AGENTS.local.md` cùng cấp, agent đọc cả 2 và ưu tiên
+> file local khi có xung đột.
 
 ---
 
-## 1. Golden Rules
+## 0. Precedence Rules (thứ tự ưu tiên khi có xung đột)
 
-- Always make a plan before code changes.
-- Do not edit code until the user approves the plan.
-- Keep changes minimal and inside the requested scope.
-- Do not refactor unrelated code.
-- Do not change API contracts unless explicitly requested.
-- Do not rename fields, response shapes, routes, or database columns without approval.
-- Do not add new libraries without approval.
-- Do not run destructive commands without approval.
-- Do not delete files, drop databases, reset branches, force push, or run migrations without explicit approval.
-- For audit/review/security tasks: **report only** unless the user explicitly asks to implement fixes.
-- When uncertain, ask a concise clarifying question.
+Khi các nguồn chỉ dẫn mâu thuẫn nhau, áp dụng đúng thứ tự sau (cao → thấp):
+
+1. **Lệnh trực tiếp của user trong phiên hiện tại** — luôn thắng, kể cả khi trái với file này
+2. **`AGENTS.local.md`** (nếu project có file riêng, override phần tương ứng ở đây)
+3. **File `AGENTS.md` này** (global rules, dùng chung mọi project)
+4. **File `docs/agent-workflows/*.md`** (quy trình chi tiết theo từng loại task — xem mục 4)
+5. **SKILL.md riêng của từng skill đã cài** (mục 2) — chỉ áp dụng khi task khớp đúng phạm vi skill đó
+6. **Mặc định/heuristic riêng của agent** — dùng khi không có gì ở trên chỉ dẫn cụ thể
+
+Nếu 2 skill cùng khớp 1 task và mâu thuẫn nhau → agent phải dừng lại, hỏi user chọn 1, không tự ý quyết định.
 
 ---
 
-## 2. Skill Selection Router
+## 1. Methodology bắt buộc — dựa trên `obra/superpowers`
 
-Use the following routing table before starting work.
+Mọi task code (trừ fix nhỏ <5 dòng hoặc task user gắn nhãn `#quick`) phải đi qua đủ pipeline:
 
-| Task Type | Preferred Skills / Tools | Behavior |
+```
+Clarify → Design → Plan → Implement (TDD) → Review → Done
+```
+
+- **Clarify**: agent PHẢI hỏi lại nếu yêu cầu chưa rõ mục tiêu thực sự, không tự suy diễn rồi code luôn
+- **Codebase Discovery** (bắt buộc, làm trước Design): agent phải đọc qua code liên quan trong project
+  để nắm những gì đã có sẵn trước khi viết bất kỳ dòng code mới nào — custom hooks, utility function,
+  component dùng chung, config/theme tokens đã định nghĩa (spacing, màu, breakpoint...), style/convention
+  đang dùng trong project. Không tự viết lại thứ đã tồn tại, không đoán API của thư viện — kiểm tra
+  đúng version đang cài (qua `package.json`/lockfile) rồi tra doc/type định nghĩa thật của thư viện đó
+  (dùng Context7 MCP nếu cần) trước khi dùng
+- **Design**: trình bày thiết kế ngắn gọn (đủ đọc trong <30s), chờ user xác nhận trước khi viết plan
+- **Plan**: chia nhỏ thành task 2-5 phút/task, ghi rõ file path + bước verify cho từng task
+- **Implement**: theo đúng TDD (Red → Green → Refactor), tuân thủ YAGNI + DRY. Không hardcode số liệu
+  tùy tiện (padding, margin, màu, font-size, breakpoint...) — luôn dùng design token/theme/biến đã định
+  nghĩa sẵn trong project (theme file, Tailwind config, StyleSheet constants...), hoặc giá trị mặc định
+  tự nhiên (native) của component/thư viện đang dùng. Nếu project chưa có token cho giá trị cần dùng,
+  hỏi user trước khi tự đặt ra con số mới, không bịa số "nhìn có vẻ hợp lý"
+- **Review**: 2 vòng — (1) đúng spec chưa, (2) chất lượng code — trước khi báo hoàn thành
+
+Task gắn nhãn `#quick` được phép bỏ qua Design/Plan, nhưng vẫn phải viết test nếu sửa logic (không áp dụng cho sửa doc/config).
+
+---
+
+## 2. Danh sách Skill đã cài — khi nào dùng cái nào
+
+| Skill | Dùng khi nào | Ghi chú |
 |---|---|---|
-| Open/understand project | `codebase-memory-mcp`, `Engram`, `project-structure` | Index/recall context, summarize architecture |
-| Feature planning | `Spec Kit`, `writing-plans`, `gstack-autoplan`, `agency architect` | Write spec/plan/tasks first |
-| Bug fixing | `systematic-debugging`, `codebase-memory-mcp`, `Engram` | Identify root cause before fix |
-| Backend Node.js/API | `agency backend architect`, `server-api`, `architecture-guardrails` | Read route/controller/service/model first |
-| Frontend React/UI | `agency frontend architect`, `taste-skill`, `gpt-tasteskill`, `ui-elements` | Review UI/data flow and propose plan |
-| Security audit | `agency security reviewer`, `api-security`, `llm-security`, `supply-chain-security` | Report only by default |
-| SQL injection audit | `agency security reviewer`, `api-security`, `systematic-debugging` | Find risky query patterns and safe fixes |
-| Reverse engineering / pentest | `reverse-skill`, `apk-reverse`, `js-reverse`, `ida-reverse`, `radare2`, `pentest-tools` | Only authorized tasks; plan first |
-| PR/code review | `gstack-review`, `caveman-review`, `ponytail-review`, `pr-review-deep` | Report findings; do not edit |
-| QA/testing | `gstack-qa`, `testing-coverage`, `test-driven-development`, `agency QA` | Create test plan or TDD workflow |
-| Docs | `docs-generator`, `docs-alignment`, `gstack-document-generate` | Generate/update docs after reading code |
-| Diagrams | `diagram-generator`, `gstack-diagram` | Create Mermaid/PlantUML/flow diagrams |
-| Git/branch/commit | `commit-hygiene`, `branch-pr`, `wednesday-git`, `caveman-commit` | Propose branch/commit/PR messages |
-| Reduce complexity | `ponytail-audit`, `ponytail-review`, `caveman-compress` | Identify code to simplify/remove |
-| UI redesign | `taste-skill`, `redesign-skill`, `minimalist-skill`, `soft-skill`, `brutalist-skill` | Propose visual direction before code |
-
-If multiple skills apply, choose the smallest effective combination.
+| `obra/superpowers` | Mọi task dev có từ 2 bước trở lên | Skill nền tảng, luôn active |
+| `mattpocock/skills` | Viết/refactor TypeScript, cần pattern chuẩn | Ưu tiên khi project dùng TS/JS |
+| `ponytail/skills` | Task tổng quát, bổ sung khi superpowers chưa đủ | Dùng như fallback |
+| `nextlevelbuilder/ui-ux-pro-max-skill` | Task liên quan UI/UX (frontend, mobile screen, layout) | Không dùng cho task backend/thuần logic |
+| `Leonxlnx/taste-skill` | Review code/thiết kế trước khi merge, tránh giải pháp hời hợt | Chạy ở bước Review (mục 1) |
+| `linshenkx/prompt-optimizer` | Khi cần viết lại/tối ưu prompt cho sub-agent hoặc test case liên quan LLM | Dùng cho mọi task liên quan thiết kế prompt |
+| `NVIDIA/SkillSpector` | **Bắt buộc chạy sau khi cài bất kỳ skill/MCP mới nào** | Quét lỗ hổng/prompt injection trong skill trước khi tin dùng |
 
 ---
 
-## 3. Always Start With Context
+## 3. Danh sách MCP Server đã cài — phạm vi & quyền hạn
 
-For any project task, start with:
+| MCP | Vai trò | Quyền cho phép | Cần approval? |
+|---|---|---|---|
+| `upstash/context7` | Lấy doc mới nhất của thư viện/framework đang dùng | Read-only, gọi API bên ngoài | Không |
+| `microsoft/playwright-mcp` | Browser automation, test UI/PoC | Điều khiển browser thật | **Có** — luôn hỏi trước khi chạy trên môi trường ngoài sandbox |
+| `modelcontextprotocol/servers (sequentialthinking)` | Hỗ trợ suy luận từng bước cho task phức tạp | Không thao tác hệ thống | Không |
+| `DeusData/codebase-memory-mcp` | Lưu/truy xuất context codebase giữa các session | Đọc/ghi index cục bộ | Không |
+| `punkpeye/awesome-mcp-servers` | KHÔNG PHẢI MCP để chạy — chỉ là danh mục tra cứu | — | — |
+| `numman-ali/openskills` | Universal loader — nạp skill dùng chung giữa nhiều agent (Codex/Antigravity/Aider) | Đọc file skill local | Không |
 
-```text
-Use codebase-memory-mcp to understand this project.
-Use Engram to recall project memories.
-Then read the relevant files for the task.
+**Chưa cài nhưng khuyến nghị bổ sung:** GitHub MCP (thao tác PR/Issue trực tiếp) — hiện tại agent chỉ thao tác Git qua CLI thường, chưa qua MCP.
+
+---
+
+## 4. Cấu trúc thư mục workflow chi tiết
+
+Nội dung quy trình dài, đặc thù theo từng lĩnh vực, không nhét hết vào AGENTS.md mà tách ra thư mục riêng của mỗi project:
+
+```
+docs/agent-workflows/
+├── <lĩnh-vực-1>.md      # VD: quy trình build/test riêng cho mảng cụ thể
+├── <lĩnh-vực-2>.md      # VD: quy trình nghiên cứu/thu thập dữ liệu riêng
+└── code-review-checklist.md   # Checklist review kết hợp taste-skill, dùng chung mọi project
 ```
 
-If `codebase-memory-mcp` is unavailable, manually inspect files using normal project search/read tools.
-
-If `Engram` is unavailable, continue without memory but mention that project memory could not be recalled.
+Agent phải đọc đúng file tương ứng loại task trước khi bắt đầu Design (mục 1). Tên file trong thư mục này do từng project tự đặt, AGENTS.md không quy định cứng.
 
 ---
 
-## 4. Standard Workflows
+## 5. Approval Definition — khi nào agent phải dừng lại hỏi user
 
-### 4.1. New Project / First Inspection
+Agent **KHÔNG được tự ý thực hiện**, luôn phải hỏi trước:
+- **`git commit` và `git push`** — agent không bao giờ tự ý commit hay push, kể cả khi task đã hoàn thành và test pass. Luôn báo lại đã sẵn sàng, để user tự quyết định commit message và thời điểm push
+- Xóa file/thư mục ngoài phạm vi task đang làm
+- Tạo/xóa branch, force push
+- Cài package mới (npm/pip/...) chưa có trong file quản lý dependency của project
+- Chạy Playwright MCP trên URL/hệ thống ngoài môi trường sandbox nội bộ
+- Sửa file trong `docs/agent-workflows/` (thay đổi quy trình gốc)
+- Bất kỳ thao tác nào có thể ảnh hưởng tới VM/container/service đang chạy live
 
-Use:
+Agent **được tự ý thực hiện** (không cần hỏi):
+- Đọc file, chạy test, chạy linter
+- Sửa file trong phạm vi task đã được Plan (mục 1) duyệt
+- Gọi Context7 MCP để tra doc
 
-- `codebase-memory-mcp`
-- `Engram`
-- `project-structure`
-- `architecture-guardrails`
+---
 
-Expected output:
+## 6. Cross-platform command detection
 
-1. Project purpose.
-2. Entry points.
-3. Main modules.
-4. Data flow.
-5. External integrations.
-6. Risky areas.
-7. Suggested next steps.
+Vì môi trường phát triển có thể là Windows (PowerShell/CMD), WSL2, hoặc macOS — agent phải tự dò đúng lệnh trước khi chạy, không giả định cố định 1 hệ:
 
-Prompt behavior:
-
-```text
-Index and inspect the project.
-Summarize architecture and risks.
-Do not modify code.
+```bash
+# Python — thử theo thứ tự, dùng lệnh đầu tiên tồn tại
+command -v python3 || command -v python || command -v py
 ```
 
----
+- Windows thuần: ưu tiên `py`
+- WSL2/Linux/macOS: ưu tiên `python3`
+- Không bao giờ hardcode `python` một mình nếu chưa xác nhận đang chạy trên hệ nào
 
-### 4.2. Feature Development
+Với Node.js: luôn kiểm tra version đang active qua `nvm current` (hoặc tương đương) trước khi giả định, không hardcode version cụ thể trong script dùng chung.
 
-Use:
-
-- `Spec Kit`
-- `writing-plans`
-- `gstack-autoplan`
-- `agency backend/frontend architect`
-- `codebase-memory-mcp`
-
-Process:
-
-1. Clarify requirement.
-2. Inspect similar existing flows.
-3. Write spec.
-4. Create implementation plan.
-5. Break into small tasks.
-6. Ask for approval.
-7. Implement one task at a time.
-8. Summarize changed files and testing steps.
-
-Never implement a large feature in one uncontrolled pass.
+- Windows/PowerShell: luôn dùng `npx.cmd` thay cho `npx` để tránh PowerShell ưu tiên wrapper `npx.ps1`; các hệ điều hành khác tiếp tục dùng `npx`.
 
 ---
 
-### 4.3. Bug Fixing
+## 7. Bảo mật chung — áp dụng mọi project
 
-Use:
-
-- `systematic-debugging`
-- `codebase-memory-mcp`
-- `Engram`
-
-Process:
-
-1. Reproduce or reason from logs/error.
-2. Locate related files.
-3. Explain current flow.
-4. Identify root cause.
-5. Propose minimal fix.
-6. Wait for approval.
-7. Implement fix.
-8. Verify.
-
-Do not guess. Do not patch symptoms without explaining the cause.
+- Agent không được tự động thực thi mã có khả năng gây hại (exploit, payload, script phá hoại) ngoài phạm vi môi trường đã cô lập rõ ràng (VM/container lab)
+- Mọi skill mới cài phải chạy qua `NVIDIA/SkillSpector` trước khi thêm vào bảng mục 2
+- Nếu người dùng có nhiều project riêng biệt (demo, sản phẩm thật, nghiên cứu học thuật...), agent không được tự ý gộp/tham chiếu chéo nội dung giữa các project trừ khi được yêu cầu rõ ràng — mỗi project giữ ngữ cảnh độc lập
 
 ---
 
-### 4.4. Backend API Changes
+## 8. Ngôn ngữ & phong cách phản hồi của agent
 
-Use:
-
-- `agency backend architect`
-- `server-api`
-- `architecture-guardrails`
-- `business-rules`
-
-Before editing backend code, read:
-
-- Route definition.
-- Controller.
-- Service.
-- Model/schema/query layer.
-- Middleware/auth/permission layer.
-- Similar existing APIs.
-
-Rules:
-
-- Preserve existing response format.
-- Preserve field names unless approved.
-- Validate user input.
-- Avoid raw SQL string concatenation.
-- Use parameter binding/replacements for SQL.
-- Keep transaction behavior consistent.
-- Do not add libraries without approval.
+- Giải thích/trao đổi: tiếng Việt
+- Tên biến, hàm, thuật ngữ kỹ thuật, tên thư viện: giữ nguyên tiếng Anh
+- Luôn giải thích trade-off khi đề xuất giải pháp, không chỉ đưa 1 lựa chọn duy nhất mà không nói lý do
+- Hỏi lại nếu task mơ hồ, không tự giả định rồi im lặng code sai hướng
 
 ---
 
-### 4.5. Frontend React/UI Changes
-
-Use:
-
-- `agency frontend architect`
-- `taste-skill`
-- `gpt-tasteskill`
-- `ui-elements`
-- `visual-language`
-
-Before editing frontend code, read:
-
-- Route/page component.
-- Child components.
-- Hooks.
-- API client.
-- Store/state management.
-- Similar existing screens.
-- Styling conventions.
-
-Rules:
-
-- Follow current project structure.
-- Reuse existing API clients/hooks.
-- Avoid generic UI.
-- Preserve behavior unless asked.
-- Do not add UI libraries without approval.
-- Do not introduce global state unless needed.
-
-For design tasks, propose the visual direction first.
-
----
-
-### 4.6. Security Review
-
-Use:
-
-- `agency security reviewer`
-- `api-security`
-- `llm-security`
-- `supply-chain-security`
-- `gstack-review`
-
-Default mode: **report only**.
-
-Check:
-
-- SQL injection.
-- Auth bypass.
-- IDOR/BOLA.
-- Unsafe file upload.
-- Exposed secrets.
-- Weak validation.
-- SSRF.
-- XSS.
-- Unsafe deserialization.
-- Dependency/supply-chain risk.
-- Over-permissive CORS.
-- Dangerous logging.
-
-For each issue, report:
-
-1. Severity.
-2. File path.
-3. Risky code/pattern.
-4. Impact.
-5. Suggested safe fix.
-6. Whether immediate action is needed.
-
-Do not exploit, exfiltrate, or run destructive tests.
-
----
-
-### 4.7. SQL Injection Review
-
-Use:
-
-- `agency security reviewer`
-- `api-security`
-- `systematic-debugging`
-
-Search for:
-
-- Raw SQL query strings.
-- Sequelize `query`, `literal`, dynamic `where`, dynamic `order`, dynamic `group`.
-- String concatenation/interpolation inside SQL.
-- User input passed into SQL.
-- Unvalidated sort/filter/search parameters.
-
-Safe patterns:
-
-- Parameterized queries.
-- Replacements/bind variables.
-- Whitelisted sort fields.
-- Validated enum filters.
-- Escaped LIKE input where applicable.
-
-Report only unless user approves fixes.
-
----
-
-### 4.8. PR / Code Review
-
-Use:
-
-- `gstack-review`
-- `pr-review-deep`
-- `caveman-review`
-- `ponytail-review`
-
-Review for:
-
-- Correctness.
-- Scope creep.
-- Regression risks.
-- Security.
-- Performance.
-- Maintainability.
-- Tests.
-- API contract changes.
-- Unnecessary complexity.
-
-Final review comments should be concise:
-
-```text
-[file:line] problem → suggested fix
-```
-
-Do not modify code unless asked.
-
----
-
-### 4.9. QA / Testing
-
-Use:
-
-- `gstack-qa`
-- `testing-coverage`
-- `test-driven-development`
-- `agency QA`
-
-For each feature, cover:
-
-- Normal path.
-- Edge cases.
-- Permission cases.
-- Invalid input.
-- Empty state.
-- Error state.
-- Regression risk.
-- Database state.
-- API failure.
-- UI loading state.
-
-If using TDD:
-
-1. Write failing test.
-2. Implement minimal fix.
-3. Refactor only if needed.
-4. Verify tests pass.
-
-Ask before adding new test frameworks.
-
----
-
-### 4.10. Docs / Diagrams
-
-Use:
-
-- `docs-generator`
-- `docs-alignment`
-- `diagram-generator`
-- `gstack-diagram`
-
-For docs:
-
-1. Read code first.
-2. Compare docs to current implementation.
-3. List outdated/missing docs.
-4. Propose updates.
-5. Generate Markdown after approval.
-
-For diagrams:
-
-- Prefer Mermaid unless user asks otherwise.
-- Use sequence diagrams for API flows.
-- Use flowcharts for business processes.
-- Use ER diagrams for data models.
-
----
-
-### 4.11. Reverse Engineering / Pentest
-
-Use only for authorized work.
-
-Use:
-
-- `reverse-skill`
-- `api-security`
-- `apk-reverse`
-- `js-reverse`
-- `ida-reverse`
-- `radare2`
-- `mobile-reverse`
-- `firmware-pentest`
-- `malware-analysis`
-- `pentest-tools`
-
-Rules:
-
-- Confirm task is authorized.
-- Route to correct skill first.
-- Make a plan before commands.
-- Do not run destructive payloads.
-- Do not target third-party systems without permission.
-- Keep evidence and report clearly.
-- Prefer safe static analysis before dynamic execution.
-
----
-
-## 5. Memory Rules
-
-Use `Engram` for durable project knowledge.
-
-Save memory when discovering:
-
-- Project architecture.
-- Important conventions.
-- Business rules.
-- API response contracts.
-- Database/migration risks.
-- Integration details.
-- Repeated bugs.
-- User preferences.
-- Decisions made during review.
-
-Do not save:
-
-- Secrets.
-- Passwords.
-- API keys.
-- Access tokens.
-- Private customer data.
-- Temporary one-off facts.
-
-Memory prompts:
-
-```text
-Use Engram to save this project rule:
-[rule]
-```
-
-```text
-Use Engram to recall project memories before working.
-Summarize relevant rules and decisions.
-```
-
----
-
-## 6. Spec Kit Rules
-
-Use Spec Kit for:
-
-- Large feature.
-- Complex business flow.
-- Multi-screen or multi-API work.
-- Any task that needs traceable requirements.
-
-Spec Kit workflow:
-
-1. `/specify` or equivalent spec creation.
-2. Clarify requirements.
-3. Write acceptance criteria.
-4. Create technical plan.
-5. Split tasks.
-6. Implement task-by-task.
-
-Do not skip directly to implementation for large features.
-
----
-
-## 7. UI Taste Rules
-
-For frontend/UI work, use `taste-skill` or related skills.
-
-Avoid:
-
-- Generic dashboard look.
-- Random colors.
-- Too many borders.
-- Dense unstructured layout.
-- Weak typography hierarchy.
-- Placeholder copy.
-- Unclear loading/empty/error states.
-
-Prefer:
-
-- Strong hierarchy.
-- Clear spacing.
-- Consistent component rhythm.
-- Useful data density.
-- Clean interaction states.
-- Accessible contrast.
-- Existing design language.
-
-When redesigning:
-
-1. Describe current UI issues.
-2. Propose visual direction.
-3. Propose component changes.
-4. Wait for approval before coding.
-
----
-
-## 8. Minimalism / Complexity Rules
-
-Use `ponytail` and `caveman` when the task risks over-engineering.
-
-Rules:
-
-- Prefer deleting code over adding code when possible.
-- Avoid abstractions until repeated pattern is proven.
-- Keep functions small but not fragmented.
-- Do not add new layers without clear benefit.
-- Keep review comments short and actionable.
-
-Use `caveman-review` for terse review output.
-Use `ponytail-audit` for complexity/debt audit.
-
----
-
-## 9. Git Rules
-
-Use:
-
-- `commit-hygiene`
-- `branch-pr`
-- `wednesday-git`
-- `caveman-commit`
-
-Before commit/PR:
-
-1. Summarize changed files.
-2. Check accidental secrets.
-3. Check generated files.
-4. Check test impact.
-5. Propose commit message.
-6. Propose PR title/summary.
-
-Never run:
-
-- `git reset --hard`
-- `git clean -fd`
-- `git push --force`
-- destructive rebase
-
-unless explicitly approved.
-
----
-
-## 10. Commands Safety
-
-Before running commands, explain why if they are:
-
-- Database migrations.
-- Data deletion.
-- Docker cleanup.
-- Production-affecting.
-- Deployment.
-- Package upgrades.
-- Large formatting changes.
-- Git destructive commands.
-
-Safe commands usually allowed after context:
-
-- Read/list files.
-- Search code.
-- Run tests.
-- Run linters.
-- Run type checks.
-- Build locally.
-
-Still summarize what command will do.
-
----
-
-## 11. Output Format
-
-For planning tasks, output:
-
-```md
-## Current understanding
-...
-
-## Files to inspect / inspected
-...
-
-## Current flow
-...
-
-## Risks
-...
-
-## Plan
-1. ...
-2. ...
-
-## Need approval
-Please approve before I edit files.
-```
-
-For implementation summary, output:
-
-```md
-## Changed files
-- `path`: what changed
-
-## Why
-...
-
-## Risks
-...
-
-## How to test
-1. ...
-2. ...
-```
-
-For review/audit, output:
-
-```md
-## Summary
-...
-
-## Findings
-### Critical
-- ...
-
-### High
-- ...
-
-### Medium
-- ...
-
-### Low
-- ...
-
-## Suggested next steps
-...
-```
-
----
-
-## 12. Default Prompt To Follow
-
-If the user gives a vague coding task, behave as if they said:
-
-```text
-Use codebase-memory-mcp to index/understand this project.
-Use Engram to recall project memories.
-Choose the right skill for this task.
-Read related files first.
-Summarize the current flow.
-Propose a minimal plan.
-Do not modify code until I approve.
-```
-
----
-
-## 13. Project-Specific Conventions
-
-Add project-specific rules below this line.
-
-<!--
-Example:
-
-## Project: realerp-server
-
-- Backend Node.js.
-- Preserve successResponse/errorResponse format.
-- Read controller/service/model before changes.
-- Do not change API response field names.
-- Do not add libraries without approval.
-- Review/audit mode is report-only.
--->
-
+## 9. Context persistence & trusted sources
+
+- Trước khi xử lý mỗi prompt, agent **PHẢI đọc lại `CONTEXT.md`** để khôi phục trạng thái làm việc gần nhất.
+- Sau khi hoàn thành mỗi prompt, agent **PHẢI cập nhật `CONTEXT.md`** với trạng thái hiện tại, quyết định đã chốt, file đã thay đổi và bước tiếp theo.
+- Hai nguồn sự thật duy nhất của project là **`PROJECT_PLAN.md`** và **`README.md`**. `CONTEXT.md` chỉ là bộ nhớ làm việc, không được override hai file này.
+- Nếu `CONTEXT.md` mâu thuẫn với trusted sources, agent phải ưu tiên `PROJECT_PLAN.md` và `README.md`, sau đó đồng bộ lại `CONTEXT.md`.
