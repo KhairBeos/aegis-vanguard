@@ -1,87 +1,40 @@
 # Working Context
 
-`CONTEXT.md` is non-authoritative working memory. `README.md` and `PROJECT_PLAN.md` define project scope, roadmap, and claim status; existing code/configuration defines actual implementation state.
+`CONTEXT.md` is non-authoritative working memory. `README.md` and `PROJECT_PLAN.md` remain the trusted sources for project scope, roadmap, and claim status.
 
 ## Current working state
 
-- The repository remains documentation-only: no source code, runtime configuration, phase artifact, test, service, or evidence artifact exists.
-- The documentation baseline has passed the targeted final correction and remains pending user final trust review.
+- Evidence timestamp: `2026-07-28T14:08:26.7038661Z`.
+- Milestone result: `VM START FAILED — REVIEW REQUIRED`.
 - Phase 0 and every later capability remain `Future`.
-- Four workflow files under `docs/agent-workflows/` have been audited and approved by the user for an exact-scope documentation commit.
-- The matching VirtualBox guest DHCP server remains `Enabled`; task `0B-07` has not been executed.
+- The matching VirtualBox guest DHCP server is present and `Disabled`.
+- VirtualBox `7.2.12r174389` VM `victim-win-01` exists under `D:\Security-SOC\virtual-machines`.
+- VM configuration: Windows 11 (64-bit), 4 vCPU, 8192 MiB RAM, 80 GiB dynamic VDI, EFI64, Secure Boot with enrolled keys, TPM 2.0, I/O APIC, and DVD-before-disk boot order.
+- Storage: the VDI and `D:\Security-SOC\iso\Windows11_Enterprise_Evaluation_x64.iso` are attached to one SATA controller.
+- Network: exactly one host-only NIC is enabled and cable-connected; NIC 2-8 are disabled; no NAT or bridged NIC is active.
+- The VM is currently `running`, but Windows Setup is not visible.
 
-## Approved documentation decisions
+## Validation and failure evidence
 
-- Capability and metric statuses use separate taxonomies.
-- Phase 1 may reach `Runtime verified` only for telemetry ingestion and ECS verification after its readiness gates, real Application/Security/System events, identity/timestamp/ECS checks, and evidence review are complete; this does not verify detection.
-- Phase 2 may reach at most `Runtime verified`; Phase 3 is the first phase where one Atomic-backed rule-scenario pair may reach `Live verified`.
-- The initial Sigma rule remains unselected and depends on reviewed Phase 1 telemetry evidence passing the rule-selection gate; expansion to 3-5 rules is post-MVP.
-- Phase 2 keeps an explicit unresolved executor decision gate.
-- Phase 3 depends on reviewed telemetry-rule-Atomic alignment and explicit approval for the exact run.
-- Phase 1 plans one standalone Elastic Agent; Fleet-managed Agent and Fleet Server are deferred.
-- The alert-triage API and SOC dashboard are optional post-MVP work.
-- All metrics remain `Not measured yet`.
+- All pre-start platform, security, storage, network, resource, registration, ISO-readability, DHCP, and repository-cleanliness checks passed.
+- Initial GUI start succeeded. Firmware loaded `cdboot.efi` twice, timed out, raised non-fatal `VMBootFail`, and displayed the UEFI menu.
+- One minimal retry reset the blank VM and sent one Space key inside the observed optical boot window.
+- The retry remained on a black display; firmware logging stopped progressing after `PciHostBridgeDxe`.
+- No further input, configuration change, power action, installer action, or cleanup was performed after the stop condition.
+- Windows is not installed. The exact ISO build and checksum remain unverified.
 
-## Remaining architecture and version gates
+## Evidence files changed in this milestone
 
-- Exact Windows victim edition/version and support.
-- Exact mutually compatible Elastic Stack and Elastic Agent versions and their version-specific standalone/integration behavior. Official `9.4.3` artifact availability was verified separately, but availability does not select or prove compatibility for the project.
-- Initial Sigma rule selected from proven Phase 1 telemetry.
-- Final Phase 2 detection executor.
-- First Atomic test and exact-run approval after alignment review.
-
-## Files changed in this documentation rewrite
-
-- `README.md`
-- `PROJECT_PLAN.md`
-- `AGENTS.local.md` (created)
+- `docs/phase-0-environment.md`
 - `CONTEXT.md`
 
-## Actual validation results
+## Decisions that remain in force
 
-- Official release check: Elasticsearch, Kibana, and Elastic Agent `9.4.3` each have separate official past-release pages and Windows artifacts; no integration-package version was used as release evidence.
-- Review round 1 (spec and binary acceptance): `PASS` with no findings.
-- Review round 2 (technical honesty, consistency, safety, and references): `PASS` for the requested scope after replacing a specific Atomic example with general official Atomic documentation; broader metadata and metric-renaming suggestions were not adopted because they exceed or contradict the user-defined correction scope.
-- Final `git diff --check`: exit code 0 with line-ending warnings only.
-- Final `git diff --name-only`: `CONTEXT.md`, `PROJECT_PLAN.md`, and `README.md`.
-- Final `git diff -- AGENTS.md AGENTS.local.md`: empty, exit code 0.
-- Final `git status --short`: modified `CONTEXT.md`, `PROJECT_PLAN.md`, and `README.md`; pre-existing untracked `AGENTS.local.md`.
-- Final required 17-term audit of `README.md`, `PROJECT_PLAN.md`, and `CONTEXT.md`: all occurrences reviewed; no `9.4.3` or `9.4.2` hard pin remains, and the corrected version, status, gate, timestamp, metric, Fleet, and pySigma semantics are present.
-
-## Unexpected workflow-file audit
-
-- Audit timestamp: `2026-07-28T13:13:43.511Z`.
-- Task: read-only audit of unexpected files under `docs/agent-workflows/`.
-- Repository state before the audit: exactly four untracked workflow files and no other modified or untracked files.
-- All four files are non-empty regular UTF-8 Markdown files inside the repository. No autogenerated header, binary content, symlink, secret, credential, machine identifier, or user-profile path was detected.
-- Git evidence: none of the files is tracked in the current tree or normal path history. Exact copies of all four current contents appear in one Codex turn-diff capture and one checkpoint. This supports `LIKELY AGENT-GENERATED` or tool-restored provenance but does not prove Codex authorship.
-
-| File | Classification | Recommendation |
-| --- | --- | --- |
-| `docs/agent-workflows/README.md` | `LIKELY AGENT-GENERATED` | `KEEP AND REVIEW FOR COMMIT` |
-| `docs/agent-workflows/bug-fix-investigation.md` | `LIKELY AGENT-GENERATED` | `KEEP AND REVIEW FOR COMMIT` |
-| `docs/agent-workflows/code-review-checklist.md` | `LIKELY AGENT-GENERATED` | `KEEP AND REVIEW FOR COMMIT` |
-| `docs/agent-workflows/feature-development.md` | `LIKELY AGENT-GENERATED` | `KEEP AND REVIEW FOR COMMIT` |
-
-- Content assessment: the files are generic development workflows aligned with `AGENTS.md`; `code-review-checklist.md` is explicitly anticipated there. They contain no project capability claim and do not change Phase 0 status.
-- Phase 0 remains `Future`.
-- No VM, disk, network, firewall, Docker, service, or VirtualBox DHCP mutation was performed during this audit.
-- User decision recorded: keep and commit all four workflow files with this `CONTEXT.md` update.
-
-## Workflow-file keep-and-commit decision
-
-- Decision timestamp: `2026-07-28T13:20:01.757Z`.
-- User decision: keep and commit the four audited workflow files:
-  - `docs/agent-workflows/README.md`
-  - `docs/agent-workflows/bug-fix-investigation.md`
-  - `docs/agent-workflows/code-review-checklist.md`
-  - `docs/agent-workflows/feature-development.md`
-- Final review result: project-aligned, consistent with `AGENTS.md`, and no sensitive data or dangerous automatic-execution instruction detected.
-- Planned commit message: `docs: add agent workflow guides and update context`.
-- The matching VirtualBox guest DHCP server remains `Enabled`; task `0B-07` remains pending.
-- No VM, disk, DHCP, network, firewall, Docker, or service mutation was performed during this task.
-- Phase 0 remains `Future`.
+- Phase 1 may reach `Runtime verified` only for telemetry ingestion and ECS verification after its readiness gates and reviewed evidence are complete; this does not verify detection.
+- The initial Sigma rule remains unselected and depends on proven Phase 1 telemetry.
+- Phase 2 retains its executor decision gate; Phase 3 requires reviewed telemetry-rule-Atomic alignment and explicit approval for the exact run.
+- All metrics remain `Not measured yet`.
 
 ## Next approved step
 
-After the approved documentation commit leaves the repository clean, rerun approved task `0B-07` to disable only the exact matching VirtualBox guest DHCP server. Do not start Phase 0, create a VM, change any other runtime state, or push without separate approval.
+Review the preserved VirtualBox/UEFI boot failure before any further VM power or input action. Do not continue Windows installation or start Phase 1 from the current state.
