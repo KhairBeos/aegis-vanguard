@@ -65,3 +65,14 @@
 3. Install the standalone Agent manually from an Administrator PowerShell session.
 4. Confirm the Agent service status and generate safe Application/System test events if needed.
 5. Run `scripts/verify-windows-ingestion.ps1` from the host with the exact Windows hostname.
+
+## Windows ingestion verification — 2026-07-29T04:36:04Z
+
+- Elastic Agent 9.4.2 standalone: HEALTHY.
+- Data streams verified: logs-system.application-aegis_lab, logs-system.system-aegis_lab, logs-system.security-aegis_lab.
+- Application, System and Security ingestion: PASS.
+- Elasticsearch host.name comparison is normalized to lowercase.
+- Verified Windows host: desktop-evvu9ls.
+- Status: WINDOWS INGESTION VERIFIED.
+- Verification script exit code: 0.
+
