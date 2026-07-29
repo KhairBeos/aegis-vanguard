@@ -80,9 +80,18 @@ Validation results:
 - Windows listener addresses: PASS; both ports reported only on `192.168.56.1`
 - `scripts/verify-elastic.ps1`: PASS; exit code `0`
 
+## VM connectivity checkpoint
+
+The user completed the manual checkpoint from `victim-win-01`:
+
+- VM TCP access to `192.168.56.1:9200`: PASS
+- VM TCP access to `192.168.56.1:5601`: PASS
+- Kibana UI at `http://192.168.56.1:5601`: PASS
+
+Overall state: `ELASTIC STACK AND VM ACCESS VERIFIED`.
+
 ## Known gaps
 
-- Victim-to-stack access to ports `9200` and `5601` is pending manual confirmation from the Windows VM.
 - Elastic Agent is not installed.
 - Telemetry ingestion and ECS normalization are not verified.
 - Detection rules are not deployed.

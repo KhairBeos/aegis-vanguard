@@ -4,60 +4,64 @@
 
 ## Current working state
 
-- Evidence timestamp: `2026-07-29T03:26:49.1846858Z`.
-- Milestone result: `ELASTIC STACK RUNNING — VM CHECK PENDING`.
+- Evidence timestamp: `2026-07-29T03:47:01.6619075Z`.
+- Milestone result: `WINDOWS INGESTION PENDING — MANUAL AGENT INSTALL REQUIRED`.
 - Phase 0 manual setup and runtime environment are complete.
-- Windows 11 Enterprise Evaluation and Guest Additions are installed in `victim-win-01`.
-- The lab uses only the VirtualBox host-only network: host `192.168.56.1`, guest `192.168.56.10`, no guest default gateway or DNS, no NAT or Bridged Adapter.
-- Bidirectional host/guest ping passed according to the user-provided manual evidence.
-- The matching VirtualBox DHCP server is disabled.
-- Read-only `VBoxManage` verification confirmed the current snapshot `clean-windows-11-baseline`, one active host-only NIC, and NIC 2 through NIC 8 disabled.
+- Elasticsearch `9.4.2` is running and healthy with a green cluster.
+- Kibana `9.4.2` is running, healthy, and available.
+- Both services remain bound only to the VirtualBox host-only address `192.168.56.1`.
+- From `victim-win-01`, TCP access to `192.168.56.1:9200` passed.
+- From `victim-win-01`, TCP access to `192.168.56.1:5601` passed.
+- Kibana UI access from the VM passed.
+- Overall connectivity checkpoint: `ELASTIC STACK AND VM ACCESS VERIFIED`.
 
-## Elastic Stack host validation
+## Elastic Agent preparation
 
-- Elasticsearch and Kibana use official Elastic images pinned to `9.4.2`.
-- `aegis-elasticsearch`: `running`, `healthy`, 4 GiB container memory limit, 2 GiB JVM heap, restart policy `no`.
-- `aegis-kibana`: `running`, `healthy`, 2 GiB container memory limit, restart policy `no`.
-- Elasticsearch root API: PASS.
-- Elasticsearch cluster health: `green`, one node, one data node, no timeout.
-- Kibana status API: PASS; overall level `available`.
-- Port binding: PASS; Elasticsearch publishes only `192.168.56.1:9200`, and Kibana publishes only `192.168.56.1:5601`.
-- `scripts/verify-elastic.ps1`: PASS with exit code `0`.
-- Victim-to-stack port access and Kibana browser access are pending manual confirmation from the user.
+- Standalone Elastic Agent configuration is prepared for exact version `9.4.2`.
+- Management mode is local; Fleet enrollment and Fleet Server are not used.
+- Output is direct to `http://192.168.56.1:9200`.
+- The policy contains no username, password, API key, or certificate.
+- Agent monitoring output is disabled.
+- The only configured inputs are the Windows Application, System, and Security event logs in namespace `aegis_lab`.
+- Security event collection requires the Agent service to run with Administrator/System privileges.
+- The official `9.4.2` Windows ZIP and SHA-512 artifact URLs returned HTTP `200`.
+- The YAML contract was checked against the exact Elastic Agent `v9.4.2` reference configuration and official Elastic System integration `winlog` definitions.
+- Elastic Agent tooling is not installed on the host, so binary policy validation is pending. No package was downloaded only for validation.
 
-## Phase 1 claim boundary
+## Ingestion validation
 
-- Elastic Stack runtime is verified on the host.
-- Elastic Agent is not installed.
-- Telemetry ingestion and ECS normalization are not verified.
-- No detection rule, alert generation, MITRE coverage, metric, Fleet Server, or Atomic Red Team behavior is verified.
+- `scripts/verify-windows-ingestion.ps1` parses without PowerShell syntax errors.
+- The verifier reached Elasticsearch `9.4.2` and correctly reported that no `aegis_lab` Windows log data streams exist.
+- Application, System, and Security checks each reported FAIL because the Agent is not installed and no events have been ingested.
+- The Elasticsearch-unreachable path also returned a non-zero exit code and separate FAIL output for every channel.
+- Windows event ingestion and ECS normalization remain `PENDING`; neither is verified.
 
 ## Files changed in this milestone
 
-- `.gitignore`
-- `infra/elastic/docker-compose.yml`
-- `infra/elastic/.env.example`
-- `scripts/verify-elastic.ps1`
-- `docs/phase-0-environment.md`
+- `infra/elastic-agent/windows/elastic-agent.yml`
+- `scripts/verify-windows-ingestion.ps1`
 - `docs/phase-1-elastic-stack.md`
+- `docs/phase-2-windows-agent.md`
 - `CONTEXT.md`
-- Local-only ignored file created: `infra/elastic/.env`
 
 ## Git result
 
-- Requested commit: `feat: deploy local Elastic Stack lab`.
-- `infra/elastic/.env` remains ignored and is not included.
+- Requested commit: `feat: prepare Windows Elastic Agent onboarding`.
 - The final commit hash is reported in the task output because a commit cannot contain its own hash.
 - No push is authorized or performed.
 
 ## Decisions that remain in force
 
-- Phase 1 ingestion/ECS verification requires real Application, Security, and System telemetry plus reviewed evidence; stack health alone does not satisfy that gate.
-- The initial Sigma rule remains unselected and depends on proven Phase 1 telemetry.
-- Phase 2 retains its executor decision gate; Phase 3 requires reviewed telemetry-rule-Atomic alignment and explicit approval for the exact run.
+- Required System integration assets and real Application, Security, and System telemetry must be reviewed before ingestion or ECS behavior can be called verified.
+- The initial Sigma rule remains unselected and depends on proven telemetry.
+- The detection executor decision gate and exact Atomic-run approval remain unresolved.
+- No detection, alert-generation, MITRE coverage, or metric claim is upgraded.
 - All metrics remain `Not measured yet`.
 
-## Next approved step
+## Next manual step
 
-1. From the Windows VM, test TCP access to host ports `9200` and `5601`, then open Kibana.
-2. After that manual checkpoint is recorded, plan the standalone Elastic Agent installation and ingestion/ECS validation.
+1. Download and verify Elastic Agent `9.4.2` for Windows x86_64 from Elastic's official artifact registry.
+2. Transfer the ZIP and prepared `elastic-agent.yml` to `victim-win-01`.
+3. Install the standalone Agent manually from an Administrator PowerShell session.
+4. Confirm the Agent service status and generate safe Application/System test events if needed.
+5. Run `scripts/verify-windows-ingestion.ps1` from the host with the exact Windows hostname.

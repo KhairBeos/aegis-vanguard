@@ -1,0 +1,37 @@
+outputs:
+  default:
+    type: elasticsearch
+    hosts:
+      - "http://192.168.56.1:9200"
+
+management:
+  mode: local
+
+agent.monitoring:
+  enabled: false
+
+inputs:
+  - type: winlog
+    id: aegis-windows-event-logs
+    use_output: default
+    data_stream:
+      namespace: aegis_lab
+    streams:
+      - id: aegis-windows-application
+        name: Application
+        data_stream:
+          type: logs
+          dataset: system.application
+        ignore_older: 72h
+      - id: aegis-windows-system
+        name: System
+        data_stream:
+          type: logs
+          dataset: system.system
+        ignore_older: 72h
+      - id: aegis-windows-security
+        name: Security
+        data_stream:
+          type: logs
+          dataset: system.security
+        ignore_older: 72h
