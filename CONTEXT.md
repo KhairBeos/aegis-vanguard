@@ -4,37 +4,60 @@
 
 ## Current working state
 
-- Evidence timestamp: `2026-07-28T14:08:26.7038661Z`.
-- Milestone result: `VM START FAILED — REVIEW REQUIRED`.
-- Phase 0 and every later capability remain `Future`.
-- The matching VirtualBox guest DHCP server is present and `Disabled`.
-- VirtualBox `7.2.12r174389` VM `victim-win-01` exists under `D:\Security-SOC\virtual-machines`.
-- VM configuration: Windows 11 (64-bit), 4 vCPU, 8192 MiB RAM, 80 GiB dynamic VDI, EFI64, Secure Boot with enrolled keys, TPM 2.0, I/O APIC, and DVD-before-disk boot order.
-- Storage: the VDI and `D:\Security-SOC\iso\Windows11_Enterprise_Evaluation_x64.iso` are attached to one SATA controller.
-- Network: exactly one host-only NIC is enabled and cable-connected; NIC 2-8 are disabled; no NAT or bridged NIC is active.
-- The VM is currently `running`, but Windows Setup is not visible.
+- Evidence timestamp: `2026-07-29T03:26:49.1846858Z`.
+- Milestone result: `ELASTIC STACK RUNNING — VM CHECK PENDING`.
+- Phase 0 manual setup and runtime environment are complete.
+- Windows 11 Enterprise Evaluation and Guest Additions are installed in `victim-win-01`.
+- The lab uses only the VirtualBox host-only network: host `192.168.56.1`, guest `192.168.56.10`, no guest default gateway or DNS, no NAT or Bridged Adapter.
+- Bidirectional host/guest ping passed according to the user-provided manual evidence.
+- The matching VirtualBox DHCP server is disabled.
+- Read-only `VBoxManage` verification confirmed the current snapshot `clean-windows-11-baseline`, one active host-only NIC, and NIC 2 through NIC 8 disabled.
 
-## Validation and failure evidence
+## Elastic Stack host validation
 
-- All pre-start platform, security, storage, network, resource, registration, ISO-readability, DHCP, and repository-cleanliness checks passed.
-- Initial GUI start succeeded. Firmware loaded `cdboot.efi` twice, timed out, raised non-fatal `VMBootFail`, and displayed the UEFI menu.
-- One minimal retry reset the blank VM and sent one Space key inside the observed optical boot window.
-- The retry remained on a black display; firmware logging stopped progressing after `PciHostBridgeDxe`.
-- No further input, configuration change, power action, installer action, or cleanup was performed after the stop condition.
-- Windows is not installed. The exact ISO build and checksum remain unverified.
+- Elasticsearch and Kibana use official Elastic images pinned to `9.4.2`.
+- `aegis-elasticsearch`: `running`, `healthy`, 4 GiB container memory limit, 2 GiB JVM heap, restart policy `no`.
+- `aegis-kibana`: `running`, `healthy`, 2 GiB container memory limit, restart policy `no`.
+- Elasticsearch root API: PASS.
+- Elasticsearch cluster health: `green`, one node, one data node, no timeout.
+- Kibana status API: PASS; overall level `available`.
+- Port binding: PASS; Elasticsearch publishes only `192.168.56.1:9200`, and Kibana publishes only `192.168.56.1:5601`.
+- `scripts/verify-elastic.ps1`: PASS with exit code `0`.
+- Victim-to-stack port access and Kibana browser access are pending manual confirmation from the user.
 
-## Evidence files changed in this milestone
+## Phase 1 claim boundary
 
+- Elastic Stack runtime is verified on the host.
+- Elastic Agent is not installed.
+- Telemetry ingestion and ECS normalization are not verified.
+- No detection rule, alert generation, MITRE coverage, metric, Fleet Server, or Atomic Red Team behavior is verified.
+
+## Files changed in this milestone
+
+- `.gitignore`
+- `infra/elastic/docker-compose.yml`
+- `infra/elastic/.env.example`
+- `scripts/verify-elastic.ps1`
 - `docs/phase-0-environment.md`
+- `docs/phase-1-elastic-stack.md`
 - `CONTEXT.md`
+- Local-only ignored file created: `infra/elastic/.env`
+
+## Git result
+
+- Requested commit: `feat: deploy local Elastic Stack lab`.
+- `infra/elastic/.env` remains ignored and is not included.
+- The final commit hash is reported in the task output because a commit cannot contain its own hash.
+- No push is authorized or performed.
 
 ## Decisions that remain in force
 
-- Phase 1 may reach `Runtime verified` only for telemetry ingestion and ECS verification after its readiness gates and reviewed evidence are complete; this does not verify detection.
+- Phase 1 ingestion/ECS verification requires real Application, Security, and System telemetry plus reviewed evidence; stack health alone does not satisfy that gate.
 - The initial Sigma rule remains unselected and depends on proven Phase 1 telemetry.
 - Phase 2 retains its executor decision gate; Phase 3 requires reviewed telemetry-rule-Atomic alignment and explicit approval for the exact run.
 - All metrics remain `Not measured yet`.
 
 ## Next approved step
 
-Review the preserved VirtualBox/UEFI boot failure before any further VM power or input action. Do not continue Windows installation or start Phase 1 from the current state.
+1. From the Windows VM, test TCP access to host ports `9200` and `5601`, then open Kibana.
+2. After that manual checkpoint is recorded, plan the standalone Elastic Agent installation and ingestion/ECS validation.

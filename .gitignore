@@ -26,6 +26,7 @@ __pycache__/
 deploy/env/.env*
 !deploy/env/.env.example
 !deploy/env/*.example
+/infra/elastic/.env
 
 # Sensitive key material
 *.pem
