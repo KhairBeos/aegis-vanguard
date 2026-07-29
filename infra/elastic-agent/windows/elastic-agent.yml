@@ -35,3 +35,21 @@ inputs:
           type: logs
           dataset: system.security
         ignore_older: 72h
+      - id: aegis-windows-sysmon
+        name: Microsoft-Windows-Sysmon/Operational
+        data_stream:
+          type: logs
+          dataset: windows.sysmon
+        ignore_older: 72h
+      - id: aegis-windows-powershell
+        name: Microsoft-Windows-PowerShell/Operational
+        data_stream:
+          type: logs
+          dataset: windows.powershell
+        ignore_older: 72h
+      - id: aegis-windows-defender
+        name: Microsoft-Windows-Windows Defender/Operational
+        data_stream:
+          type: logs
+          dataset: windows.defender
+        ignore_older: 72h

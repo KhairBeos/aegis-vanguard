@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AEGIS-VANGUARD lab profile for Sysmon 15.21.
+  Scope: process, network, selected file creation, persistence-related registry,
+  and DNS telemetry. Image Load is intentionally not enabled.
+  Runtime schema validation still requires the real Sysmon binary inside the VM.
+-->
+<Sysmon schemaversion="4.82">
+  <EventFiltering>
+    <ProcessCreate onmatch="exclude" />
+    <NetworkConnect onmatch="exclude" />
+
+    <FileCreate onmatch="include">
+      <TargetFilename condition="end with">.ps1</TargetFilename>
+      <TargetFilename condition="end with">.bat</TargetFilename>
+      <TargetFilename condition="end with">.cmd</TargetFilename>
+      <TargetFilename condition="end with">.vbs</TargetFilename>
+      <TargetFilename condition="end with">.js</TargetFilename>
+      <TargetFilename condition="end with">.exe</TargetFilename>
+      <TargetFilename condition="end with">.dll</TargetFilename>
+    </FileCreate>
+
+    <RegistryEvent onmatch="include">
+      <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Run</TargetObject>
+      <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\RunOnce</TargetObject>
+      <TargetObject condition="contains">\Software\Policies\Microsoft\Windows\PowerShell</TargetObject>
+    </RegistryEvent>
+
+    <DnsQuery onmatch="exclude" />
+  </EventFiltering>
+</Sysmon>

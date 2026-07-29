@@ -4,55 +4,84 @@
 
 ## Current working state
 
-- Evidence timestamp: `2026-07-29T03:47:01.6619075Z`.
-- Milestone result: `WINDOWS INGESTION PENDING — MANUAL AGENT INSTALL REQUIRED`.
+- Evidence timestamp: `2026-07-29T05:04:44.8040053Z`.
+- Milestone result: `ADVANCED WINDOWS TELEMETRY PREPARED — VM APPLY PENDING`.
 - Phase 0 manual setup and runtime environment are complete.
-- Elasticsearch `9.4.2` is running and healthy with a green cluster.
+- Elasticsearch `9.4.2` is running and healthy; the single-node cluster currently reports yellow because replica shards are unassigned.
 - Kibana `9.4.2` is running, healthy, and available.
 - Both services remain bound only to the VirtualBox host-only address `192.168.56.1`.
-- From `victim-win-01`, TCP access to `192.168.56.1:9200` passed.
-- From `victim-win-01`, TCP access to `192.168.56.1:5601` passed.
-- Kibana UI access from the VM passed.
+- From `victim-win-01`, TCP access to ports `9200` and `5601` and Kibana UI access passed.
 - Overall connectivity checkpoint: `ELASTIC STACK AND VM ACCESS VERIFIED`.
 
-## Elastic Agent preparation
+## Baseline Windows ingestion
 
-- Standalone Elastic Agent configuration is prepared for exact version `9.4.2`.
-- Management mode is local; Fleet enrollment and Fleet Server are not used.
-- Output is direct to `http://192.168.56.1:9200`.
-- The policy contains no username, password, API key, or certificate.
-- Agent monitoring output is disabled.
-- The only configured inputs are the Windows Application, System, and Security event logs in namespace `aegis_lab`.
-- Security event collection requires the Agent service to run with Administrator/System privileges.
-- The official `9.4.2` Windows ZIP and SHA-512 artifact URLs returned HTTP `200`.
-- The YAML contract was checked against the exact Elastic Agent `v9.4.2` reference configuration and official Elastic System integration `winlog` definitions.
-- Elastic Agent tooling is not installed on the host, so binary policy validation is pending. No package was downloaded only for validation.
+- Elastic Agent `9.4.2` standalone on `victim-win-01`: HEALTHY.
+- Fleet and Agent monitoring remain disabled; output remains direct to `http://192.168.56.1:9200`.
+- Verified host identity: `desktop-evvu9ls`; verifier input is normalized with `Trim().ToLowerInvariant()`.
+- Verified data streams:
+  - `logs-system.application-aegis_lab`
+  - `logs-system.system-aegis_lab`
+  - `logs-system.security-aegis_lab`
+- Recent Application, System, and Security ingestion: PASS.
+- Status: `WINDOWS INGESTION VERIFIED`.
+- ECS normalization remains unverified.
 
-## Ingestion validation
+## Baseline verifier fix
 
-- `scripts/verify-windows-ingestion.ps1` parses without PowerShell syntax errors.
-- The verifier reached Elasticsearch `9.4.2` and correctly reported that no `aegis_lab` Windows log data streams exist.
-- Application, System, and Security checks each reported FAIL because the Agent is not installed and no events have been ingested.
-- The Elasticsearch-unreachable path also returned a non-zero exit code and separate FAIL output for every channel.
-- Windows event ingestion and ECS normalization remain `PENDING`; neither is verified.
+- Root cause: PowerShell parsed `$namespace?` as a variable name in the data-stream discovery path.
+- Minimal fix: delimit the variable as `${namespace}`.
+- Parser validation and uppercase-host runtime regression: PASS.
+- Verifier exit code: `0`.
+- Commit: `203a9f408af721f14a0a3357a0eab864063a48ee` (`fix: correct baseline data stream query`).
 
-## Files changed in this milestone
+## Advanced Windows telemetry preparation
 
+- Sysmon target version: `15.21`, officially published by Microsoft Sysinternals on `2026-06-17`.
+- Official lifecycle contract verified: `-i` install, `-c` configuration update, `-s` schema display, and `-u` uninstall.
+- Sysmon XML uses the official documentation sample schema version `4.82`; real-binary schema validation remains pending in the VM.
+- Prepared advanced streams:
+  - `Microsoft-Windows-Sysmon/Operational` → `windows.sysmon`
+  - `Microsoft-Windows-PowerShell/Operational` → `windows.powershell`
+  - `Microsoft-Windows-Windows Defender/Operational` → `windows.defender`
+- Namespace remains `aegis_lab`; baseline streams are unchanged.
+- Setup, rollback, benign marker, and host verifier scripts are prepared.
+- VM runtime apply: `PENDING`.
+- Advanced ingestion: `PENDING`.
+- Advanced ECS normalization: not verified.
+
+## Advanced validation
+
+- PowerShell parser validation for all four new scripts: PASS.
+- Sysmon XML parse and static event/filter assertions: PASS.
+- Agent channel, dataset, stable-ID, direct-output, local-management, and safety assertions: PASS.
+- Baseline verifier regression: PASS; exit code `0`.
+- Advanced verifier reached Elasticsearch and reported the three not-yet-created data streams separately: expected exit code `1`.
+- Elasticsearch-unreachable path reports a distinct HTTP error and separate skipped-source failures: PASS.
+- No Sysmon binary was downloaded or run, and no VM, service, registry, audit, Defender, Firewall, Docker, or network state was changed by Codex.
+
+## Files changed for advanced preparation
+
+- `infra/sysmon/sysmon-aegis.xml`
 - `infra/elastic-agent/windows/elastic-agent.yml`
-- `scripts/verify-windows-ingestion.ps1`
-- `docs/phase-1-elastic-stack.md`
+- `scripts/windows/setup-advanced-telemetry.ps1`
+- `scripts/windows/rollback-advanced-telemetry.ps1`
+- `scripts/windows/generate-advanced-telemetry-markers.ps1`
+- `scripts/verify-advanced-windows-telemetry.ps1`
 - `docs/phase-2-windows-agent.md`
+- `docs/phase-3-advanced-telemetry.md`
 - `CONTEXT.md`
 
 ## Git result
 
-- Requested commit: `feat: prepare Windows Elastic Agent onboarding`.
-- The final commit hash is reported in the task output because a commit cannot contain its own hash.
+- Part 1 commit: `203a9f408af721f14a0a3357a0eab864063a48ee`.
+- Requested Part 2 commit: `feat: prepare advanced Windows telemetry`.
+- The Part 2 commit hash is reported in the task output because a commit cannot contain its own hash.
 - No push is authorized or performed.
 
 ## Decisions that remain in force
 
-- Required System integration assets and real Application, Security, and System telemetry must be reviewed before ingestion or ECS behavior can be called verified.
+- Do not call Sysmon, PowerShell, or Defender ingestion verified before manual VM setup and host verification pass.
+- Required integration assets and representative events must be reviewed before advanced ECS behavior can be called verified.
 - The initial Sigma rule remains unselected and depends on proven telemetry.
 - The detection executor decision gate and exact Atomic-run approval remain unresolved.
 - No detection, alert-generation, MITRE coverage, or metric claim is upgraded.
@@ -60,42 +89,16 @@
 
 ## Next manual step
 
-1. Download and verify Elastic Agent `9.4.2` for Windows x86_64 from Elastic's official artifact registry.
-2. Transfer the ZIP and prepared `elastic-agent.yml` to `victim-win-01`.
-3. Install the standalone Agent manually from an Administrator PowerShell session.
-4. Confirm the Agent service status and generate safe Application/System test events if needed.
-5. Run `scripts/verify-windows-ingestion.ps1` from the host with the exact Windows hostname.
+1. Download Sysmon `15.21` from Microsoft Sysinternals and record its SHA-256 hash.
+2. Transfer `Sysmon64.exe`, `sysmon-aegis.xml`, the updated `elastic-agent.yml`, and the three VM-side scripts listed in `docs/phase-3-advanced-telemetry.md` to `victim-win-01`.
+3. From an Administrator PowerShell session in the transfer directory, run:
 
-## Windows ingestion verification — 2026-07-29T04:36:04Z
+   ```powershell
+   .\setup-advanced-telemetry.ps1 `
+     -SysmonBinaryPath ".\Sysmon64.exe" `
+     -SysmonConfigPath ".\sysmon-aegis.xml" `
+     -ElasticAgentConfigPath ".\elastic-agent.yml"
+   ```
 
-- Elastic Agent 9.4.2 standalone: HEALTHY.
-- Data streams verified: logs-system.application-aegis_lab, logs-system.system-aegis_lab, logs-system.security-aegis_lab.
-- Application, System and Security ingestion: PASS.
-- Elasticsearch host.name comparison is normalized to lowercase.
-- Verified Windows host: desktop-evvu9ls.
-- Status: WINDOWS INGESTION VERIFIED.
-- Verification script exit code: 0.
-
-## Advanced Windows telemetry preflight blocker — 2026-07-29T04:44:33.5168090Z
-
-- Repository root and initial clean-worktree checks: PASS.
-- Elasticsearch 9.4.2 and Kibana 9.4.2 health/binding verification: PASS.
-- Elasticsearch currently resolves all three baseline names as data streams, and recent Application, System, and Security document queries each return PASS.
-- Required baseline command `scripts/verify-windows-ingestion.ps1` returns exit code `1`, so the milestone preflight is FAIL.
-- Root cause: in the data-stream request path, `"$namespace?expand_wildcards=all"` is parsed by PowerShell as the undefined variable `$namespace?`, producing `/_data_stream/logs-system.*-=all`.
-- The milestone explicitly excludes `scripts/verify-windows-ingestion.ps1` from modification. No telemetry configuration, advanced telemetry artifact, VM, Sysmon, Docker, service, firewall, or network state was changed.
-- Advanced telemetry preparation and commit: BLOCKED.
-- Exact next step: authorize a separate fix to delimit the variable in the existing verifier path (for example, `${namespace}`), re-run the baseline preflight, then restart this milestone.
-
-## Baseline verifier fix — 2026-07-29T04:49:33.0929910Z
-
-- The previously recorded advanced-telemetry preflight blocker is resolved.
-- Root cause confirmed: PowerShell parsed `$namespace?` as a variable name in the data-stream discovery path.
-- Minimal fix applied: the path now uses `${namespace}` before the query delimiter.
-- PowerShell parser validation: PASS.
-- Baseline data-stream discovery: PASS.
-- Recent Application, System, and Security ingestion checks for `desktop-evvu9ls`: PASS.
-- Baseline verifier exit code: `0`.
-- Baseline status remains `WINDOWS INGESTION VERIFIED`.
-- Next approved step: prepare the repository artifacts for advanced Sysmon, PowerShell, and Defender telemetry without applying them to the VM.
+4. Generate a benign marker, then run `scripts/verify-advanced-windows-telemetry.ps1` from the host.
 

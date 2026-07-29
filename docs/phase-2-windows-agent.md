@@ -10,26 +10,38 @@ victim-win-01
   → Kibana 9.4.2
 ```
 
-The Agent uses local standalone management and sends directly to Elasticsearch. Fleet enrollment, Fleet Server, authentication credentials, TLS material, metrics, Sysmon, and detection rules are outside this milestone.
+The Agent uses local standalone management and sends directly to Elasticsearch. Fleet enrollment, Fleet Server, authentication credentials, TLS material, metrics, and detection rules remain outside this baseline milestone.
 
-The configuration collects only the Windows Application, System, and Security event logs. The Security log requires Elastic Agent to run with Administrator/System privileges.
+The baseline configuration collects the Windows Application, System, and Security event logs. The Security log requires Elastic Agent to run with Administrator/System privileges. Advanced Sysmon, PowerShell, and Defender channels are prepared separately in Phase 3 and do not change the baseline verification claim.
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
-| `infra/elastic-agent/windows/elastic-agent.yml` | Standalone Windows event-log policy |
+| `infra/elastic-agent/windows/elastic-agent.yml` | Standalone Windows event-log policy; baseline streams plus Phase 3 advanced streams |
 | `scripts/verify-windows-ingestion.ps1` | Host-side data-stream and recent-event verification |
 
 ## Configuration validation boundary
 
 The policy structure was checked against the official `elastic-agent.reference.yml` from the Elastic Agent `v9.4.2` source tag and the official Elastic System integration `winlog` stream definitions. The exact `9.4.2` Windows ZIP and SHA-512 files are available from Elastic's artifact registry.
 
-Elastic Agent tooling is not installed on the host, and Codex did not download the 247 MB package solely for validation. Binary policy validation and runtime ingestion remain pending until the user performs the manual installation.
+Codex did not download the Agent package solely for validation or control the VM. The user subsequently installed the standalone Agent manually and completed the runtime baseline verification described below.
+
+## Baseline ingestion verification
+
+Runtime verification completed on `2026-07-29` for Windows host `desktop-evvu9ls`.
+
+- `logs-system.application-aegis_lab`: PASS
+- `logs-system.system-aegis_lab`: PASS
+- `logs-system.security-aegis_lab`: PASS
+- Uppercase verifier input `DESKTOP-EVVU9LS` is normalized before querying: PASS
+- `scripts/verify-windows-ingestion.ps1`: PASS; exit code `0`
+
+This result verifies recent Application, System, and Security ingestion only. It does not verify ECS normalization, a detection rule, alert generation, or any advanced Phase 3 channel.
 
 ## Manual installation boundary
 
-Codex did not download, install, start, stop, or control Elastic Agent or the Windows VM. Perform these steps manually inside `victim-win-01`:
+Codex did not download, install, start, stop, or control Elastic Agent or the Windows VM. The following remains the manual onboarding and recovery procedure:
 
 1. Download the official `elastic-agent-9.4.2-windows-x86_64.zip` and its `.sha512` file from:
    - `https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-9.4.2-windows-x86_64.zip`
@@ -90,9 +102,7 @@ Rollback must not delete Windows Event Logs or the Elasticsearch Docker volume.
 
 ## Known gaps
 
-- Elastic Agent has not been installed by the user.
-- Windows event ingestion is not verified.
 - Required System integration assets and ECS field behavior are not verified.
-- Sysmon is not installed.
+- Phase 3 Sysmon, PowerShell, and Defender runtime application and ingestion are pending.
 - Detection rules are not created.
 - Elastic security remains disabled only because this is an isolated personal lab; this configuration is not suitable for production.
