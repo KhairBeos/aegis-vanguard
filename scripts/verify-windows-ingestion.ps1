@@ -103,7 +103,7 @@ catch {
 try {
     $dataStreamResponse = Invoke-ElasticsearchJson `
         -Method GET `
-        -Path "/_data_stream/logs-system.*-$namespace?expand_wildcards=all"
+        -Path "/_data_stream/logs-system.*-${namespace}?expand_wildcards=all"
 
     $dataStreamNames = @(
         $dataStreamResponse.data_streams |

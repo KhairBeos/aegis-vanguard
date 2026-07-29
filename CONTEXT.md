@@ -76,3 +76,26 @@
 - Status: WINDOWS INGESTION VERIFIED.
 - Verification script exit code: 0.
 
+## Advanced Windows telemetry preflight blocker — 2026-07-29T04:44:33.5168090Z
+
+- Repository root and initial clean-worktree checks: PASS.
+- Elasticsearch 9.4.2 and Kibana 9.4.2 health/binding verification: PASS.
+- Elasticsearch currently resolves all three baseline names as data streams, and recent Application, System, and Security document queries each return PASS.
+- Required baseline command `scripts/verify-windows-ingestion.ps1` returns exit code `1`, so the milestone preflight is FAIL.
+- Root cause: in the data-stream request path, `"$namespace?expand_wildcards=all"` is parsed by PowerShell as the undefined variable `$namespace?`, producing `/_data_stream/logs-system.*-=all`.
+- The milestone explicitly excludes `scripts/verify-windows-ingestion.ps1` from modification. No telemetry configuration, advanced telemetry artifact, VM, Sysmon, Docker, service, firewall, or network state was changed.
+- Advanced telemetry preparation and commit: BLOCKED.
+- Exact next step: authorize a separate fix to delimit the variable in the existing verifier path (for example, `${namespace}`), re-run the baseline preflight, then restart this milestone.
+
+## Baseline verifier fix — 2026-07-29T04:49:33.0929910Z
+
+- The previously recorded advanced-telemetry preflight blocker is resolved.
+- Root cause confirmed: PowerShell parsed `$namespace?` as a variable name in the data-stream discovery path.
+- Minimal fix applied: the path now uses `${namespace}` before the query delimiter.
+- PowerShell parser validation: PASS.
+- Baseline data-stream discovery: PASS.
+- Recent Application, System, and Security ingestion checks for `desktop-evvu9ls`: PASS.
+- Baseline verifier exit code: `0`.
+- Baseline status remains `WINDOWS INGESTION VERIFIED`.
+- Next approved step: prepare the repository artifacts for advanced Sysmon, PowerShell, and Defender telemetry without applying them to the VM.
+
