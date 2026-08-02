@@ -1,6 +1,11 @@
 [CmdletBinding()]
 param(
-    [switch]$RunDefenderScan
+    [switch]$RunDefenderScan,
+
+    # Opt-in: runs a benign encoded PowerShell command so the deployed detection rule
+    # T1059.001 has something to match. Kept behind a switch because plain ingestion
+    # verification should not manufacture alerts.
+    [switch]$TriggerEncodedCommandRule
 )
 
 $ErrorActionPreference = 'Stop'
@@ -45,6 +50,19 @@ try {
         Write-Warning "DNS lookup was attempted but did not resolve: $($_.Exception.Message)"
     }
 
+    if ($TriggerEncodedCommandRule) {
+        # The payload only echoes the marker id. -EncodedCommand expects UTF-16LE base64.
+        $ruleProbeCommand = "Write-Output '$markerId'"
+        $ruleProbeEncoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($ruleProbeCommand))
+
+        & powershell.exe -NoProfile -EncodedCommand $ruleProbeEncoded | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Encoded-command rule probe returned exit code $LASTEXITCODE."
+        }
+
+        Write-Host 'PASS: Benign encoded-command probe executed (expect one detection alert).' -ForegroundColor Green
+    }
+
     if ($RunDefenderScan) {
         $defenderCommand = Get-Command -Name Start-MpScan -ErrorAction SilentlyContinue
         if ($null -eq $defenderCommand) {
@@ -60,6 +78,11 @@ try {
     Write-Host "MarkerId: $markerId"
     Write-Host "StartUtc: $($startUtc.ToString('o'))"
     Write-Host "EndUtc: $($endUtc.ToString('o'))"
+    if ($TriggerEncodedCommandRule) {
+        Write-Host ''
+        Write-Host 'Collect the result from the host with:' -ForegroundColor Cyan
+        Write-Host "  .\scripts\collect-evidence.ps1 -ScenarioId <id> -ExecutionStartUtc '$($startUtc.ToString('o'))' -ExecutionEndUtc '$($endUtc.ToString('o'))' -MarkerId $markerId"
+    }
     exit 0
 }
 catch {

@@ -1,0 +1,39 @@
+{
+  "_meta": {
+    "managed_by": "AEGIS-VANGUARD",
+    "reason": "The T1059.001 rule cannot separate a benign encoded command from a malicious one, because both look identical in the command line. Parent-process exclusion was measured and rejected: it removed only 1 of 2 observed false positives, and the remaining false positive shared its parent, image, and command-line shape with the true positives. The only discriminator is the payload itself, so the payload is decoded at ingest and handed to the analyst and to later rules.",
+    "note": "Attached as index.final_pipeline so it runs after any integration default pipeline rather than replacing it."
+  },
+  "description": "Decodes the base64 payload of powershell.exe -EncodedCommand into aegis.powershell.decoded_command",
+  "processors": [
+    {
+      "script": {
+        "lang": "painless",
+        "if": "ctx.winlog?.event_data?.Image != null && ctx.winlog?.event_data?.CommandLine != null && (ctx.winlog.event_data.Image.toLowerCase().endsWith('powershell.exe') || ctx.winlog.event_data.Image.toLowerCase().endsWith('pwsh.exe'))",
+        "source": "String cmd = ctx.winlog.event_data.CommandLine;\nString[] parts = cmd.splitOnToken(' ');\nfor (int i = parts.length - 1; i >= 0; i--) {\n  String token = parts[i].trim();\n  if (token.length() >= 16) {\n    try {\n      def raw = Base64.getDecoder().decode(token);\n      if (raw.length >= 2) {\n        StringBuilder sb = new StringBuilder();\n        for (int k = 0; k + 1 < raw.length; k += 2) {\n          int lo = raw[k] & 255;\n          int hi = raw[k + 1] & 255;\n          sb.append((char)(lo | (hi * 256)));\n        }\n        String decoded = sb.toString();\n        int printable = 0;\n        for (int j = 0; j < decoded.length(); j++) {\n          char c = decoded.charAt(j);\n          if (c >= 32 && c != 127) { printable++; }\n        }\n        if (decoded.length() > 0 && printable * 5 >= decoded.length() * 4) {\n          if (ctx.aegis == null) { ctx.aegis = new HashMap(); }\n          if (ctx.aegis.powershell == null) { ctx.aegis.powershell = new HashMap(); }\n          ctx.aegis.powershell.decoded_command = decoded;\n          ctx.aegis.powershell.encoded_token_length = token.length();\n          return;\n        }\n      }\n    } catch (Exception e) {\n      // token was not valid base64; keep scanning earlier tokens\n    }\n  }\n}",
+        "description": "Scan command-line tokens from the end and decode the first valid UTF-16LE base64 payload"
+      }
+    },
+    {
+      "set": {
+        "if": "ctx.aegis?.powershell?.decoded_command != null",
+        "field": "aegis.powershell.decode_status",
+        "value": "decoded"
+      }
+    }
+  ],
+  "on_failure": [
+    {
+      "set": {
+        "field": "aegis.powershell.decode_status",
+        "value": "failed"
+      }
+    },
+    {
+      "set": {
+        "field": "aegis.powershell.decode_error",
+        "value": "{{{ _ingest.on_failure_message }}}"
+      }
+    }
+  ]
+}

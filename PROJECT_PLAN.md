@@ -4,7 +4,25 @@
 
 An earlier concept relied on hand-crafted fixture events to "verify" detection logic. Fixtures can check syntax, parsing, conversion, and isolated logic, but they cannot prove that a real telemetry and alert path works. This plan therefore separates implementation, runtime validation, evidence-backed detection validation, and metrics.
 
-The repository is currently documentation-only. Every phase and capability described below has status `Future`.
+## Current position against this plan
+
+Last synchronised `2026-08-02`. `CONTEXT.md` holds the detail; `README.md` holds the
+capability table. This section exists so the roadmap below is read against reality.
+
+| Phase | Status | Note |
+| --- | --- | --- |
+| Phase 0 - local lab foundation | **Complete** | `docs/phase-0-environment.md` |
+| Phase 1 - ingestion and ECS verification | **Partly complete** | Six data streams ingest under authentication. ECS normalization is still not done: integration assets are not installed, so documents carry raw `winlog.*` fields |
+| Phase 2 - Sigma conversion, execution, alert persistence | **Complete to its ceiling** | Executor gate resolved in `docs/adr-001-detection-executor.md`. Five rules deployed, four techniques with evidence-backed detections, one tuning cycle with before/after measurement |
+| Phase 3 - Atomic-backed validation | `Future` | No approved Atomic Red Team run. Nothing is `Live verified` |
+| Phase 4 - MITRE coverage and gap analysis | **Partly complete** | `mitre/coverage.md` is generated from evidence bundles, but every entry rests on benign marker runs rather than Atomic tests |
+| Phases 5-8 | `Future` | Gated behind the MVP checkpoint |
+
+The MVP checkpoint below is at 9 of 10 items. The missing item is the Atomic test number,
+which is also the single thing standing between the current results and any `Live verified`
+claim.
+
+All metrics remain `Not measured yet`.
 
 ## Goal
 
@@ -68,7 +86,8 @@ Future Docker Compose profiles may reflect the resource modes in README, but no 
 | Planned prerequisites | Supported VirtualBox host/guest setup, host-only adapter design, guest isolation procedure, Docker host prerequisites, and resource-budget assumptions. |
 | Planned deliverables | Isolated victim VM, scoped host firewall baseline, Docker host readiness record, measured CPU/RAM/disk baseline, cleanup notes, and planned `docs/phase-0-environment.md` with linked evidence. |
 | Success criteria | Bidirectional host-only communication and intended guest isolation are demonstrated; resource measurements are recorded; no service is publicly exposed; no Phase 1 service is required to be running. |
-| Status | `Future` |
+| Status | `Runtime verified` |
+| Evidence | `docs/phase-0-environment.md`: `PHASE 0 RUNTIME ENVIRONMENT COMPLETE`, bidirectional host-only ping passed |
 | Evidence rule | Do not upgrade the status until the planned artifact exists and its linked evidence has been reviewed. |
 
 Current RAM figures in README are planning estimates, not preflight measurements.
@@ -85,7 +104,20 @@ Current RAM figures in README are planning estimates, not preflight measurements
 
 #### Phase 1 pre-implementation gates
 
-Every gate below is **not yet passed**. Any gate that is not passed blocks artifact acquisition, configuration generation, service startup, firewall changes, Agent installation, and live ingestion. It does not block separately approved documentation work.
+Most gates below are now passed. Elastic `9.4.2` is deployed and authenticating, Sysmon
+`15.21` is installed with its signature and version verified inside the VM, the Agent uses
+a least-privilege API key, and both services publish only on the host-only address.
+
+Two gates remain deliberately open and are recorded rather than quietly dropped:
+
+- **TLS identity.** Not enabled. Elastic no longer requires TLS for API keys or alerting
+  and the lab is host-only, so this was accepted as a known gap in `docs/adr-001-detection-executor.md`.
+  It must be closed before any transport-security claim.
+- **Data stream naming vs integration assets.** The lab writes custom datasets
+  (`windows.sysmon`) that do not match the real integration data streams, so no integration
+  ingest pipeline runs. This is why ECS normalization is still `Future`.
+
+Any gate that is not passed blocks artifact acquisition, configuration generation, service startup, firewall changes, Agent installation, and live ingestion. It does not block separately approved documentation work.
 
 | Gate | Required record before implementation |
 | --- | --- |
@@ -156,7 +188,17 @@ The initial rule must be selected from telemetry proven available; this plan doe
 
 #### Phase 2 architecture decision gate
 
-The executor remains unresolved until a separate architecture decision is approved and documented.
+**Resolved on `2026-08-02`.** The preferred path was taken: the Elastic Security detection
+engine is the executor, with Sigma converted by `sigma-cli` into `siem_rule_ndjson` and
+imported through the Kibana API. The decision, the four checks that justified it, and the
+rejected custom-executor alternative are recorded in `docs/adr-001-detection-executor.md`.
+
+Deduplication, alert persistence, and error handling are provided by the detection engine
+rather than by this project's code. Deployment and execution are `Runtime verified`; the
+deduplication behaviour itself has still not been directly exercised by a repeat scenario
+and remains an open verification item.
+
+The original gate text follows for reference.
 
 | Path | Condition | Trade-off |
 | --- | --- | --- |

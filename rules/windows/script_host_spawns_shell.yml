@@ -1,0 +1,43 @@
+title: Script Host Spawning a Command Shell
+id: a41ef4b6-efa6-42c0-80d6-3d4ccd1b2aa9
+status: experimental
+description: |
+  Detects wscript.exe, cscript.exe, or mshta.exe creating a powershell.exe, pwsh.exe,
+  or cmd.exe child process.
+
+  This is a parent-child relationship rule rather than a string match. The child command
+  line may be entirely innocuous, so no keyword would catch it; what makes the event
+  suspicious is who started it. Script hosts are a standard first stage for macro and
+  scriptlet delivery, and they have very little legitimate reason to launch a shell on
+  a workstation.
+references:
+  - https://attack.mitre.org/techniques/T1059/005/
+  - https://attack.mitre.org/techniques/T1218/005/
+author: AEGIS-VANGUARD lab
+date: 2026-08-02
+tags:
+  - attack.execution
+  - attack.defense-evasion
+  - attack.t1059.005
+  - attack.t1218.005
+logsource:
+  product: windows
+  service: sysmon
+detection:
+  selection_event:
+    EventID: 1
+  selection_parent:
+    ParentImage|endswith:
+      - '\wscript.exe'
+      - '\cscript.exe'
+      - '\mshta.exe'
+  selection_child:
+    Image|endswith:
+      - '\powershell.exe'
+      - '\pwsh.exe'
+      - '\cmd.exe'
+  condition: all of selection_*
+falsepositives:
+  - Legacy in-house VBScript or JScript automation that shells out on purpose
+  - Vendor installers and management agents that wrap shell steps in a script host
+level: high

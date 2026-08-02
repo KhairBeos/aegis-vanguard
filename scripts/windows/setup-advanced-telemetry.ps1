@@ -168,6 +168,19 @@ try {
     $resolvedAgentConfigPath = (Resolve-Path -LiteralPath $ElasticAgentConfigPath).ProviderPath
     Write-Pass 'All three input files exist.'
 
+    # Elasticsearch now enforces authentication. A config left on the committed
+    # placeholder would install cleanly and then fail every ingest with 401.
+    $agentConfigText = Get-Content -Raw -LiteralPath $resolvedAgentConfigPath
+    if ($agentConfigText -match 'REPLACE_WITH_AGENT_API_KEY') {
+        throw ("The Elastic Agent config still contains the api_key placeholder. " +
+               "Run scripts/new-agent-api-key.ps1 on the host and paste the real key first.")
+    }
+    if ($agentConfigText -notmatch '(?m)^\s*api_key\s*:') {
+        throw ("The Elastic Agent config has no api_key in its output block. " +
+               "Elasticsearch requires authentication; ingestion would fail with HTTP 401.")
+    }
+    Write-Pass 'Elastic Agent config carries an api_key.'
+
     try {
         [xml]$sysmonConfig = Get-Content -Raw -LiteralPath $resolvedSysmonConfigPath
     }

@@ -1,0 +1,74 @@
+name: AEGIS-VANGUARD lab
+priority: 30
+# Runs after ecs_windows (priority 20) and fixes two mismatches between what
+# ecs_windows assumes and what this lab actually stores.
+#
+# 1. FIELD NAMES. ecs_windows targets data that has passed through the Windows
+#    integration ingest pipelines, so it maps Image -> process.executable and
+#    TargetObject -> registry.path. This lab runs a standalone Agent writing raw
+#    winlog documents with no integration package installed, so those ECS fields do
+#    not exist - only winlog.event_data.* does. Each affected field is mapped to BOTH
+#    names, which pySigma renders as an OR, so rules work before and after the
+#    integration assets are installed.
+#
+# 2. VALUE CASE. Sigma matches case-insensitively; Elasticsearch keyword fields do
+#    not. infra/elastic/component-templates/logs@custom.json lowercases these fields
+#    at index time, so the query values must be lowercased to match. Doing it here
+#    rather than by convention means a rule author can write natural casing and still
+#    get a working rule. Without this, a rule written as '\CurrentVersion\Run\' parses,
+#    converts, imports, executes, and silently never matches.
+#
+# The two lists below must stay in step with logs@custom.json. scripts/test-detection-rules.ps1
+# is the guard: it fails if a rule stops matching its fixtures.
+transformations:
+  - id: aegis_dual_field_names
+    type: field_name_mapping
+    mapping:
+      process.executable:
+        - process.executable
+        - winlog.event_data.Image
+      process.parent.executable:
+        - process.parent.executable
+        - winlog.event_data.ParentImage
+      process.command_line:
+        - process.command_line
+        - winlog.event_data.CommandLine
+      registry.path:
+        - registry.path
+        - winlog.event_data.TargetObject
+      file.path:
+        - file.path
+        - winlog.event_data.TargetFilename
+      dns.question.name:
+        - dns.question.name
+        - winlog.event_data.QueryName
+      user.name:
+        - user.name
+        - winlog.event_data.User
+      # DecodedCommand is not a Windows event field; it is produced by
+      # infra/elastic/ingest-pipelines/aegis-powershell-decode.json. ecs_windows has
+      # already prefixed the unmapped name with winlog.event_data., so undo that and
+      # point it at the real field. Rules can then read DecodedCommand naturally.
+      winlog.event_data.DecodedCommand: aegis.powershell.decoded_command
+
+  - id: aegis_lowercase_values
+    type: case
+    method: lower
+    field_name_conditions:
+      - type: include_fields
+        fields:
+          - process.executable
+          - process.parent.executable
+          - process.command_line
+          - registry.path
+          - file.path
+          - dns.question.name
+          - user.name
+          - winlog.event_data.Image
+          - winlog.event_data.ParentImage
+          - winlog.event_data.CommandLine
+          - winlog.event_data.TargetObject
+          - winlog.event_data.TargetFilename
+          - winlog.event_data.QueryName
+          - winlog.event_data.User
+          - aegis.powershell.decoded_command

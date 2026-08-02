@@ -44,6 +44,14 @@ deploy/kibana/config/kibana.keystore
 # Standalone Agent policies are generated from Kibana and may contain credentials
 deploy/elastic-agent/runtime/
 
+# Local-only test/verification files (never committed)
+*.test.*
+*.spec.*
+__tests__/
+
+# Converted detection rules may embed environment-specific values
+rules/generated/
+
 # Runtime data
 data/
 logs/
@@ -54,3 +62,10 @@ runtime/*
 .vscode/
 .idea/
 .DS_Store
+
+# Claude Code local config. Uses .claude/* rather than .claude/ so the negation below
+# still works; git will not descend into a directory ignored with a trailing slash.
+# settings.json stays tracked because CLAUDE.md cites it as the source of truth for the
+# approval rules. The bundled skills are unrelated to this project and stay out.
+.claude/*
+!.claude/settings.json

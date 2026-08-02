@@ -4,6 +4,9 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'lib\aegis-elastic.ps1')
+$authHeader = Get-AegisElasticAuthHeader
+
 $composeDirectory = Join-Path $PSScriptRoot '..\infra\elastic'
 $failures = [System.Collections.Generic.List[string]]::new()
 
@@ -69,11 +72,21 @@ function Test-Container {
 function Test-Api {
     param(
         [string]$Description,
-        [string]$Uri
+        [string]$Uri,
+        [hashtable]$Headers
     )
 
+    $requestParameters = @{
+        Uri        = $Uri
+        TimeoutSec = 15
+    }
+
+    if ($Headers) {
+        $requestParameters.Headers = $Headers
+    }
+
     try {
-        $response = Invoke-RestMethod -Uri $Uri -TimeoutSec 15
+        $response = Invoke-RestMethod @requestParameters
         Write-Pass "$Description ($Uri)"
         return $response
     }
@@ -81,6 +94,30 @@ function Test-Api {
         Write-Fail "$Description ($Uri) - $($_.Exception.Message)"
         return $null
     }
+}
+
+function Test-AnonymousAccessRejected {
+    param([string]$Uri)
+
+    try {
+        Invoke-RestMethod -Uri $Uri -TimeoutSec 15 | Out-Null
+    }
+    catch {
+        $statusCode = $null
+        if ($null -ne $_.Exception.Response -and $null -ne $_.Exception.Response.StatusCode) {
+            $statusCode = [int]$_.Exception.Response.StatusCode
+        }
+
+        if ($statusCode -eq 401) {
+            Write-Pass "Elasticsearch rejects unauthenticated requests (HTTP 401)"
+            return
+        }
+
+        Write-Fail "Elasticsearch anonymous probe returned an unexpected error: $($_.Exception.Message)"
+        return
+    }
+
+    Write-Fail "Elasticsearch answered an unauthenticated request; xpack.security is not enforcing authentication"
 }
 
 function Test-DockerPortBinding {
@@ -126,9 +163,11 @@ finally {
 Test-Container -ContainerName 'aegis-elasticsearch' -ServiceName 'Elasticsearch'
 Test-Container -ContainerName 'aegis-kibana' -ServiceName 'Kibana'
 
-Test-Api -Description 'Elasticsearch root API responded' -Uri "http://${ExpectedBindIp}:9200" | Out-Null
-$clusterHealth = Test-Api -Description 'Elasticsearch cluster health API responded' -Uri "http://${ExpectedBindIp}:9200/_cluster/health"
+Test-Api -Description 'Elasticsearch root API responded' -Uri "http://${ExpectedBindIp}:9200" -Headers $authHeader | Out-Null
+$clusterHealth = Test-Api -Description 'Elasticsearch cluster health API responded' -Uri "http://${ExpectedBindIp}:9200/_cluster/health" -Headers $authHeader
 $kibanaStatus = Test-Api -Description 'Kibana status API responded' -Uri "http://${ExpectedBindIp}:5601/api/status"
+
+Test-AnonymousAccessRejected -Uri "http://${ExpectedBindIp}:9200/_cluster/health"
 
 if ($clusterHealth -and $clusterHealth.status -in @('green', 'yellow')) {
     Write-Pass "Elasticsearch cluster health is '$($clusterHealth.status)'"

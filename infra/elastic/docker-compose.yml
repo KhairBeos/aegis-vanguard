@@ -4,8 +4,14 @@ services:
     container_name: aegis-elasticsearch
     restart: "no"
     environment:
+      # discovery.type=single-node puts the node in dev mode, so bootstrap checks
+      # (including the transport-TLS check) are skipped. The lab is host-only, and
+      # Elastic no longer requires TLS for API keys / alerting.
       - discovery.type=single-node
-      - xpack.security.enabled=false
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - ES_JAVA_OPTS=${ES_JAVA_OPTS}
     ports:
       - "${LAB_BIND_IP}:9200:9200"
@@ -15,11 +21,34 @@ services:
       - elastic
     mem_limit: 4g
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent http://localhost:9200/_cluster/health > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl --fail --silent -u \"elastic:$${ELASTIC_PASSWORD}\" http://localhost:9200/_cluster/health > /dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 30
       start_period: 30s
+
+  # One-shot: the ELASTIC_PASSWORD bootstrap only sets the `elastic` user, so
+  # `kibana_system` still needs a password before Kibana can authenticate.
+  setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION}
+    container_name: aegis-elastic-setup
+    restart: "no"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+    networks:
+      - elastic
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - >
+        curl --fail --silent --show-error
+        -u "elastic:$${ELASTIC_PASSWORD}"
+        -X POST "http://elasticsearch:9200/_security/user/kibana_system/_password"
+        -H "Content-Type: application/json"
+        -d "{\"password\":\"$${KIBANA_SYSTEM_PASSWORD}\"}"
 
   kibana:
     image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION}
@@ -27,6 +56,13 @@ services:
     restart: "no"
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      # Required by the Security detection engine: without a persistent key,
+      # detection rules cannot be modified or deleted after a Kibana restart.
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      - XPACK_SECURITY_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      - XPACK_REPORTING_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
     ports:
       - "${LAB_BIND_IP}:5601:5601"
     networks:
@@ -35,6 +71,8 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
+      setup:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "curl --fail --silent http://localhost:5601/api/status > /dev/null || exit 1"]
       interval: 10s

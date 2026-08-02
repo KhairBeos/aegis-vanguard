@@ -1,0 +1,63 @@
+title: PowerShell Encoded Command Execution
+id: 1131fb39-a497-4a09-b051-4e4c89066f5f
+status: experimental
+description: |
+  Detects powershell.exe or pwsh.exe started with an encoded command parameter.
+  Encoding hides the real script text from the command line, so attackers use it to
+  defeat casual inspection and simple string matching. AEGIS-VANGUARD uses this as
+  the initial rule because Sysmon Event ID 1 is the first advanced telemetry source
+  the lab collects, and because the behaviour is exercised by Atomic Red Team T1059.001.
+references:
+  - https://attack.mitre.org/techniques/T1059/001/
+  - https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_pwsh
+author: AEGIS-VANGUARD lab
+date: 2026-08-02
+tags:
+  - attack.execution
+  - attack.t1059.001
+logsource:
+  product: windows
+  service: sysmon
+detection:
+  # Event ID 1 is stated explicitly instead of relying on a category-to-EventID
+  # pipeline mapping, so the rule matches exactly what infra/sysmon/sysmon-aegis.xml
+  # is configured to emit.
+  selection_event:
+    EventID: 1
+  selection_image:
+    Image|endswith:
+      - '\powershell.exe'
+      - '\pwsh.exe'
+  selection_encoded:
+    # PowerShell accepts any unambiguous prefix of -EncodedCommand. Each variant
+    # keeps a trailing space so that -ExecutionPolicy and friends do not match.
+    CommandLine|contains:
+      - ' -e '
+      - ' -ec '
+      - ' -en '
+      - ' -enc '
+      - ' -enco'
+      - ' -encod'
+      - ' -encode'
+      - ' -encodedcommand'
+      - ' /e '
+      - ' /ec '
+      - ' /en '
+      - ' /enc '
+      - ' /enco'
+      - ' /encod'
+      - ' /encode'
+      - ' /encodedcommand'
+  condition: all of selection_*
+falsepositives:
+  - Software installers and management agents that legitimately pass encoded payloads to PowerShell
+  - Administrative scheduled tasks created by monitoring or backup products
+# Tuned down from `high` on 2026-08-02 after measurement, not after guesswork.
+# Of the first 4 alerts this rule produced, 2 were benign management tooling. Parent
+# process exclusion was evaluated and rejected: it removed only 1 of the 2 false
+# positives, and the survivor was indistinguishable from the true positives on every
+# field available in the command line.
+# The rule is kept because encoding itself is worth seeing, but it is context for
+# hunting rather than an incident. The alerting rule on the same behaviour is
+# 8c1d2f4a-5b6e-47c8-9a03-2e7f81d4b6c5, which matches the decoded payload.
+level: medium

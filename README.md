@@ -1,51 +1,103 @@
 # AEGIS-VANGUARD
 
-AEGIS-VANGUARD is a planned, fully local SIEM-like SOC learning lab. Its goal is to demonstrate a portfolio-scale detection lifecycle: collect real telemetry, normalize it to ECS, convert Sigma rules into executable detections, create alerts, triage evidence, investigate related events, map results to MITRE ATT&CK, and document coverage and gaps.
+AEGIS-VANGUARD is a fully local SIEM-like SOC learning lab. Its goal is to demonstrate a portfolio-scale detection lifecycle: collect real telemetry, normalize it to ECS, convert Sigma rules into executable detections, create alerts, triage evidence, investigate related events, map results to MITRE ATT&CK, and document coverage and gaps.
 
-This is **not** a production SIEM, commercial SIEM, commercial EDR, enterprise SOC platform, or claim of enterprise-scale coverage. The repository is new and currently contains documentation only: no lab phase, runtime service, detection, alert, metric, dashboard, or evidence artifact has been implemented or verified.
+This is **not** a production SIEM, commercial SIEM, commercial EDR, enterprise SOC platform, or claim of enterprise-scale coverage.
 
-The planned core question is:
+The core question is:
 
 > Given one approved Atomic Red Team test executed against an isolated Windows VM, can the local pipeline collect the relevant telemetry, alert on it, and produce enough evidence to explain what was detected or missed?
 
-## Planned Core Flow
+That question is **not yet answered**. No alert has ever been produced.
+
+## Current State
+
+The lab is partly built and partly planned. The table below is the honest summary; the detail is in `CONTEXT.md`.
+
+| Area | Capability status | Evidence |
+| --- | --- | --- |
+| Local lab foundation | `Runtime verified` | `docs/phase-0-environment.md` |
+| Elastic Stack `9.4.2` deployment | `Runtime verified` | `infra/elastic/docker-compose.yml`, `scripts/verify-elastic.ps1` (18/18 pass) |
+| Elasticsearch authentication | `Runtime verified` | Unauthenticated requests are rejected with HTTP 401, asserted by `verify-elastic.ps1` |
+| Baseline Windows ingestion (Application/System/Security) | `Runtime verified`, **re-verification pending** | `docs/phase-2-windows-agent.md`; verified `2026-07-29` before authentication was enabled |
+| Advanced telemetry (Sysmon/PowerShell/Defender) | `Implemented` | `infra/sysmon/sysmon-aegis.xml`, `docs/phase-3-advanced-telemetry.md`; not applied in the VM |
+| ECS normalization | `Future` | Integration package assets and ingest pipelines are not installed |
+| Sigma conversion | `Unit tested` | `rules/`, `sigma/pipelines/aegis-lab.yml`, `scripts/convert-sigma.ps1` |
+| Detection rule query logic | `Unit tested` | `scripts/test-detection-rules.ps1`, 32 fixture cases across 5 rules |
+| Ingest-time payload decoding | `Runtime verified` | `infra/elastic/ingest-pipelines/aegis-powershell-decode.json`; live events carry `aegis.powershell.decoded_command` |
+| Detection tuning | `Runtime verified` | `docs/detection-tuning-log.md`, TUNE-001 with before/after alert counts |
+| Detection rule deployment and execution | `Runtime verified` | `scripts/verify-detection-rules.ps1`; 4 rules enabled and executing |
+| Detection of real activity | `Runtime verified` | 3 evidence bundles in `evidence/`, each one alert correctly attributed to one source event |
+| MITRE coverage and gap analysis | `Runtime verified` | `mitre/coverage.md`, generated from evidence by `scripts/build-coverage.ps1` |
+| Atomic Red Team validation | `Future` | Not installed, never run |
+| Optional post-MVP API/dashboard | `Future` | No artifact planned before MVP |
+| Suricata, Wazuh, Kafka | `Future` | Later gated deliverables |
+
+All coverage, false-positive-rate, MTTD, and gap-closure metrics are `Not measured yet`.
+
+### What the detections do and do not prove
+
+Proven: four Sigma rules convert, deploy, and execute in Elastic Security. Three of them
+matched real telemetry produced by a live Windows VM, and each detection is captured in an
+evidence bundle that links one alert to one source document, with the query window, rule
+version, timestamps, and a SHA-256 of the raw export.
+
+Not proven: that any of this survives an attacker who is trying to evade it. Every scenario
+so far is a benign marker run chosen to match the rule, which is the easiest possible test.
+No approved Atomic Red Team test has been executed, so nothing is `Live verified`.
+
+The rules have already produced their first operational false positives. This project's own
+tooling drives the VM through `VBoxManage guestcontrol`, which invokes
+`powershell.exe -EncodedCommand`, and the T1059.001 rule correctly flagged it. That is
+recorded rather than tuned away, because the before-and-after is the interesting part.
+
+## Core Flow
 
 ```text
-Phase 1
+Built
   Application / Security / System event logs
-  -> standalone Elastic Agent selected at the Phase 1 version gate
-  -> required integration assets and ingest pipelines
-  -> mutually compatible Elasticsearch
-  -> mutually compatible Kibana search and ECS verification
+  -> standalone Elastic Agent 9.4.2
+  -> Elasticsearch 9.4.2 (authenticated, host-only)
+  -> Kibana 9.4.2
 
-Phase 2
-  one initial Sigma rule
-  -> pySigma/sigma-cli + backend conversion
-  -> separately selected detection executor
-  -> minimal alert persistence
+  Sigma rule
+  -> sigma-cli + pySigma-backend-elasticsearch (siem_rule_ndjson)
+  -> Elastic Security detection engine
 
-Phase 3
+Prepared, not applied
+  Sysmon 15.21 / PowerShell Operational / Defender Operational
+
+Not started
+  required integration assets and ingest pipelines -> ECS verification
   approved Atomic Red Team test
   -> complete evidence bundle for one rule-scenario pair
   -> first result eligible for Live verified
 
 Post-MVP
-  expand to 3-5 rules
-  -> coverage and gap analysis
+  expand to 3-5 rules -> coverage and gap analysis
   -> additional telemetry sources
   -> optional alert-triage API and dashboard
 ```
 
-Phase 1 will select an exact mutually compatible Elastic Stack and Elastic Agent version at its version gate. Elastic `9.x` is the target release family, not a selected exact version.
+## Selected Versions
+
+The version gate is closed. These exact versions are deployed and mutually compatible:
+
+| Component | Version |
+| --- | --- |
+| Elasticsearch | `9.4.2` |
+| Kibana | `9.4.2` |
+| Elastic Agent (standalone) | `9.4.2` |
+| Sysmon | `15.21` (prepared, not yet installed) |
 
 ## No Fixture-Based Capability Claims
 
-Fixtures and unit tests are planned only for syntax, parsing, conversion, and isolated logic checks. They must never be cited as detection evidence.
+Fixtures and unit tests are used only for syntax, parsing, conversion, and isolated logic checks. They must never be cited as detection evidence.
 
 - A unit result may receive `Unit tested`; it cannot prove a runtime detection.
-- Phase 1 may reach `Runtime verified` only for telemetry ingestion and ECS verification after all relevant readiness gates pass, real Application/Security/System events are collected, source timestamps and host/Agent identity and planned ECS field groups are checked, and the corresponding evidence artifact is reviewed.
-- Phase 1 ingestion verification does not prove a detection rule works. Phase 1 cannot claim detection, alert generation, MITRE coverage, or `Live verified`.
-- Phase 2 may reach at most `Runtime verified` through controlled runtime smoke or manual validation on real telemetry; it cannot receive `Live verified` or prove evidence-backed detection coverage.
+- Telemetry ingestion and ECS verification may reach `Runtime verified` only after the relevant readiness gates pass, real events are collected, source timestamps and host/Agent identity and ECS field groups are checked, and the corresponding evidence artifact is reviewed.
+- Ingestion verification does not prove a detection rule works.
+- Detection rule deployment and execution may reach `Runtime verified`; that is separate from, and much weaker than, evidence that a rule detects anything.
 - Only a specific rule-scenario pair exercised by an approved Atomic Red Team test with a complete evidence bundle may receive `Live verified`.
 - One scenario must never be generalized into a whole phase, platform, rule collection, or MITRE technique being live verified.
 - Screenshots are supporting evidence only and require links to the corresponding query, source event, and scenario run.
@@ -71,63 +123,41 @@ Capability status and metric status are separate.
 | `Not measured yet` | No sufficient evidence set exists for the metric. |
 | `Measured` | The metric has a documented method, sample scope, and linked evidence. |
 
-## Planned Demonstration Targets
+## Architecture
 
-- Collect Application, Security, and System logs from an isolated Windows victim VM through one standalone Elastic Agent whose exact version is selected with mutually compatible Elastic Stack versions at the Phase 1 version gate.
-- Install and verify the required Elastic integration assets, ingest pipelines, and index templates before accepting ingestion as valid.
-- Verify searchable real events and planned ECS field groups in Elasticsearch and Kibana.
-- Express detection logic as Sigma rules and use `pySigma`/`sigma-cli` with a backend to convert them into target queries or deployable formats.
-- Run converted detections through a separately selected executor that manages scheduling, query windows, deduplication, and alert persistence.
-- Validate one initial rule through the first complete Atomic-backed evidence loop before expanding to 3-5 rules.
-- Produce SOC-style triage notes, MITRE ATT&CK mappings, coverage entries, and gap notes only from linked scenario evidence.
-- Add Sysmon, PowerShell, Defender, Suricata, Wazuh, and optional Kafka only after the MVP gate that applies to them.
-- Optionally add a small alert-triage API and SOC dashboard after MVP; these components do not block the first evidence-backed detection loop.
-
-## Planned SIEM Capability Map
-
-| SIEM capability | Planned AEGIS-VANGUARD component |
-| --- | --- |
-| Log/telemetry collection | Standalone Elastic Agent for Application, Security, and System; later planned sources include Sysmon, PowerShell, Defender, Suricata, and Wazuh |
-| Normalization | Elastic integration assets and ingest pipelines, with mappings verified and documented in planned `normalization/ecs_mapping.md` |
-| Detection format and conversion | Sigma rule format converted by `pySigma`/`sigma-cli` and a compatible backend |
-| Detection execution | An unresolved Phase 2 architecture decision between compatible Elastic Security detection rules and a custom scheduled executor |
-| Alert generation | Minimal alert persistence created by the selected executor from live detection results |
-| Triage and investigation | Evidence-linked notes first; optional post-MVP API and SOC dashboard later |
-| Threat mapping | MITRE ATT&CK technique IDs linked across scenario, rule, alert, and coverage entry |
-| Coverage and gap reporting | Planned `mitre/coverage.md` populated only from complete scenario evidence bundles |
-
-`pySigma` and `sigma-cli` are conversion tooling. They do not by themselves monitor Elasticsearch, schedule queries, suppress duplicates, or create alert records.
-
-## Target Architecture
-
-The following diagram is a planned target architecture, not a deployed system.
+Solid lines are deployed. Dotted lines are prepared or deferred.
 
 ```mermaid
 flowchart LR
-  subgraph victim["Planned isolated Windows victim VM - VirtualBox host-only network"]
+  subgraph victim["Isolated Windows victim VM - VirtualBox host-only 192.168.56.0/24"]
     logs["Application / Security / System"]
-    agent["Standalone Elastic Agent - version gate"]
-    laterTelemetry["Deferred: Sysmon / PowerShell / Defender"]
+    agent["Standalone Elastic Agent 9.4.2"]
+    laterTelemetry["Prepared: Sysmon / PowerShell / Defender"]
     atomic["Deferred: approved Atomic Red Team test"]
   end
 
-  subgraph host["Planned local Docker host - staged resource modes"]
-    assets["Required integration assets / ingest pipelines"]
-    es[("Selected Elasticsearch")]
-    kibana["Selected compatible Kibana - search / ECS verification"]
-    conversion["Sigma conversion - deferred"]
-    executor["Detection executor decision gate - deferred"]
-    alerts[("Minimal alert persistence - deferred")]
+  subgraph host["Local Docker host - 192.168.56.1"]
+    es[("Elasticsearch 9.4.2 - authenticated")]
+    kibana["Kibana 9.4.2"]
+    engine["Elastic Security detection engine"]
+    alerts[(".alerts-security.alerts-default")]
+    assets["Deferred: integration assets / ingest pipelines"]
     api["Optional post-MVP API"]
     dashboard["Optional post-MVP SOC dashboard"]
   end
 
-  logs --> agent --> assets --> es --> kibana
-  laterTelemetry -. later phases .-> agent
-  atomic -. Phase 3 validation .-> logs
-  es -. Phase 2 .-> executor
-  conversion -. target query / deployable format .-> executor
-  executor --> alerts
+  subgraph conversion["Conversion - host, offline"]
+    sigma["rules/*.yml"]
+    cli["sigma-cli + pySigma backend"]
+    ndjson["rules/generated/*.ndjson"]
+  end
+
+  logs --> agent --> es --> kibana
+  laterTelemetry -. VM apply pending .-> agent
+  assets -. not installed .-> es
+  atomic -. scenario validation .-> logs
+  sigma --> cli --> ndjson --> engine
+  es --> engine --> alerts
   alerts -. optional post-MVP .-> api
   api --> dashboard
   alerts --> triage["Evidence-linked triage notes"]
@@ -135,73 +165,121 @@ flowchart LR
   triage --> report["MITRE coverage / gap notes"]
 ```
 
-## Standalone Elastic Agent and Fleet Boundary
+## Detection Executor
 
-- Phase 1 plans one standalone Elastic Agent. Its policy and binary lifecycle must be managed manually.
-- Fleet-managed Elastic Agent enrollment and Fleet Server are deferred. Fleet Server is not a prerequisite for the standalone flow.
-- Kibana Integrations/Fleet UI may be used to install integration package assets, create an Agent policy, and export a standalone policy without enrolling the Agent in Fleet Server.
-- Required ingest pipelines, index templates, and other integration assets must exist before ingestion is accepted as valid.
-- The exact mutually compatible Elastic Stack and Elastic Agent versions and their version-specific workflow must be confirmed at the Phase 1 version gate; this document does not assume unverified version-specific behavior.
+The Phase 2 architecture decision is resolved: the **Elastic Security detection engine** is the executor. Sigma rules are converted by `sigma-cli` into Elastic detection rules and imported through the Kibana API. No custom scheduler is written.
 
-## Planned Environment
+The decision, the evidence behind it, and the rejected alternative are recorded in `docs/adr-001-detection-executor.md`.
 
-| Component | Planned location | Boundary |
+## Security Posture
+
+| Control | State |
+| --- | --- |
+| Elasticsearch authentication | Enabled and enforced; verified by an HTTP 401 assertion |
+| Elastic Agent credentials | Least-privilege API key: cluster `monitor`, plus `auto_configure` and `create_doc` on the lab data streams only |
+| Network exposure | Elasticsearch and Kibana publish only on the host-only address `192.168.56.1`; no public exposure |
+| Repository secrets | `infra/elastic/.env`, `.venv/`, `rules/generated/`, and test files are gitignored; API keys are printed once and never stored |
+| TLS | **Deliberately not enabled.** A recorded, accepted gap - see `docs/adr-001-detection-executor.md`. Elastic no longer requires TLS for API keys or alerting, and the lab is confined to a host-only network. It must be revisited before any transport-security claim. |
+| Cluster health | `yellow`, expected on a single node because replica shards are unassigned |
+
+## Repository Layout
+
+```text
+infra/elastic/                Docker Compose for Elasticsearch + Kibana
+infra/elastic-agent/windows/  Standalone Agent policy template (api_key placeholder)
+infra/sysmon/                 Sysmon configuration
+infra/elastic/component-templates/  Index mapping customisations
+rules/windows/                Sigma rule sources
+rules/tests/                  Fixture cases that guard rule query logic
+sigma/pipelines/              Custom pySigma processing pipeline
+scripts/                      Host-side setup, verification, evidence, coverage
+scripts/lib/                  Shared credential handling
+scripts/windows/              VM-side setup, rollback, markers, scenario driver
+evidence/                     Scenario evidence bundles
+mitre/                        Generated coverage matrix
+docs/                         Phase records and architecture decisions
+```
+
+## Running It
+
+Bring up the stack (requires `infra/elastic/.env`):
+
+```powershell
+docker compose -f infra\elastic\docker-compose.yml --env-file infra\elastic\.env up -d
+.\scripts\verify-elastic.ps1
+```
+
+Create an Agent credential, then apply it inside the VM:
+
+```powershell
+.\scripts\new-agent-api-key.ps1
+```
+
+Convert and deploy detections:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\scripts\convert-sigma.ps1
+.\scripts\deploy-detection-rules.ps1
+.\scripts\verify-detection-rules.ps1
+```
+
+VM-side steps are manual and documented in `docs/phase-3-advanced-telemetry.md`.
+
+## Environment
+
+| Component | Location | Boundary |
 | --- | --- | --- |
-| Windows victim VM | Local VirtualBox host-only network | No bridged/public networking during scenarios; Phase 1 starts with Application, Security, and System |
+| Windows victim VM | Local VirtualBox host-only network | No bridged/public networking during scenarios |
 | Elastic Stack and detection workflow | Local Docker host | Services run only in the resource mode needed for the approved task |
 | Optional backend/dashboard | Local Docker host, post-MVP only | No public exposure; does not block MVP |
 
-No cloud or publicly exposed attack environment is planned.
+No cloud or publicly exposed attack environment is used.
 
-## Planned Resource Modes
+## Resource Modes
 
-The values below are planning estimates for a 16 GB RAM laptop. They are not measurements and must be replaced or qualified by the Phase 0/1 preflight results.
+The values below are planning estimates for a 16 GB RAM laptop, except where a container limit is set. They are not measurements.
 
-| Component | Planning estimate | Notes |
+| Component | Estimate | Notes |
 | --- | --- | --- |
-| Host OS and tools | ~3 GB RAM | Validate during preflight |
-| Windows victim VM | ~4 GB RAM | Planned only for ingestion and scenario sessions |
-| Selected Elasticsearch + Kibana | ~3.5-4.5 GB RAM | Validate exact compatibility and resource use before startup |
+| Host OS and tools | ~3 GB RAM | Not measured |
+| Windows victim VM | ~4 GB RAM | Used only for ingestion and scenario sessions |
+| Elasticsearch | `mem_limit: 4g` | Enforced by Compose |
+| Kibana | `mem_limit: 2g` | Enforced by Compose |
 | Suricata | ~1 GB RAM | Post-MVP estimate |
-| Wazuh manager + indexer | ~4 GB RAM | Planned separate session from Elastic Stack |
+| Wazuh manager + indexer | ~4 GB RAM | Separate session from the Elastic Stack |
 | Kafka | ~1.5-2 GB RAM | Optional stretch estimate |
 
-| Mode | Planned use | Planned running components |
+| Mode | Use | Running components |
 | --- | --- | --- |
 | A - Rule development | Sigma syntax/conversion work | No live services required |
-| B - Live ingestion | Phase 1 telemetry and ECS verification | Victim VM + Elastic Stack |
-| C - Scenario session | Approved Phase 3 Atomic validation | Victim VM + Elastic Stack + selected detection executor |
-| D - Evidence review | Review stored alerts and evidence | Elastic Stack; optional API/dashboard only after MVP |
+| B - Live ingestion | Telemetry and ECS verification | Victim VM + Elastic Stack |
+| C - Scenario session | Approved Atomic validation | Victim VM + Elastic Stack + detection engine |
+| D - Evidence review | Review stored alerts and evidence | Elastic Stack |
 | E - Wazuh session | Post-MVP Wazuh work | Wazuh stack only |
-| F - Kafka session | Optional stretch work | Kafka and only required producer/consumer components |
+| F - Kafka session | Optional stretch work | Kafka and required producer/consumer only |
 
-Future Docker Compose profiles may support these modes, but no Compose configuration currently exists or enforces them.
+Compose currently defines one profile covering modes B, C, and D. It does not yet enforce mode separation.
 
-## Current Evidence-Backed Status
+## Standalone Elastic Agent and Fleet Boundary
 
-The repository currently contains only the documentation baseline and agent instructions. It contains no source code, runtime configuration, tests, phase deliverables, or evidence artifacts.
+- One standalone Elastic Agent is used. Its policy and binary lifecycle are managed manually.
+- Fleet-managed enrollment and Fleet Server are deferred. Fleet Server is not a prerequisite for this flow.
+- The Agent authenticates with an API key. The committed policy carries a placeholder; the real key is applied only inside the VM.
+- Required ingest pipelines, index templates, and other integration assets are **not** installed. Documents therefore carry raw `winlog.*` fields rather than the full ECS field set, which is why `sigma/pipelines/aegis-lab.yml` matches both field shapes.
 
-| Area | Capability status | Planned evidence/artifact |
-| --- | --- | --- |
-| Phase 0 local lab foundation | `Future` | Planned `docs/phase-0-environment.md` |
-| Phase 1 telemetry ingestion and ECS verification | `Future` | Planned `normalization/ecs_mapping.md` and `docs/phase-1-verification.md` |
-| Phase 2 Sigma conversion, execution, and alert persistence | `Future` | Planned initial rule and `docs/phase-2-verification.md` |
-| Phase 3 first Atomic-backed rule-scenario validation | `Future` | Planned scenario runbook and `docs/phase-3-scenario-log.md` |
-| Phase 4 MITRE coverage and gap analysis | `Future` | Planned `mitre/coverage.md` |
-| Optional post-MVP API/dashboard | `Future` | No artifact planned before MVP |
-| Suricata, Wazuh, and Kafka | `Future` | Later gated deliverables |
+## Operating Flow
 
-All coverage, false-positive-rate, MTTD, and gap-closure metrics are `Not measured yet`.
-
-## Planned Operating Flow
-
-1. Complete and evidence the Phase 0 isolation and resource prerequisites.
-2. Pass the Phase 1 version, resource, network, TLS, secret-handling, logging, and rollback gates.
-3. Ingest and verify Application, Security, and System telemetry through one standalone Elastic Agent; only the ingestion/ECS capability may then become `Runtime verified`.
-4. Use reviewed Phase 1 telemetry evidence to pass the initial-rule selection gate, select the Phase 2 executor, convert the rule, run controlled runtime validation, and persist minimal alerts.
-5. Review the telemetry-rule-scenario alignment, obtain approval for the exact Atomic Red Team test run, execute it, and produce the first complete rule-scenario evidence bundle.
-6. Create the first evidence-backed coverage entry and gap/validation note.
-7. After MVP, expand to 3-5 rules and consider additional telemetry and the optional API/dashboard workstream.
+1. ~~Complete and evidence the isolation and resource prerequisites.~~ Done.
+2. ~~Pass the version, resource, network, secret-handling, and rollback gates.~~ Done, except TLS, which is a recorded accepted gap.
+3. ~~Select the detection executor.~~ Done - see ADR-001.
+4. Apply the Agent API key and advanced telemetry in the victim VM, then re-verify ingestion under authentication.
+5. Install and verify integration assets, then verify ECS field groups and populate `normalization/ecs_mapping.md`.
+6. Produce the first alert from benign marker activity.
+7. Review the telemetry-rule-scenario alignment, obtain approval for the exact Atomic Red Team run, execute it, and produce the first complete rule-scenario evidence bundle.
+8. Create the first evidence-backed coverage entry and gap/validation note.
+9. After MVP, expand to 3-5 rules and consider additional telemetry and the optional API/dashboard workstream.
 
 ## Ethics and Safety
 
@@ -217,16 +295,17 @@ All coverage, false-positive-rate, MTTD, and gap-closure metrics are `Not measur
 - A commercial SIEM or EDR.
 - An enterprise SOC platform.
 - Enterprise-scale telemetry or detection coverage.
-- Any implemented or runtime-verified lab phase.
+- That any detection rule has detected anything.
 - Any detection result, coverage value, or other metric without linked evidence.
 
 ## Documentation Ownership
 
-- `README.md`: project identity, current repository state, target architecture summary, status model, resource modes, safety boundaries, and roadmap link.
+- `README.md`: project identity, current repository state, architecture summary, status model, resource modes, safety boundaries, and roadmap link.
 - `PROJECT_PLAN.md`: roadmap, gates, dependencies, success criteria, evidence requirements, and future work.
-- `AGENTS.local.md`: project-specific agent behavior and safety boundaries.
+- `CLAUDE.md`: agent behavior, methodology, and approval boundaries.
 - `CONTEXT.md`: non-authoritative working state, approved decisions, blockers, changed files, validation results, and next approved step.
+- `docs/adr-*.md`: architecture decision records.
 
 ## Roadmap
 
-See `PROJECT_PLAN.md`.
+See `PROJECT_PLAN.md`. Note that `PROJECT_PLAN.md` still describes several gates as unresolved that this README records as closed; it needs its own sync pass.

@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Glob(**)",
+      "Grep(**)",
+      "Bash(npm run test*)",
+      "Bash(npm run lint*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
+    ],
+    "ask": [
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(git branch*)",
+      "Bash(git checkout -b*)",
+      "Bash(rm *)",
+      "Bash(npm install*)",
+      "Bash(pip install*)",
+      "Bash(bun add*)",
+      "Edit(docs/agent-workflows/**)",
+      "Write(docs/agent-workflows/**)",
+      "mcp__playwright__browser_navigate"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(rm -rf /*)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/secrets/**)"
+    ]
+  }
+}

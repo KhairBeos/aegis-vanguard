@@ -1,0 +1,37 @@
+title: Registry Run Key Persistence
+id: 0630c267-9ba0-40b2-95d9-670996d404c8
+status: experimental
+description: |
+  Detects a value being written to a Run or RunOnce key, which causes the referenced
+  command to execute at logon.
+
+  This rule watches a state change rather than a process launch, so it uses Sysmon
+  Event ID 13 (registry value set). It is deliberately written against the registry
+  path instead of the value contents, because the payload an attacker stores there is
+  unbounded while the small set of autorun locations is not. That trade makes the rule
+  durable but noisy, which is why the tuning note below matters.
+references:
+  - https://attack.mitre.org/techniques/T1547/001/
+author: AEGIS-VANGUARD lab
+date: 2026-08-02
+tags:
+  - attack.persistence
+  - attack.t1547.001
+logsource:
+  product: windows
+  service: sysmon
+detection:
+  selection_event:
+    EventID: 13
+  selection_runkey:
+    TargetObject|contains:
+      - '\CurrentVersion\Run\'
+      - '\CurrentVersion\RunOnce\'
+      - '\CurrentVersion\RunServices\'
+      - '\CurrentVersion\RunServicesOnce\'
+  condition: all of selection_*
+falsepositives:
+  - Legitimate application installers registering their own startup entries
+  - Windows Update, OneDrive, and vendor updaters rewriting their autorun values
+  - User-initiated startup configuration changes
+level: medium

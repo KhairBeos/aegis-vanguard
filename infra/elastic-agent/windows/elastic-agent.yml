@@ -1,8 +1,12 @@
+# Template only. Elasticsearch now requires authentication, so replace the
+# api_key placeholder on victim-win-01 with the value printed by
+# scripts/new-agent-api-key.ps1. Never commit the real key.
 outputs:
   default:
     type: elasticsearch
     hosts:
       - "http://192.168.56.1:9200"
+    api_key: "REPLACE_WITH_AGENT_API_KEY"
 
 management:
   mode: local

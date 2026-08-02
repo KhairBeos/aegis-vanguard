@@ -17,6 +17,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+. (Join-Path $PSScriptRoot 'lib\aegis-elastic.ps1')
+$authHeader = Get-AegisElasticAuthHeader
+
 $namespace = 'aegis_lab'
 $normalizedExpectedHostName = $ExpectedHostName.Trim().ToLowerInvariant()
 $failures = [System.Collections.Generic.List[string]]::new()
@@ -75,6 +78,7 @@ function Invoke-ElasticsearchJson {
     $requestParameters = @{
         Method      = $Method
         Uri         = $uri
+        Headers     = $authHeader
         ErrorAction = 'Stop'
     }
 

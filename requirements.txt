@@ -1,0 +1,7 @@
+# Sigma rule conversion tooling (host-side only; nothing here runs in the victim VM).
+# Install into a local venv:
+#   py -m venv .venv
+#   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+sigma-cli
+pySigma-backend-elasticsearch
+pySigma-pipeline-windows

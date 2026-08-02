@@ -1,3 +1,107 @@
+# CLAUDE.md
+
+> File này Claude Code **tự đọc khi khởi động session** — không cần agent chủ động đọc như AGENTS.md trước đây.
+> Đây là project memory (`./CLAUDE.md`), commit vào git, team-shared. Precedence của nó đã CAO HƠN
+> `~/.claude/CLAUDE.md` (personal, mọi project) theo cơ chế native — không cần file `.local.md` riêng
+> để override, chỉ cần sửa trực tiếp ở đây. Rule cá nhân không muốn commit → dùng
+> `@~/.claude/<ten-project>-instructions.md` (import, không vào git).
+
+## Precedence (native Claude Code, cao → thấp)
+
+1. Lệnh trực tiếp của user trong session hiện tại
+2. Enterprise policy (nếu tổ chức có managed CLAUDE.md)
+3. **File này** (`./CLAUDE.md`)
+4. `~/.claude/CLAUDE.md` (personal, mọi project)
+5. File import qua `@path` bên dưới (workflow chi tiết theo lĩnh vực)
+6. `SKILL.md` của skill đã cài — chỉ áp dụng khi task khớp đúng phạm vi skill
+7. Heuristic mặc định của Claude
+
+Nếu 2 skill cùng khớp 1 task và mâu thuẫn nhau → dừng lại, hỏi user, không tự quyết định.
+
+## Methodology bắt buộc — dựa trên `obra/superpowers`
+
+Mọi task code (trừ fix nhỏ <5 dòng hoặc task gắn nhãn `#quick`) phải đi qua đủ pipeline:
+
+```
+Clarify → Design → Plan → Implement (TDD) → Review → Done
+```
+
+- **Clarify**: hỏi lại nếu yêu cầu chưa rõ mục tiêu thực sự, không tự suy diễn rồi code luôn.
+- **Codebase Discovery** (bắt buộc, trước Design): đọc code liên quan để nắm những gì đã có sẵn —
+  custom hooks, utility dùng chung, config/theme token (spacing, màu, breakpoint...), convention đang
+  dùng. Không viết lại thứ đã tồn tại, không đoán API thư viện — kiểm tra đúng version qua
+  `package.json`/lockfile rồi tra doc/type thật (dùng Context7 MCP nếu cần) trước khi dùng.
+- **Design**: trình bày ngắn gọn (đọc <30s), chờ user xác nhận trước khi viết plan.
+- **Plan**: chia task 2-5 phút/task, ghi rõ file path + bước verify cho từng task.
+- **Implement**: TDD (Red → Green → Refactor), YAGNI + DRY. Không hardcode số liệu tùy tiện
+  (padding, margin, màu, font-size, breakpoint...) — luôn dùng design token/theme/biến đã định nghĩa
+  sẵn, hoặc default tự nhiên của component/thư viện. Nếu project chưa có token phù hợp, hỏi user
+  trước khi tự đặt số mới.
+- **Review**: 2 vòng — (1) đúng spec chưa, (2) chất lượng code — trước khi báo hoàn thành.
+
+Task `#quick` được bỏ qua Design/Plan, nhưng vẫn phải viết test nếu sửa logic (không áp dụng cho sửa doc/config).
+
+## Skills & MCP đã cài
+
+Danh sách đầy đủ + khi nào dùng cái nào, xem file import (không lặp lại ở đây vì Claude tự
+discover và trigger theo `description` trong từng `SKILL.md`, table chỉ để người đọc tra cứu):
+
+@docs/agent-workflows/skills-reference.md
+@docs/agent-workflows/mcp-reference.md
+
+**Bắt buộc**: mọi skill/MCP mới cài phải chạy qua `NVIDIA/SkillSpector` trước khi thêm vào bảng trên.
+
+## Approval — enforce thật qua `.claude/settings.json`
+
+Danh sách hành động cần approval (git commit/push, xóa file ngoài phạm vi, tạo/xóa branch, force
+push, cài package mới, chạy Playwright ngoài sandbox, sửa `docs/agent-workflows/`, thao tác ảnh
+hưởng VM/container live) **đã được enforce bằng `permissions.ask`/`permissions.deny`** trong
+`.claude/settings.json` cùng repo — đó là nguồn sự thật, bảng ở đây chỉ mô tả lại lý do:
+
+| Hành động | Rule | Vì sao |
+|---|---|---|
+| `git commit` / `git push` | `ask` | User luôn tự quyết định message + thời điểm push |
+| `rm -rf`, xóa ngoài phạm vi task | `ask` | Tránh xóa nhầm ngoài scope đã Plan |
+| Tạo/xóa branch, force push | `ask` | Thao tác phá hoại lịch sử git |
+| Cài package chưa có trong lockfile | `ask` | Tránh dependency không kiểm soát |
+| Playwright MCP ngoài sandbox nội bộ | `ask` | Điều khiển browser thật trên hệ ngoài |
+| Sửa `docs/agent-workflows/*.md` | `ask` | Đây là quy trình gốc, không tự đổi |
+
+Được tự ý làm (không cần hỏi): đọc file, chạy test/linter, sửa file trong phạm vi task đã Plan,
+gọi Context7 MCP tra doc.
+
+## Cross-platform command detection
+
+```bash
+# Python — thử theo thứ tự, dùng lệnh đầu tiên tồn tại
+command -v python3 || command -v python || command -v py
+```
+
+- Windows thuần: ưu tiên `py`
+- WSL2/Linux/macOS: ưu tiên `python3`
+- Không hardcode `python` một mình nếu chưa xác nhận đang chạy trên hệ nào
+- Node.js: luôn kiểm tra version active qua `nvm current` trước khi giả định, không hardcode version
+- Windows/PowerShell: dùng `npx.cmd` thay `npx` để tránh PowerShell ưu tiên wrapper `npx.ps1`; hệ khác dùng `npx`
+
+## Bảo mật chung
+
+- Không tự động thực thi mã có khả năng gây hại (exploit, payload, script phá hoại) ngoài môi
+  trường đã cô lập rõ ràng (VM/container lab).
+- Nếu có nhiều project riêng biệt (demo, sản phẩm thật, nghiên cứu học thuật...), không tự ý
+  gộp/tham chiếu chéo nội dung giữa các project trừ khi được yêu cầu rõ ràng.
+
+## Ngôn ngữ & phong cách phản hồi
+
+- Giải thích/trao đổi: tiếng Việt
+- Tên biến, hàm, thuật ngữ kỹ thuật, tên thư viện: giữ nguyên tiếng Anh
+- Luôn giải thích trade-off khi đề xuất giải pháp, không chỉ đưa 1 lựa chọn mà không nói lý do
+- Hỏi lại nếu task mơ hồ, không tự giả định rồi im lặng code sai hướng
+
+## Test & Git file rules
+
+- Mọi file test (`*.test.*`, `*.spec.*`, hoặc trong `__tests__/`) chỉ dùng để chạy/verify local.
+- Tất cả file test PHẢI nằm trong `.gitignore`, không bao giờ commit hay push lên repo.
+
 # AGENTS.md
 
 > File cấu hình hành vi cho AI coding agent (Claude Code, Codex, Antigravity, Aider, Cursor...).

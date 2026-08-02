@@ -1,0 +1,55 @@
+title: PowerShell Encoded Download Cradle
+id: 8c1d2f4a-5b6e-47c8-9a03-2e7f81d4b6c5
+status: experimental
+description: |
+  Detects an encoded PowerShell command whose DECODED payload contains download or
+  in-memory execution primitives.
+
+  This rule exists because measurement showed the plain encoded-command rule
+  (1131fb39-a497-4a09-b051-4e4c89066f5f) cannot separate benign automation from an
+  attack. In the lab's own alert population, 2 of 4 alerts were benign management
+  tooling, and the remaining false positive shared its parent process, image, and
+  command-line shape with the true positives. Nothing on the command line distinguishes
+  them, because the payload is base64.
+
+  The discriminator is the payload itself, so it is decoded at ingest by
+  infra/elastic/ingest-pipelines/aegis-powershell-decode.json and matched here.
+  DecodedCommand is that decoded text, not a Windows event field.
+
+  The two rules are kept together on purpose and carry different severities: the plain
+  encoded-command rule is context for hunting, and this one is the alerting rule.
+references:
+  - https://attack.mitre.org/techniques/T1059/001/
+  - https://attack.mitre.org/techniques/T1027/
+author: AEGIS-VANGUARD lab
+date: 2026-08-02
+tags:
+  - attack.execution
+  - attack.defense-evasion
+  - attack.t1059.001
+  - attack.t1027
+logsource:
+  product: windows
+  service: sysmon
+detection:
+  selection_event:
+    EventID: 1
+  selection_decoded:
+    DecodedCommand|contains:
+      - 'downloadstring'
+      - 'downloadfile'
+      - 'downloaddata'
+      - 'invoke-webrequest'
+      - 'invoke-restmethod'
+      - 'net.webclient'
+      - 'invoke-expression'
+      - 'iex('
+      - 'iex ('
+      - 'start-bitstransfer'
+      - 'frombase64string'
+      - 'reflection.assembly'
+  condition: all of selection_*
+falsepositives:
+  - Package managers and deployment tooling that legitimately download over PowerShell
+  - Security tooling that stages scripts in memory
+level: high

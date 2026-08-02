@@ -1,0 +1,41 @@
+title: Regsvr32 Remote Scriptlet Execution
+id: 6b5da61b-8454-449f-b33c-99f2335025c9
+status: experimental
+description: |
+  Detects regsvr32.exe invoked with a scriptlet or a remote path, the technique commonly
+  called Squiblydoo.
+
+  regsvr32.exe is a signed Microsoft binary, so application allowlisting alone does not
+  stop it. The abuse is visible only in how it is called: /i: with a URL, or a reference
+  to scrobj.dll, which hands execution to the script runtime instead of registering a DLL.
+
+  This rule is validated by fixtures only. Triggering it for real requires the host to
+  fetch a remote scriptlet, and the lab's host-only network correctly has no egress, so
+  no live evidence bundle exists for it. That is a scenario limitation, not a rule defect.
+references:
+  - https://attack.mitre.org/techniques/T1218/010/
+author: AEGIS-VANGUARD lab
+date: 2026-08-02
+tags:
+  - attack.defense-evasion
+  - attack.t1218.010
+logsource:
+  product: windows
+  service: sysmon
+detection:
+  selection_event:
+    EventID: 1
+  selection_image:
+    Image|endswith: '\regsvr32.exe'
+  selection_abuse:
+    CommandLine|contains:
+      - 'scrobj.dll'
+      - '/i:http'
+      - '/i:ftp'
+      - '-i:http'
+      - '-i:ftp'
+      - '/i:\\'
+  condition: all of selection_*
+falsepositives:
+  - Legacy installers that genuinely register scriptlet components
+level: high
