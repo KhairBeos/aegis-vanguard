@@ -22,12 +22,48 @@ satisfies every constraint at once:
 `T1059.001` is a reasonable second scenario. Several of its atomics fetch remote content,
 so each test number must be read before selection rather than assumed safe.
 
+### Why test #1 specifically
+
+The technique has 20 atomic tests. The definition was parsed rather than skimmed, and only
+five run without elevation, which matters because `VBoxManage guestcontrol` cannot obtain an
+elevated token on this VM:
+
+| Test | Elevation | Why it was or was not chosen |
+| --- | --- | --- |
+| #1 Reg Key Run | not required | **Chosen.** `HKCU` only, no dependencies, cleanup defined, payload path does not exist so nothing executes |
+| #8 Add persistence via Recycle bin | not required | Rejected: writes to `HKCR` and hijacks a shell-open verb, a wider blast radius for no extra detection value |
+| #9 SystemBC Malware-as-a-Service Registry | not required | Rejected for a first run: writes a Run value whose payload is a real `powershell.exe` command line |
+| #11 Change Startup Folder | not required | Rejected: copies a binary and repoints the user's Startup folder, so cleanup has more to undo |
+| #2-#7, #10, #12-#20 | required | Not runnable unattended here |
+
+### Exact commands that would run
+
+Taken verbatim from the definition above, not paraphrased:
+
+```bat
+REM execute
+REG ADD "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /V "Atomic Red Team" /t REG_SZ /F /D "C:\Path\AtomicRedTeam.exe"
+
+REM cleanup
+REG DELETE "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /V "Atomic Red Team" /f
+```
+
+`C:\Path\AtomicRedTeam.exe` does not exist on the host, so the value is inert: Windows would
+try to launch it at next logon and fail. Cleanup removes it well before that.
+
+Note on method: the `Invoke-AtomicRedTeam` framework would not be installed. The two commands
+above would be executed directly, with the definition's SHA-256 recorded so a reviewer can
+confirm they match the official test. This should be stated plainly in any resulting evidence
+bundle rather than implying the framework was used.
+
 ## Proposed run
 
 | Field | Value |
 | --- | --- |
 | MITRE technique | `T1547.001` - Boot or Logon Autostart Execution: Registry Run Keys |
-| Atomic test | **To be confirmed against the installed atomics before approval.** The intended test is the plain "Reg Key Run" case that writes a value under `HKCU\...\CurrentVersion\Run` and removes it in cleanup. The exact test number must be read from the transferred `atomics/T1547.001/T1547.001.yaml`, not assumed from memory. |
+| Atomic test | **#1, "Reg Key Run"**, confirmed by reading the official definition rather than from memory |
+| Atomic test GUID | `e55be3fd-3521-4610-9d1a-e210e42dcf05` |
+| Source definition | `atomics/T1547.001/T1547.001.yaml`, SHA-256 `9F8ADD4DC6C94E68A4053F970439219E9D91D4A4EFFFDE2B77B576E57007240D` |
 | Target host | `victim-win-01`, VirtualBox host-only `192.168.56.10` |
 | Detecting rule | `0630c267-9ba0-40b2-95d9-670996d404c8` - Registry Run Key Persistence |
 | Rule version at run time | To be recorded by `scripts/collect-evidence.ps1` |
@@ -84,8 +120,11 @@ authorises execution, including approval of this record.
 
 | Item | Status |
 | --- | --- |
-| Exact Atomic test number confirmed from the transferred atomics | **not done** |
+| Exact Atomic test number confirmed from the official definition | **done** - test #1, GUID `e55be3fd-3521-4610-9d1a-e210e42dcf05` |
 | User approval for this exact run | **not given** |
 | Executed | **no** |
 
-Until all three read otherwise, this file is a plan and nothing more.
+Execution was prepared and then **stopped at the user's instruction**. Everything above is
+research and planning; no Atomic command has been run against `victim-win-01`.
+
+Until the approval row reads otherwise, this file is a plan and nothing more.

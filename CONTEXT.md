@@ -373,23 +373,29 @@ Verified by regenerating `AEGIS-SCN-0003` and confirming the note survived.
 `README.md` and `PROJECT_PLAN.md` are both current as of `2026-08-02`. A scan for the old
 documentation-only claims returns nothing.
 
-## Alert deduplication — measured, not proven
+## Alert deduplication — proven
 
-Across all 11 alerts in the system there are 11 distinct `(rule_id, source document)` pairs
-and **zero** pairs with more than one alert. Every rule runs on a 5-minute interval with a
-6-minute window (`from: now-5m` plus a 1-minute additional lookback), so consecutive
-executions overlap by one minute and re-query anything that lands in that band.
+First observation: across all alerts there were as many distinct `(rule_id, source document)`
+pairs as alerts, and zero pairs with more than one alert. That was consistent with dedup
+working and equally consistent with dedup never having been exercised, so it proved nothing
+on its own.
 
-What this establishes: no source document has ever produced two alerts in this lab.
+Decisive test, run `2026-08-02T09:13Z` to `09:28Z`: a **temporary copy** of the encoded-command
+rule was imported under its own `rule_id` with `lookback: 25m` against a `5m` interval, giving
+a 30-minute query window. No deployed rule was modified. One event was generated at
+`09:13:08.299Z` and left alone.
 
-What this does **not** establish: that deduplication is what prevented it. It was not
-confirmed that any source event actually fell inside an overlap band, so the observation is
-consistent with dedup working and also consistent with dedup never having been tested.
+| Measure | Value |
+| --- | --- |
+| Temp rule executions covering the event | 3 (`~09:18:32`, `~09:23:32`, `09:28:32`) |
+| Times the source document was queried | 3 |
+| Alerts produced | **1** |
+| Distinct source documents | 1 |
+| Maximum alerts for any one document | **1** |
 
-The decisive test — widening the lookback so every event is guaranteed to be queried twice —
-was not run, because it requires mutating a live deployed rule. Deduplication therefore
-stays an **open verification item** and is claimed only as `Implemented` in
-`docs/adr-001-detection-executor.md`, not as verified.
+The same source document was queried three times across three separate rule executions and
+produced exactly one alert. Deduplication is **verified**. The temporary rule was deleted and
+the five production rules are unchanged.
 
 ## Remaining work
 
