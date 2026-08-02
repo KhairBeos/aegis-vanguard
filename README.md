@@ -35,7 +35,8 @@ The lab is partly built and partly planned. The table below is the honest summar
 | T1547.001 Run key rule vs Atomic test #1 | **`Live verified`** | `evidence/AEGIS-SCN-0005.md`, `docs/scenario-alignment-t1547-001.md`. This exact rule-scenario pair only |
 | Every other rule-scenario pair | `Runtime verified` | Benign marker runs, where the same author wrote both the rule and the trigger |
 | Optional post-MVP API/dashboard | `Future` | No artifact planned before MVP |
-| Suricata, Wazuh, Kafka | `Future` | Later gated deliverables |
+| Portfolio packaging | `Runtime verified` | `docs/portfolio-report.md`: claim-to-evidence table, demo runbook, and the weaknesses a reviewer should press on |
+| Suricata, Wazuh, Kafka | `Future` | Absent by judgement, not by resource limit. See `docs/portfolio-report.md` |
 
 All coverage, false-positive-rate, MTTD, and gap-closure metrics are `Not measured yet`.
 
@@ -247,17 +248,19 @@ No cloud or publicly exposed attack environment is used.
 
 ## Resource Modes
 
-The values below are planning estimates for a 16 GB RAM laptop, except where a container limit is set. They are not measurements.
+The host was measured on `2026-08-02`: **61.7 GB total, 30.3 GB free** with the Elastic Stack and the victim VM both running. Earlier revisions of this file assumed a 16 GB laptop and staged the work around that constraint; the constraint does not exist, and the staging below is kept for discipline rather than necessity.
 
-| Component | Estimate | Notes |
+| Component | Figure | Basis |
 | --- | --- | --- |
-| Host OS and tools | ~3 GB RAM | Not measured |
-| Windows victim VM | ~4 GB RAM | Used only for ingestion and scenario sessions |
+| Host total / free | 61.7 GB / 30.3 GB | Measured with the stack and VM running |
 | Elasticsearch | `mem_limit: 4g` | Enforced by Compose |
 | Kibana | `mem_limit: 2g` | Enforced by Compose |
-| Suricata | ~1 GB RAM | Post-MVP estimate |
-| Wazuh manager + indexer | ~4 GB RAM | Separate session from the Elastic Stack |
-| Kafka | ~1.5-2 GB RAM | Optional stretch estimate |
+| Windows victim VM | ~4 GB RAM | VM configuration, not measured |
+| Suricata | ~1 GB RAM | Estimate; not deployed |
+| Wazuh manager + indexer | ~4 GB RAM | Estimate; not deployed |
+| Kafka | ~1.5-2 GB RAM | Estimate; not deployed |
+
+Resource pressure is therefore **not** the reason Suricata, Wazuh, and Kafka are absent. The reason is stated in `PROJECT_PLAN.md`: with four of five scenarios still benign marker runs, more components would make the project look broader and be worth less than more Atomic tests against the rules that already exist.
 
 | Mode | Use | Running components |
 | --- | --- | --- |

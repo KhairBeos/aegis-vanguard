@@ -16,7 +16,8 @@ capability table. This section exists so the roadmap below is read against reali
 | Phase 2 - Sigma conversion, execution, alert persistence | **Complete** | Executor gate resolved in `docs/adr-001-detection-executor.md`. All five executor requirements verified, including deduplication and error handling. Five rules deployed, one tuning cycle with before/after measurement |
 | Phase 3 - Atomic-backed validation | **Complete for one pair** | Atomic T1547.001 test #1 executed with approval. `evidence/AEGIS-SCN-0005.md` is the first `Live verified` rule-scenario pair |
 | Phase 4 - MITRE coverage and gap analysis | **Complete for the current evidence** | `mitre/coverage.md` is generated from bundles and separates Atomic-backed scenarios from benign marker runs |
-| Phases 5-8 | `Future` | Gated behind judgement rather than effort; see below |
+| Phase 5-7 - Suricata, Wazuh, Kafka | `Future` | **Not resource-blocked.** The host was measured at 61.7 GB total with 30.3 GB free while the stack and VM were running. These are absent by judgement; see below |
+| Phase 8 - portfolio packaging | **Complete** | `docs/portfolio-report.md`: claim-to-evidence table, the four bugs worth discussing, a demo runbook, and a list of what a reviewer should push back on |
 
 **The MVP checkpoint below is met, 10 of 10.**
 
