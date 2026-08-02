@@ -21,7 +21,9 @@ The lab is partly built and partly planned. The table below is the honest summar
 | Elasticsearch authentication | `Runtime verified` | Unauthenticated requests are rejected with HTTP 401, asserted by `verify-elastic.ps1` |
 | Baseline Windows ingestion (Application/System/Security) | `Runtime verified`, **re-verification pending** | `docs/phase-2-windows-agent.md`; verified `2026-07-29` before authentication was enabled |
 | Advanced telemetry (Sysmon/PowerShell/Defender) | `Implemented` | `infra/sysmon/sysmon-aegis.xml`, `docs/phase-3-advanced-telemetry.md`; not applied in the VM |
-| ECS normalization | `Future` | Integration package assets and ingest pipelines are not installed |
+| ECS normalization, `system.*` | `Runtime verified` | System integration `2.22.1` installed; `event.kind` and `event.outcome` confirmed on a real document. See `docs/ecs-normalization.md` |
+| ECS normalization, Sysmon / PowerShell / Defender | `Future` | Blocked: Windows integration `3.9.0` is incompatible with Elasticsearch `9.4.2`. Verified not to be a lab misconfiguration |
+| Executor error handling | `Runtime verified` | A missing index yields `partial failure`, a malformed query yields `failed`, and neither fabricates an alert |
 | Sigma conversion | `Unit tested` | `rules/`, `sigma/pipelines/aegis-lab.yml`, `scripts/convert-sigma.ps1` |
 | Detection rule query logic | `Unit tested` | `scripts/test-detection-rules.ps1`, 32 fixture cases across 5 rules |
 | Ingest-time payload decoding | `Runtime verified` | `infra/elastic/ingest-pipelines/aegis-powershell-decode.json`; live events carry `aegis.powershell.decoded_command` |

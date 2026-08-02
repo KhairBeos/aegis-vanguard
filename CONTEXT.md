@@ -397,9 +397,48 @@ The same source document was queried three times across three separate rule exec
 produced exactly one alert. Deduplication is **verified**. The temporary rule was deleted and
 the five production rules are unchanged.
 
-## Remaining work
+## Executor error handling — verified
 
-1. **Open verification item**: alert deduplication, as above. The clean way to close it without touching a deployed rule is to add a second rule that is a copy with a deliberately wide lookback, run one scenario, count alerts, then delete that rule.
-2. **ECS normalization** is still `Future`. Closing it means installing the Windows integration assets, which requires renaming the custom datasets so the integration ingest pipelines actually attach.
-3. **Atomic Red Team** is the only thing between the current results and any `Live verified` claim, and it needs approval for an exact test. The atomics can be downloaded on the host and transferred through the same controlled path already used for Sysmon, so the lab's isolation does **not** need to be broken to run one.
-4. Nothing has been committed. The working tree is ready.
+Two temporary rules, each a copy of a production rule with one deliberate defect. No deployed
+rule was touched; both were deleted afterwards.
+
+| Failure injected | Status | Alerts fabricated |
+| --- | --- | --- |
+| Index pattern matching nothing | `partial failure`, warning states it persists until fixed | **0** |
+| Malformed Lucene query | `failed`, full parse error naming every backing index | **0** |
+
+Neither reports a quiet success and neither invents an alert. All five executor requirements
+in `PROJECT_PLAN.md` are now met.
+
+## ECS normalization — partially achieved, remainder blocked upstream
+
+Full write-up in `docs/ecs-normalization.md`.
+
+System integration `2.22.1` installed (137 assets) and its pipeline is attached to the three
+`logs-system.*-aegis_lab` streams; `event.kind` and `event.outcome` confirmed on a real
+document, which raw winlog input does not produce.
+
+Windows integration `3.9.0` **cannot** install on Elasticsearch `9.4.2`:
+`analyzer [powershell_script_analyzer] has not been configured in mappings`. The obvious
+suspect was this project's own `logs@custom` template clobbering the package's `analysis`
+block. That was **tested by blanking `logs@custom` and retrying** - it failed identically, so
+the incompatibility is upstream, not a lab misconfiguration.
+
+Consequently the `windows.sysmon` and `windows.defender` dataset renames were **deliberately
+not done**. They would only pay off if the Windows package could attach its pipeline, and it
+cannot; doing them anyway would mean an elevated VM re-apply and rewriting every rule's index
+patterns to arrive at the same raw documents under a new name.
+
+Verified after installation rather than assumed:
+
+- `logs@custom` is still composed by the integration's index template, so the lowercase
+  normalizer survives on new backing indices.
+- `aegis-powershell-decode` still runs on `windows.sysmon` and `windows.powershell`. On
+  `system.*` it was replaced by `.fleet_final_pipeline-1`, which is harmless because the
+  decode pipeline only ever targeted PowerShell process creation on the Sysmon stream.
+- Regression after all changes: 32/32 fixtures, 5/5 rules deployed and executing.
+
+## Remaining work
+2. **Windows integration package** stays blocked until either the package or the stack version moves. Re-test with `POST /api/fleet/epm/packages/windows` after any upgrade; if it installs, the two dataset renames become worth doing.
+3. **Breadth over depth is still the wrong move.** Phases 5-8 (Suricata, Wazuh, Kafka, packaging) remain gated behind judgement, not effort. Four of five scenarios are still benign marker runs, and only one rule-scenario pair is `Live verified`; more Atomic tests against the existing rules are worth more than any new component.
+4. **TLS** remains a recorded, accepted gap.

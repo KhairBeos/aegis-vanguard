@@ -38,15 +38,30 @@ Enabling security was therefore a prerequisite, not an optional hardening step.
 | Record the query time window | Rule carries `from: now-5m`, `to: now`, plus an additional look-back of `1m` | `Implemented` |
 | Define an alert deduplication method | The detection engine derives a deterministic alert ID from the source document and rule identity, so one source event yields one alert across overlapping windows | `Runtime verified` - one document queried by three consecutive executions produced exactly one alert |
 | Persist rule ID, source document IDs, timestamps, execution context | Alerts-as-data documents in the `.alerts-security.alerts-*` indices | `Runtime verified` - every field in the evidence bundles is read back from these documents |
-| Handle errors without losing or fabricating alerts | Rule execution status and failure history are kept by the alerting framework | **Not verified** - no rule has yet been made to fail, so the failure path is untested |
+| Handle errors without losing or fabricating alerts | Rule execution status and failure history are kept by the alerting framework | `Runtime verified` - see below |
 
 Deduplication was proven with a temporary rule imported under its own `rule_id` with a
 25-minute lookback against a 5-minute interval, so a single source event sat inside three
 consecutive query windows. It produced one alert. No deployed rule was modified, and the
 temporary rule was deleted afterwards. Details in `CONTEXT.md`.
 
-Error handling remains unverified and is the reason this ADR still does not claim the
-executor is fully validated.
+Error handling was tested with two temporary rules, each a copy of a production rule with one
+deliberate defect. No deployed rule was touched, and both were deleted afterwards.
+
+| Failure injected | Execution status | Message | Alerts fabricated |
+| --- | --- | --- | --- |
+| Index pattern matching nothing | `partial failure` | Names the rule and states the warning persists until a matching index exists or the rule is disabled | **0** |
+| Malformed Lucene query | `failed` | Full parse error, naming every backing index it was attempted against | **0** |
+
+Both surface the problem explicitly rather than reporting a quiet success, and neither invents
+an alert record. That satisfies the requirement.
+
+Worth noting operationally: a missing index produces a *persistent* warning rather than a
+one-off error. A rule pointing at a data stream that is never created stays degraded
+indefinitely, which is a real consideration for any future dataset rename.
+
+All five executor requirements are now met. The rule-scenario coverage they support is a
+separate question, answered in `mitre/coverage.md`.
 
 ## Consequences
 

@@ -12,17 +12,24 @@ capability table. This section exists so the roadmap below is read against reali
 | Phase | Status | Note |
 | --- | --- | --- |
 | Phase 0 - local lab foundation | **Complete** | `docs/phase-0-environment.md` |
-| Phase 1 - ingestion and ECS verification | **Partly complete** | Six data streams ingest under authentication. ECS normalization is still not done: integration assets are not installed, so documents carry raw `winlog.*` fields |
-| Phase 2 - Sigma conversion, execution, alert persistence | **Complete to its ceiling** | Executor gate resolved in `docs/adr-001-detection-executor.md`. Five rules deployed, four techniques with evidence-backed detections, one tuning cycle with before/after measurement |
-| Phase 3 - Atomic-backed validation | `Future` | No approved Atomic Red Team run. Nothing is `Live verified` |
-| Phase 4 - MITRE coverage and gap analysis | **Partly complete** | `mitre/coverage.md` is generated from evidence bundles, but every entry rests on benign marker runs rather than Atomic tests |
-| Phases 5-8 | `Future` | Gated behind the MVP checkpoint |
+| Phase 1 - ingestion and ECS verification | **Partly complete** | Six data streams ingest under authentication. ECS normalization is verified for `system.*`; for Sysmon, PowerShell, and Defender it is blocked by a Windows integration package incompatibility, not by configuration. See `docs/ecs-normalization.md` |
+| Phase 2 - Sigma conversion, execution, alert persistence | **Complete** | Executor gate resolved in `docs/adr-001-detection-executor.md`. All five executor requirements verified, including deduplication and error handling. Five rules deployed, one tuning cycle with before/after measurement |
+| Phase 3 - Atomic-backed validation | **Complete for one pair** | Atomic T1547.001 test #1 executed with approval. `evidence/AEGIS-SCN-0005.md` is the first `Live verified` rule-scenario pair |
+| Phase 4 - MITRE coverage and gap analysis | **Complete for the current evidence** | `mitre/coverage.md` is generated from bundles and separates Atomic-backed scenarios from benign marker runs |
+| Phases 5-8 | `Future` | Gated behind judgement rather than effort; see below |
 
-The MVP checkpoint below is at 9 of 10 items. The missing item is the Atomic test number,
-which is also the single thing standing between the current results and any `Live verified`
-claim.
+**The MVP checkpoint below is met, 10 of 10.**
 
-All metrics remain `Not measured yet`.
+What that does and does not mean: one rule-scenario pair is `Live verified`, and four of the
+five scenarios are still benign markers where the same author wrote both the rule and the
+thing meant to trigger it. `T1547.001` alone has 20 defined atomic tests and this lab has run
+one. The honest next move is more Atomic tests against the existing rules, not Suricata,
+Wazuh, or Kafka. Adding components to a lab with one externally validated detection would make
+the project look broader and be worth less.
+
+All metrics remain `Not measured yet`. The false-positive-rate metric in particular has a
+documented method and a real before/after in `docs/detection-tuning-log.md`, but a sample of
+three events on one host is not a rate.
 
 ## Goal
 
