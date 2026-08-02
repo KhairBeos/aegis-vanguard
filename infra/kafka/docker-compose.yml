@@ -1,0 +1,50 @@
+# Single-broker Kafka in KRaft mode: no ZooKeeper, one container.
+#
+# This exists to answer one question from PROJECT_PLAN.md - can an already evidence-backed
+# event path cross Kafka without losing records - not to be a production bus. At this lab's
+# volume a message broker earns nothing operationally; it is here as an architecture
+# demonstration and is labelled as such.
+#
+# Bound to the same host-only address as the rest of the lab so nothing is publicly exposed.
+services:
+  kafka:
+    image: apache/kafka:3.9.0
+    container_name: aegis-kafka
+    restart: "no"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@aegis-kafka:9093
+      # Empty host, not 0.0.0.0. Both bind every interface, but with an explicit 0.0.0.0
+      # Kafka derives an advertised address for the CONTROLLER listener from this value and
+      # then rejects its own config: "advertised.listeners cannot use the nonroutable
+      # meta-address 0.0.0.0". The error never mentions the controller listener.
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      # Hardcoded rather than templated: Kafka rejects a non-routable advertised address, and
+      # an unset variable silently resolves to 0.0.0.0, which fails at startup with a message
+      # that does not mention the variable.
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.56.1:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      # Single node, so a replication factor above 1 would leave the cluster unavailable.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      CLUSTER_ID: aegis-vanguard-lab-cluster
+    ports:
+      - "192.168.56.1:9092:9092"
+    networks:
+      - kafka
+    mem_limit: 2g
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 20s
+
+networks:
+  kafka:

@@ -36,7 +36,10 @@ The lab is partly built and partly planned. The table below is the honest summar
 | Every other rule-scenario pair | `Runtime verified` | Benign marker runs, where the same author wrote both the rule and the trigger |
 | Optional post-MVP API/dashboard | `Future` | No artifact planned before MVP |
 | Portfolio packaging | `Runtime verified` | `docs/portfolio-report.md`: claim-to-evidence table, demo runbook, and the weaknesses a reviewer should press on |
-| Suricata, Wazuh, Kafka | `Future` | Absent by judgement, not by resource limit. See `docs/portfolio-report.md` |
+| Suricata network telemetry | `Runtime verified` (pipeline only) | `scripts/analyze-network-telemetry.ps1`; PCAP to `logs-suricata.eve-aegis_lab`. Real VM capture still `Future` |
+| Wazuh host log / FIM | `Runtime verified` (deployment only) | `infra/wazuh/docker-compose.yml`; manager running, 11 components. Agent on the victim VM still `Future` |
+| Kafka transport | `Runtime verified` | `scripts/verify-kafka-transport.ps1`; 15 real alerts round-trip byte-identical |
+| Detections from Suricata, Wazuh, or Kafka | `Future` | **None of the three has produced a detection.** All five detections still come from Sysmon via Elastic |
 
 All coverage, false-positive-rate, MTTD, and gap-closure metrics are `Not measured yet`.
 
