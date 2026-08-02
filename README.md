@@ -29,7 +29,9 @@ The lab is partly built and partly planned. The table below is the honest summar
 | Detection rule deployment and execution | `Runtime verified` | `scripts/verify-detection-rules.ps1`; 4 rules enabled and executing |
 | Detection of real activity | `Runtime verified` | 3 evidence bundles in `evidence/`, each one alert correctly attributed to one source event |
 | MITRE coverage and gap analysis | `Runtime verified` | `mitre/coverage.md`, generated from evidence by `scripts/build-coverage.ps1` |
-| Atomic Red Team validation | `Future` | Not installed, never run |
+| Alert deduplication | `Runtime verified` | One source document queried by three consecutive rule executions produced exactly one alert |
+| T1547.001 Run key rule vs Atomic test #1 | **`Live verified`** | `evidence/AEGIS-SCN-0005.md`, `docs/scenario-alignment-t1547-001.md`. This exact rule-scenario pair only |
+| Every other rule-scenario pair | `Runtime verified` | Benign marker runs, where the same author wrote both the rule and the trigger |
 | Optional post-MVP API/dashboard | `Future` | No artifact planned before MVP |
 | Suricata, Wazuh, Kafka | `Future` | Later gated deliverables |
 
@@ -42,9 +44,13 @@ matched real telemetry produced by a live Windows VM, and each detection is capt
 evidence bundle that links one alert to one source document, with the query window, rule
 version, timestamps, and a SHA-256 of the raw export.
 
-Not proven: that any of this survives an attacker who is trying to evade it. Every scenario
-so far is a benign marker run chosen to match the rule, which is the easiest possible test.
-No approved Atomic Red Team test has been executed, so nothing is `Live verified`.
+One pair is `Live verified`: the Registry Run Key Persistence rule against Atomic Red Team
+T1547.001 test #1. That scenario matters more than the others because the activity was
+defined by someone outside this project. In the four marker-based scenarios the same author
+wrote both the rule and the thing meant to trigger it, which is the weakest possible test.
+
+Not proven: that any of this survives an attacker who is trying to evade it. One Atomic test
+of one procedure is not coverage of a technique, and `T1547.001` alone has 20 defined tests.
 
 The rules have already produced their first operational false positives. This project's own
 tooling drives the VM through `VBoxManage guestcontrol`, which invokes

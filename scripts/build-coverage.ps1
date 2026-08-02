@@ -78,15 +78,45 @@ Add-Line 'listed as covered only because a scenario produced a `detected` result
 Add-Line 'because a rule exists.'
 Add-Line
 
+# A bundle only counts toward Live verified when the activity was defined by an external
+# Atomic Red Team test rather than by a marker this project wrote to match its own rule.
+$atomicBundles = @($detectedBundles | Where-Object { $_.AtomicTest -and $_.AtomicTest -notmatch '^not applicable' })
+$markerBundles = @($detectedBundles | Where-Object { -not $_.AtomicTest -or $_.AtomicTest -match '^not applicable' })
+
 Add-Line '## What this matrix does not mean'
 Add-Line
 Add-Line '- Coverage of a technique here means **one** specific behaviour was detected once, in'
 Add-Line '  one lab, on one host. It does not mean the technique is covered in general; each'
 Add-Line '  technique has many procedures and this lab exercises one.'
-Add-Line '- No entry is `Live verified`. Every scenario so far is a benign marker run, not an'
-Add-Line '  approved Atomic Red Team test, so the Atomic test number column reads accordingly.'
 Add-Line '- Detection here says nothing about whether the rule would survive an attacker who is'
 Add-Line '  actively trying to evade it.'
+Add-Line '- A benign marker run is the weakest possible test, because the same person wrote the'
+Add-Line '  rule and the activity meant to trigger it. Only an externally defined Atomic Red Team'
+Add-Line '  test removes that circularity, which is why the two are counted separately below.'
+Add-Line
+
+Add-Line '## Live verified eligibility'
+Add-Line
+Add-Line '| Basis | Scenarios | Counts toward `Live verified` |'
+Add-Line '| --- | --- | --- |'
+Add-Line ('| Approved Atomic Red Team test | {0} | yes |' -f $atomicBundles.Count)
+Add-Line ('| Benign marker written by this project | {0} | no |' -f $markerBundles.Count)
+Add-Line
+
+if ($atomicBundles.Count -gt 0) {
+    Add-Line 'Atomic-backed rule-scenario pairs:'
+    Add-Line
+    foreach ($bundle in $atomicBundles) {
+        Add-Line ('- `{0}` - {1} on `{2}`, via {3}' -f $bundle.ScenarioId, $bundle.RuleName, $bundle.TechniqueId, $bundle.AtomicTest)
+    }
+    Add-Line
+    Add-Line 'Each pair above is `Live verified` **only as that exact pair**. Per `PROJECT_PLAN.md`'
+    Add-Line 'this must never be generalised to the phase, the platform, the rule collection, or the'
+    Add-Line 'technique as a whole.'
+}
+else {
+    Add-Line 'No entry is `Live verified`: every scenario so far is a benign marker run.'
+}
 Add-Line
 
 Add-Line '## Evidence-backed coverage'

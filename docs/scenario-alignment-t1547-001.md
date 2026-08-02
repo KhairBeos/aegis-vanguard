@@ -121,10 +121,30 @@ authorises execution, including approval of this record.
 | Item | Status |
 | --- | --- |
 | Exact Atomic test number confirmed from the official definition | **done** - test #1, GUID `e55be3fd-3521-4610-9d1a-e210e42dcf05` |
-| User approval for this exact run | **not given** |
-| Executed | **no** |
+| User approval for this exact run | **given** `2026-08-02` |
+| Executed | **yes**, `2026-08-02T09:42:11Z` to `09:42:17Z` |
 
-Execution was prepared and then **stopped at the user's instruction**. Everything above is
-research and planning; no Atomic command has been run against `victim-win-01`.
+## Outcome
 
-Until the approval row reads otherwise, this file is a plan and nothing more.
+| Item | Result |
+| --- | --- |
+| Scenario | `AEGIS-SCN-0005` |
+| Detection result | `detected`, 1 alert, 1 source document |
+| Time to detect | 151.6 seconds |
+| Evidence | `evidence/AEGIS-SCN-0005.md` |
+
+Telemetry captured the full lifecycle: Event ID 13 `SetValue` at `09:42:13.487Z` with
+`Details` of `C:\Path\AtomicRedTeam.exe`, and Event ID 12 `DeleteValue` at `09:42:16.567Z`.
+
+Cleanup was confirmed two independent ways, not trusted from an exit code:
+
+1. A direct registry read afterwards returned only `MicrosoftEdgeAutoLaunch` and `OneDrive`.
+2. The Event ID 12 delete event is present in `logs-windows.sysmon-aegis_lab`.
+
+An earlier attempt at this run was prepared and **stopped at the user's instruction**. The
+registry was checked at that point and carried no trace, so the run recorded above is the
+only execution that took place.
+
+The `Invoke-AtomicRedTeam` framework was not installed. The two commands above were executed
+directly, and the SHA-256 of the official definition is recorded so a reviewer can confirm
+they match. Any claim made from this bundle should say so rather than imply framework use.
