@@ -1,0 +1,37 @@
+﻿{
+    "scenario_id":  "AEGIS-SCN-0008",
+    "lab_session_id":  "AEGIS-LAB-20260802",
+    "collected_utc":  "2026-08-03T01:52:45.3477025Z",
+    "technique_id":  "T1027",
+    "atomic_test":  "#11 (6683baf0) - char-array obfuscated Start-Process, no -EncodedCommand",
+    "marker_id":  "",
+    "detection_result":  "missed",
+    "alert_count":  0,
+    "source_doc_count":  0,
+    "time_to_detect_s":  "not applicable",
+    "execution_start":  "2026-08-02T10:55:05.0000000Z",
+    "execution_end":  "2026-08-02T10:55:50.0000000Z",
+    "alert_timestamp":  "not applicable",
+    "rule":  {
+                 "rule_id":  "1131fb39-a497-4a09-b051-4e4c89066f5f",
+                 "uuid":  "002416d5-5a4d-44aa-b4d7-3c4a681ca1c1",
+                 "name":  "SIGMA - PowerShell Encoded Command Execution",
+                 "version":  1,
+                 "interval":  "5m",
+                 "from":  "now-5m",
+                 "to":  "now",
+                 "index":  [
+                               "logs-windows.sysmon-aegis_lab",
+                               "logs-windows.powershell-aegis_lab",
+                               "logs-windows.defender-aegis_lab",
+                               "logs-system.security-aegis_lab"
+                           ],
+                 "query":  "winlog.channel:Microsoft\\-Windows\\-Sysmon\\/Operational AND (event.code:1 AND ((process.executable:(*\\\\powershell.exe OR *\\\\pwsh.exe)) OR (winlog.event_data.Image:(*\\\\powershell.exe OR *\\\\pwsh.exe))) AND (winlog.event_data.CommandLine:(*\\ \\-e\\ * OR *\\ \\-ec\\ * OR *\\ \\-en\\ * OR *\\ \\-enc\\ * OR *\\ \\-enco* OR *\\ \\-encod* OR *\\ \\-encode* OR *\\ \\-encodedcommand* OR *\\ \\/e\\ * OR *\\ \\/ec\\ * OR *\\ \\/en\\ * OR *\\ \\/enc\\ * OR *\\ \\/enco* OR *\\ \\/encod* OR *\\ \\/encode* OR *\\ \\/encodedcommand*)))"
+             },
+    "alerts":  [
+
+               ],
+    "source_documents":  [
+
+                         ]
+}

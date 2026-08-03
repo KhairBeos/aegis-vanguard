@@ -1,0 +1,37 @@
+﻿{
+    "scenario_id":  "AEGIS-SCN-0007",
+    "lab_session_id":  "AEGIS-LAB-20260802",
+    "collected_utc":  "2026-08-03T01:52:45.2717206Z",
+    "technique_id":  "T1027",
+    "atomic_test":  "#3 (450e7218) - base64 payload in registry, inline IEX+FromBase64String (no -EncodedCommand)",
+    "marker_id":  "",
+    "detection_result":  "missed",
+    "alert_count":  0,
+    "source_doc_count":  0,
+    "time_to_detect_s":  "not applicable",
+    "execution_start":  "2026-08-02T10:55:05.0000000Z",
+    "execution_end":  "2026-08-02T10:55:50.0000000Z",
+    "alert_timestamp":  "not applicable",
+    "rule":  {
+                 "rule_id":  "8c1d2f4a-5b6e-47c8-9a03-2e7f81d4b6c5",
+                 "uuid":  "453d5cfb-f351-40ab-bbb1-1b9df4903daf",
+                 "name":  "SIGMA - PowerShell Encoded Download Cradle",
+                 "version":  1,
+                 "interval":  "5m",
+                 "from":  "now-5m",
+                 "to":  "now",
+                 "index":  [
+                               "logs-windows.sysmon-aegis_lab",
+                               "logs-windows.powershell-aegis_lab",
+                               "logs-windows.defender-aegis_lab",
+                               "logs-system.security-aegis_lab"
+                           ],
+                 "query":  "winlog.channel:Microsoft\\-Windows\\-Sysmon\\/Operational AND (event.code:1 AND (aegis.powershell.decoded_command:(*downloadstring* OR *downloadfile* OR *downloaddata* OR *invoke\\-webrequest* OR *invoke\\-restmethod* OR *net.webclient* OR *invoke\\-expression* OR *iex\\(* OR *iex\\ \\(* OR *start\\-bitstransfer* OR *frombase64string* OR *reflection.assembly*)))"
+             },
+    "alerts":  [
+
+               ],
+    "source_documents":  [
+
+                         ]
+}

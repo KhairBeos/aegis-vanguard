@@ -587,5 +587,91 @@
         }
       }
     ]
+  },
+  {
+    "rule_id": "d4e91a72-3c85-4f6b-9e2a-7b1c0d5f8a34",
+    "rule_name": "PowerShell Character-Array Obfuscated Execution",
+    "cases": [
+      {
+        "name": "canonical char-array + -join (Atomic T1027 #11)",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -NoProfile -Command \"$ps=[char[]](112,111,119,101,114,115,104,101,108,108); $cmd=[char[]](83,116,97,114,116); & (-join $ps) '-Command' (-join $cmd)\""
+            }
+          }
+        }
+      },
+      {
+        "name": "pwsh.exe variant",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+              "CommandLine": "pwsh.exe -Command \"& (-join [char[]](112,111,119,101,114,115,104,101,108,108))\""
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: char-array cast without -join",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -Command \"$x=[char[]](65,66,67); $x[0]\""
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: -join without a char-array cast",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -Command \"(Get-Content list.txt) -join ','\""
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: ordinary command",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -Command Get-Date"
+            }
+          }
+        }
+      }
+    ]
   }
 ]

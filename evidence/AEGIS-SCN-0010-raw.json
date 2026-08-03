@@ -1,0 +1,464 @@
+﻿{
+    "scenario_id":  "AEGIS-SCN-0010",
+    "lab_session_id":  "AEGIS-LAB-20260803",
+    "collected_utc":  "2026-08-03T02:15:45.9054590Z",
+    "technique_id":  "T1027",
+    "atomic_test":  "#11 (6683baf0) - char-array obfuscated Start-Process, faithful re-run from a transferred .ps1",
+    "marker_id":  "",
+    "detection_result":  "detected",
+    "alert_count":  1,
+    "source_doc_count":  1,
+    "time_to_detect_s":  171.2,
+    "execution_start":  "2026-08-03T02:12:26.0000000Z",
+    "execution_end":  "2026-08-03T02:12:42.0000000Z",
+    "alert_timestamp":  "2026-08-03T02:15:17.205Z",
+    "rule":  {
+                 "rule_id":  "d4e91a72-3c85-4f6b-9e2a-7b1c0d5f8a34",
+                 "uuid":  "ade22e88-5840-4795-b0b9-8ecc10446202",
+                 "name":  "SIGMA - PowerShell Character-Array Obfuscated Execution",
+                 "version":  1,
+                 "interval":  "5m",
+                 "from":  "now-5m",
+                 "to":  "now",
+                 "index":  [
+                               "logs-windows.sysmon-aegis_lab",
+                               "logs-windows.powershell-aegis_lab",
+                               "logs-windows.defender-aegis_lab",
+                               "logs-system.security-aegis_lab"
+                           ],
+                 "query":  "winlog.channel:Microsoft\\-Windows\\-Sysmon\\/Operational AND (event.code:1 AND ((process.executable:(*\\\\powershell.exe OR *\\\\pwsh.exe)) OR (winlog.event_data.Image:(*\\\\powershell.exe OR *\\\\pwsh.exe))) AND winlog.event_data.CommandLine:*\\[char\\[\\]\\]\\(* AND winlog.event_data.CommandLine:*\\-join*)"
+             },
+    "alerts":  [
+                   {
+                       "_index":  ".internal.alerts-security.alerts-default-000001",
+                       "_id":  "2c23e7faa979cec6bb8fecfefbb671564542fdcfb08730fd30bf8798cf80712d",
+                       "_score":  null,
+                       "_source":  {
+                                       "kibana.alert.rule.execution.timestamp":  "2026-08-03T02:15:17.227Z",
+                                       "kibana.alert.start":  "2026-08-03T02:15:17.227Z",
+                                       "kibana.alert.last_detected":  "2026-08-03T02:15:17.227Z",
+                                       "kibana.version":  "9.4.2",
+                                       "kibana.alert.rule.parameters":  {
+                                                                            "description":  "Detects PowerShell building a command or cmdlet name from an array of character\ncodes and rejoining it before execution, for example\n[char[]](112,111,119,101,114,115,104,101,108,108) piped through -join.\n\nThis rule exists because a real Atomic Red Team variation evaded the whole rule\npack. T1027 test #11 obfuscates Start-Process by constructing both the interpreter\nname and the command from decimal [char[]] arrays, then invoking with \u0026 (-join ...).\nIt carries no -EncodedCommand, no download-cradle vocabulary, and no scriptlet, so\nthe encoded-command rule (1131fb39), the decoded-cradle rule (8c1d2f4a), and the\nLOLBin rules all miss it. Its Sysmon Event ID 1 command line was captured intact in\nthe lab (2026-08-02 atomic run) and every deployed rule returned zero hits against it.\n\nThe discriminator is the obfuscation idiom itself: a [char[]] cast paired with -join\nis how a decimal code array is turned back into runnable text. Legitimate automation\nessentially never assembles a command name this way, so the two markers are required\ntogether to keep the rule tight.\n",
+                                                                            "risk_score":  73,
+                                                                            "severity":  "high",
+                                                                            "license":  "DRL",
+                                                                            "meta":  {
+                                                                                         "from":  "1m"
+                                                                                     },
+                                                                            "author":  [
+                                                                                           "AEGIS-VANGUARD lab"
+                                                                                       ],
+                                                                            "false_positives":  [
+                                                                                                    "Rare tooling that legitimately assembles strings from character-code arrays"
+                                                                                                ],
+                                                                            "from":  "now-5m",
+                                                                            "rule_id":  "d4e91a72-3c85-4f6b-9e2a-7b1c0d5f8a34",
+                                                                            "max_signals":  100,
+                                                                            "risk_score_mapping":  [
+
+                                                                                                   ],
+                                                                            "severity_mapping":  [
+
+                                                                                                 ],
+                                                                            "threat":  [
+                                                                                           {
+                                                                                               "framework":  "MITRE ATT\u0026CK",
+                                                                                               "tactic":  {
+                                                                                                              "id":  "TA0002",
+                                                                                                              "name":  "Execution",
+                                                                                                              "reference":  "https://attack.mitre.org/tactics/TA0002"
+                                                                                                          },
+                                                                                               "technique":  [
+                                                                                                                 {
+                                                                                                                     "id":  "T1059",
+                                                                                                                     "name":  "Command and Scripting Interpreter",
+                                                                                                                     "reference":  "https://attack.mitre.org/techniques/T1059",
+                                                                                                                     "subtechnique":  [
+                                                                                                                                          {
+                                                                                                                                              "id":  "T1059.001",
+                                                                                                                                              "name":  "PowerShell",
+                                                                                                                                              "reference":  "https://attack.mitre.org/techniques/T1059/001"
+                                                                                                                                          }
+                                                                                                                                      ]
+                                                                                                                 }
+                                                                                                             ]
+                                                                                           }
+                                                                                       ],
+                                                                            "to":  "now",
+                                                                            "references":  [
+                                                                                               "https://attack.mitre.org/techniques/T1027/",
+                                                                                               "https://attack.mitre.org/techniques/T1059/001/"
+                                                                                           ],
+                                                                            "version":  1,
+                                                                            "exceptions_list":  [
+
+                                                                                                ],
+                                                                            "immutable":  false,
+                                                                            "rule_source":  {
+                                                                                                "type":  "internal"
+                                                                                            },
+                                                                            "related_integrations":  [
+
+                                                                                                     ],
+                                                                            "required_fields":  [
+
+                                                                                                ],
+                                                                            "setup":  "",
+                                                                            "type":  "query",
+                                                                            "language":  "lucene",
+                                                                            "index":  [
+                                                                                          "logs-windows.sysmon-aegis_lab",
+                                                                                          "logs-windows.powershell-aegis_lab",
+                                                                                          "logs-windows.defender-aegis_lab",
+                                                                                          "logs-system.security-aegis_lab"
+                                                                                      ],
+                                                                            "query":  "winlog.channel:Microsoft\\-Windows\\-Sysmon\\/Operational AND (event.code:1 AND ((process.executable:(*\\\\powershell.exe OR *\\\\pwsh.exe)) OR (winlog.event_data.Image:(*\\\\powershell.exe OR *\\\\pwsh.exe))) AND winlog.event_data.CommandLine:*\\[char\\[\\]\\]\\(* AND winlog.event_data.CommandLine:*\\-join*)",
+                                                                            "filters":  [
+
+                                                                                        ]
+                                                                        },
+                                       "kibana.alert.rule.category":  "Custom Query Rule",
+                                       "kibana.alert.rule.consumer":  "siem",
+                                       "kibana.alert.rule.execution.uuid":  "d8999394-ed66-465b-8e70-6c71d3d05fa9",
+                                       "kibana.alert.rule.name":  "SIGMA - PowerShell Character-Array Obfuscated Execution",
+                                       "kibana.alert.rule.producer":  "siem",
+                                       "kibana.alert.rule.revision":  0,
+                                       "kibana.alert.rule.rule_type_id":  "siem.queryRule",
+                                       "kibana.alert.rule.uuid":  "ade22e88-5840-4795-b0b9-8ecc10446202",
+                                       "kibana.space_ids":  [
+                                                                "default"
+                                                            ],
+                                       "kibana.alert.rule.tags":  [
+
+                                                                  ],
+                                       "@timestamp":  "2026-08-03T02:15:17.205Z",
+                                       "input":  {
+                                                     "type":  "winlog"
+                                                 },
+                                       "agent":  {
+                                                     "name":  "DESKTOP-EVVU9LS",
+                                                     "id":  "86fa468a-1a0a-484e-b406-fbdd60e82413",
+                                                     "ephemeral_id":  "d88fca8d-10f9-441b-a5ed-c0c36eea599f",
+                                                     "type":  "filebeat",
+                                                     "version":  "9.4.2"
+                                                 },
+                                       "winlog":  {
+                                                      "computer_name":  "DESKTOP-EVVU9LS",
+                                                      "record_id":  4527,
+                                                      "process":  {
+                                                                      "pid":  3488,
+                                                                      "thread":  {
+                                                                                     "id":  3148
+                                                                                 }
+                                                                  },
+                                                      "event_id":  "1",
+                                                      "task":  "Process Create (rule: ProcessCreate)",
+                                                      "provider_guid":  "{5770385F-C22A-43E0-BF4C-06F5698FFBD9}",
+                                                      "channel":  "Microsoft-Windows-Sysmon/Operational",
+                                                      "event_data":  {
+                                                                         "Company":  "Microsoft Corporation",
+                                                                         "ParentImage":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                                                                         "User":  "DESKTOP-EVVU9LS\\victim-win-01",
+                                                                         "LogonGuid":  "{D796217E-F44D-6A6F-136D-100000000000}",
+                                                                         "Description":  "Windows PowerShell",
+                                                                         "OriginalFileName":  "PowerShell.EXE",
+                                                                         "IntegrityLevel":  "Medium",
+                                                                         "TerminalSessionId":  "1",
+                                                                         "ParentProcessId":  "2500",
+                                                                         "Product":  "MicrosoftÂ® WindowsÂ® Operating System",
+                                                                         "ParentUser":  "DESKTOP-EVVU9LS\\victim-win-01",
+                                                                         "Image":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                                                                         "ProcessGuid":  "{D796217E-F90E-6A6F-5501-000000000B00}",
+                                                                         "UtcTime":  "2026-08-03 02:12:30.993",
+                                                                         "CurrentDirectory":  "C:\\WINDOWS\\system32\\",
+                                                                         "CommandLine":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -Command \"$ps=[char[]](112,111,119,101,114,115,104,101,108,108); $cmd=[char[]](83,116,97,114,116,45,80,114,111,99,101,115,115,32,99,97,108,99,46,101,120,101); \u0026 (-join $ps) \u0027-Command\u0027 (-join $cmd)\"",
+                                                                         "Hashes":  "SHA256=0FF6F2C94BC7E2833A5F7E16DE1622E5DBA70396F31C7D5F56381870317E8C46",
+                                                                         "FileVersion":  "10.0.26100.5074 (WinBuild.160101.0800)",
+                                                                         "ProcessId":  "5216",
+                                                                         "ParentCommandLine":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\\AEGIS\\transfer\\atomic-t1027-11.ps1",
+                                                                         "ParentProcessGuid":  "{D796217E-F90D-6A6F-5401-000000000B00}",
+                                                                         "LogonId":  "0x106d13",
+                                                                         "RuleName":  "-"
+                                                                     },
+                                                      "opcode":  "Info",
+                                                      "provider_name":  "Microsoft-Windows-Sysmon",
+                                                      "version":  5,
+                                                      "user":  {
+                                                                   "identifier":  "S-1-5-18",
+                                                                   "domain":  "NT AUTHORITY",
+                                                                   "name":  "SYSTEM",
+                                                                   "type":  "User"
+                                                               }
+                                                  },
+                                       "ecs":  {
+                                                   "version":  "8.0.0"
+                                               },
+                                       "log":  {
+                                                   "level":  "information"
+                                               },
+                                       "data_stream":  {
+                                                           "namespace":  "aegis_lab",
+                                                           "type":  "logs",
+                                                           "dataset":  "windows.sysmon"
+                                                       },
+                                       "elastic_agent":  {
+                                                             "id":  "86fa468a-1a0a-484e-b406-fbdd60e82413",
+                                                             "version":  "9.4.2",
+                                                             "snapshot":  false
+                                                         },
+                                       "host":  {
+                                                    "hostname":  "DESKTOP-EVVU9LS",
+                                                    "os":  {
+                                                               "build":  "26200.6584",
+                                                               "kernel":  "10.0.26100.6584 (WinBuild.160101.0800)",
+                                                               "name":  "Windows 11 Enterprise Evaluation",
+                                                               "family":  "windows",
+                                                               "type":  "windows",
+                                                               "version":  "10.0",
+                                                               "platform":  "windows"
+                                                           },
+                                                    "ip":  [
+                                                               "fe80::67bf:cb80:c45d:f4d8",
+                                                               "192.168.56.10"
+                                                           ],
+                                                    "name":  "desktop-evvu9ls",
+                                                    "id":  "d796217e-7f00-44ee-bcfa-d00dd989ea1b",
+                                                    "mac":  [
+                                                                "08-00-27-FE-DE-BB"
+                                                            ],
+                                                    "architecture":  "x86_64"
+                                                },
+                                       "event":  {
+                                                     "code":  "1",
+                                                     "provider":  "Microsoft-Windows-Sysmon",
+                                                     "created":  "2026-08-03T02:12:33.094Z",
+                                                     "action":  "Process Create (rule: ProcessCreate)",
+                                                     "dataset":  "windows.sysmon"
+                                                 },
+                                       "message":  "Process Create:\nRuleName: -\nUtcTime: 2026-08-03 02:12:30.993\nProcessGuid: {D796217E-F90E-6A6F-5501-000000000B00}\nProcessId: 5216\nImage: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\nFileVersion: 10.0.26100.5074 (WinBuild.160101.0800)\nDescription: Windows PowerShell\nProduct: MicrosoftÂ® WindowsÂ® Operating System\nCompany: Microsoft Corporation\nOriginalFileName: PowerShell.EXE\nCommandLine: \"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -Command \"$ps=[char[]](112,111,119,101,114,115,104,101,108,108); $cmd=[char[]](83,116,97,114,116,45,80,114,111,99,101,115,115,32,99,97,108,99,46,101,120,101); \u0026 (-join $ps) \u0027-Command\u0027 (-join $cmd)\"\nCurrentDirectory: C:\\WINDOWS\\system32\\\nUser: DESKTOP-EVVU9LS\\victim-win-01\nLogonGuid: {D796217E-F44D-6A6F-136D-100000000000}\nLogonId: 0x106d13\nTerminalSessionId: 1\nIntegrityLevel: Medium\nHashes: SHA256=0FF6F2C94BC7E2833A5F7E16DE1622E5DBA70396F31C7D5F56381870317E8C46\nParentProcessGuid: {D796217E-F90D-6A6F-5401-000000000B00}\nParentProcessId: 2500\nParentImage: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\nParentCommandLine: \"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\\AEGIS\\transfer\\atomic-t1027-11.ps1\nParentUser: DESKTOP-EVVU9LS\\victim-win-01",
+                                       "kibana.alert.original_data_stream.namespace":  "aegis_lab",
+                                       "kibana.alert.original_data_stream.type":  "logs",
+                                       "kibana.alert.original_data_stream.dataset":  "windows.sysmon",
+                                       "kibana.alert.original_event.code":  "1",
+                                       "kibana.alert.original_event.provider":  "Microsoft-Windows-Sysmon",
+                                       "kibana.alert.original_event.created":  "2026-08-03T02:12:33.094Z",
+                                       "kibana.alert.original_event.kind":  "event",
+                                       "kibana.alert.original_event.action":  "Process Create (rule: ProcessCreate)",
+                                       "kibana.alert.original_event.dataset":  "windows.sysmon",
+                                       "event.kind":  "signal",
+                                       "kibana.alert.original_time":  "2026-08-03T02:12:31.003Z",
+                                       "kibana.alert.ancestors":  [
+                                                                      {
+                                                                          "id":  "AZ_FZWZyveKuiCkNBcSC",
+                                                                          "type":  "event",
+                                                                          "index":  ".ds-logs-windows.sysmon-aegis_lab-2026.08.02-000002",
+                                                                          "depth":  0
+                                                                      }
+                                                                  ],
+                                       "kibana.alert.status":  "active",
+                                       "kibana.alert.workflow_status":  "open",
+                                       "kibana.alert.depth":  1,
+                                       "kibana.alert.reason":  "event on desktop-evvu9ls created high alert SIGMA - PowerShell Character-Array Obfuscated Execution.",
+                                       "kibana.alert.severity":  "high",
+                                       "kibana.alert.risk_score":  73,
+                                       "kibana.alert.rule.actions":  [
+
+                                                                     ],
+                                       "kibana.alert.rule.author":  [
+                                                                        "AEGIS-VANGUARD lab"
+                                                                    ],
+                                       "kibana.alert.rule.created_at":  "2026-08-03T02:00:13.932Z",
+                                       "kibana.alert.rule.created_by":  "elastic",
+                                       "kibana.alert.rule.description":  "Detects PowerShell building a command or cmdlet name from an array of character\ncodes and rejoining it before execution, for example\n[char[]](112,111,119,101,114,115,104,101,108,108) piped through -join.\n\nThis rule exists because a real Atomic Red Team variation evaded the whole rule\npack. T1027 test #11 obfuscates Start-Process by constructing both the interpreter\nname and the command from decimal [char[]] arrays, then invoking with \u0026 (-join ...).\nIt carries no -EncodedCommand, no download-cradle vocabulary, and no scriptlet, so\nthe encoded-command rule (1131fb39), the decoded-cradle rule (8c1d2f4a), and the\nLOLBin rules all miss it. Its Sysmon Event ID 1 command line was captured intact in\nthe lab (2026-08-02 atomic run) and every deployed rule returned zero hits against it.\n\nThe discriminator is the obfuscation idiom itself: a [char[]] cast paired with -join\nis how a decimal code array is turned back into runnable text. Legitimate automation\nessentially never assembles a command name this way, so the two markers are required\ntogether to keep the rule tight.\n",
+                                       "kibana.alert.rule.enabled":  true,
+                                       "kibana.alert.rule.exceptions_list":  [
+
+                                                                             ],
+                                       "kibana.alert.rule.false_positives":  [
+                                                                                 "Rare tooling that legitimately assembles strings from character-code arrays"
+                                                                             ],
+                                       "kibana.alert.rule.from":  "now-5m",
+                                       "kibana.alert.rule.immutable":  false,
+                                       "kibana.alert.rule.interval":  "5m",
+                                       "kibana.alert.rule.indices":  [
+                                                                         "logs-windows.sysmon-aegis_lab",
+                                                                         "logs-windows.powershell-aegis_lab",
+                                                                         "logs-windows.defender-aegis_lab",
+                                                                         "logs-system.security-aegis_lab"
+                                                                     ],
+                                       "kibana.alert.rule.license":  "DRL",
+                                       "kibana.alert.rule.max_signals":  100,
+                                       "kibana.alert.rule.references":  [
+                                                                            "https://attack.mitre.org/techniques/T1027/",
+                                                                            "https://attack.mitre.org/techniques/T1059/001/"
+                                                                        ],
+                                       "kibana.alert.rule.risk_score_mapping":  [
+
+                                                                                ],
+                                       "kibana.alert.rule.rule_id":  "d4e91a72-3c85-4f6b-9e2a-7b1c0d5f8a34",
+                                       "kibana.alert.rule.severity_mapping":  [
+
+                                                                              ],
+                                       "kibana.alert.rule.threat":  [
+                                                                        {
+                                                                            "framework":  "MITRE ATT\u0026CK",
+                                                                            "tactic":  {
+                                                                                           "id":  "TA0002",
+                                                                                           "name":  "Execution",
+                                                                                           "reference":  "https://attack.mitre.org/tactics/TA0002"
+                                                                                       },
+                                                                            "technique":  [
+                                                                                              {
+                                                                                                  "id":  "T1059",
+                                                                                                  "name":  "Command and Scripting Interpreter",
+                                                                                                  "reference":  "https://attack.mitre.org/techniques/T1059",
+                                                                                                  "subtechnique":  [
+                                                                                                                       {
+                                                                                                                           "id":  "T1059.001",
+                                                                                                                           "name":  "PowerShell",
+                                                                                                                           "reference":  "https://attack.mitre.org/techniques/T1059/001"
+                                                                                                                       }
+                                                                                                                   ]
+                                                                                              }
+                                                                                          ]
+                                                                        }
+                                                                    ],
+                                       "kibana.alert.rule.to":  "now",
+                                       "kibana.alert.rule.type":  "query",
+                                       "kibana.alert.rule.updated_at":  "2026-08-03T02:00:13.932Z",
+                                       "kibana.alert.rule.updated_by":  "elastic",
+                                       "kibana.alert.rule.version":  1,
+                                       "kibana.alert.uuid":  "2c23e7faa979cec6bb8fecfefbb671564542fdcfb08730fd30bf8798cf80712d",
+                                       "kibana.alert.workflow_tags":  [
+
+                                                                      ],
+                                       "kibana.alert.workflow_assignee_ids":  [
+
+                                                                              ],
+                                       "kibana.alert.rule.meta.from":  "1m",
+                                       "kibana.alert.rule.risk_score":  73,
+                                       "kibana.alert.rule.severity":  "high",
+                                       "kibana.alert.intended_timestamp":  "2026-08-03T02:15:17.205Z",
+                                       "kibana.alert.rule.execution.type":  "scheduled"
+                                   },
+                       "sort":  [
+                                    1785723317205
+                                ]
+                   }
+               ],
+    "source_documents":  [
+                             {
+                                 "document_id":  "AZ_FZWZyveKuiCkNBcSC",
+                                 "index":  ".ds-logs-windows.sysmon-aegis_lab-2026.08.02-000002",
+                                 "source":  {
+                                                "input":  {
+                                                              "type":  "winlog"
+                                                          },
+                                                "agent":  {
+                                                              "name":  "DESKTOP-EVVU9LS",
+                                                              "id":  "86fa468a-1a0a-484e-b406-fbdd60e82413",
+                                                              "ephemeral_id":  "d88fca8d-10f9-441b-a5ed-c0c36eea599f",
+                                                              "type":  "filebeat",
+                                                              "version":  "9.4.2"
+                                                          },
+                                                "@timestamp":  "2026-08-03T02:12:31.003Z",
+                                                "winlog":  {
+                                                               "computer_name":  "DESKTOP-EVVU9LS",
+                                                               "record_id":  4527,
+                                                               "process":  {
+                                                                               "pid":  3488,
+                                                                               "thread":  {
+                                                                                              "id":  3148
+                                                                                          }
+                                                                           },
+                                                               "event_id":  "1",
+                                                               "task":  "Process Create (rule: ProcessCreate)",
+                                                               "provider_guid":  "{5770385F-C22A-43E0-BF4C-06F5698FFBD9}",
+                                                               "channel":  "Microsoft-Windows-Sysmon/Operational",
+                                                               "event_data":  {
+                                                                                  "Company":  "Microsoft Corporation",
+                                                                                  "ParentImage":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                                                                                  "User":  "DESKTOP-EVVU9LS\\victim-win-01",
+                                                                                  "LogonGuid":  "{D796217E-F44D-6A6F-136D-100000000000}",
+                                                                                  "Description":  "Windows PowerShell",
+                                                                                  "OriginalFileName":  "PowerShell.EXE",
+                                                                                  "IntegrityLevel":  "Medium",
+                                                                                  "TerminalSessionId":  "1",
+                                                                                  "ParentProcessId":  "2500",
+                                                                                  "Product":  "MicrosoftÂ® WindowsÂ® Operating System",
+                                                                                  "ParentUser":  "DESKTOP-EVVU9LS\\victim-win-01",
+                                                                                  "Image":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                                                                                  "ProcessGuid":  "{D796217E-F90E-6A6F-5501-000000000B00}",
+                                                                                  "UtcTime":  "2026-08-03 02:12:30.993",
+                                                                                  "CurrentDirectory":  "C:\\WINDOWS\\system32\\",
+                                                                                  "CommandLine":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -Command \"$ps=[char[]](112,111,119,101,114,115,104,101,108,108); $cmd=[char[]](83,116,97,114,116,45,80,114,111,99,101,115,115,32,99,97,108,99,46,101,120,101); \u0026 (-join $ps) \u0027-Command\u0027 (-join $cmd)\"",
+                                                                                  "Hashes":  "SHA256=0FF6F2C94BC7E2833A5F7E16DE1622E5DBA70396F31C7D5F56381870317E8C46",
+                                                                                  "FileVersion":  "10.0.26100.5074 (WinBuild.160101.0800)",
+                                                                                  "ProcessId":  "5216",
+                                                                                  "ParentCommandLine":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\\AEGIS\\transfer\\atomic-t1027-11.ps1",
+                                                                                  "ParentProcessGuid":  "{D796217E-F90D-6A6F-5401-000000000B00}",
+                                                                                  "LogonId":  "0x106d13",
+                                                                                  "RuleName":  "-"
+                                                                              },
+                                                               "opcode":  "Info",
+                                                               "provider_name":  "Microsoft-Windows-Sysmon",
+                                                               "version":  5,
+                                                               "user":  {
+                                                                            "identifier":  "S-1-5-18",
+                                                                            "domain":  "NT AUTHORITY",
+                                                                            "name":  "SYSTEM",
+                                                                            "type":  "User"
+                                                                        }
+                                                           },
+                                                "ecs":  {
+                                                            "version":  "8.0.0"
+                                                        },
+                                                "log":  {
+                                                            "level":  "information"
+                                                        },
+                                                "data_stream":  {
+                                                                    "namespace":  "aegis_lab",
+                                                                    "type":  "logs",
+                                                                    "dataset":  "windows.sysmon"
+                                                                },
+                                                "elastic_agent":  {
+                                                                      "id":  "86fa468a-1a0a-484e-b406-fbdd60e82413",
+                                                                      "version":  "9.4.2",
+                                                                      "snapshot":  false
+                                                                  },
+                                                "host":  {
+                                                             "hostname":  "DESKTOP-EVVU9LS",
+                                                             "os":  {
+                                                                        "build":  "26200.6584",
+                                                                        "kernel":  "10.0.26100.6584 (WinBuild.160101.0800)",
+                                                                        "name":  "Windows 11 Enterprise Evaluation",
+                                                                        "family":  "windows",
+                                                                        "type":  "windows",
+                                                                        "version":  "10.0",
+                                                                        "platform":  "windows"
+                                                                    },
+                                                             "ip":  [
+                                                                        "fe80::67bf:cb80:c45d:f4d8",
+                                                                        "192.168.56.10"
+                                                                    ],
+                                                             "name":  "desktop-evvu9ls",
+                                                             "id":  "d796217e-7f00-44ee-bcfa-d00dd989ea1b",
+                                                             "mac":  [
+                                                                         "08-00-27-FE-DE-BB"
+                                                                     ],
+                                                             "architecture":  "x86_64"
+                                                         },
+                                                "event":  {
+                                                              "code":  "1",
+                                                              "provider":  "Microsoft-Windows-Sysmon",
+                                                              "created":  "2026-08-03T02:12:33.094Z",
+                                                              "kind":  "event",
+                                                              "action":  "Process Create (rule: ProcessCreate)",
+                                                              "dataset":  "windows.sysmon"
+                                                          },
+                                                "message":  "Process Create:\nRuleName: -\nUtcTime: 2026-08-03 02:12:30.993\nProcessGuid: {D796217E-F90E-6A6F-5501-000000000B00}\nProcessId: 5216\nImage: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\nFileVersion: 10.0.26100.5074 (WinBuild.160101.0800)\nDescription: Windows PowerShell\nProduct: MicrosoftÂ® WindowsÂ® Operating System\nCompany: Microsoft Corporation\nOriginalFileName: PowerShell.EXE\nCommandLine: \"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -Command \"$ps=[char[]](112,111,119,101,114,115,104,101,108,108); $cmd=[char[]](83,116,97,114,116,45,80,114,111,99,101,115,115,32,99,97,108,99,46,101,120,101); \u0026 (-join $ps) \u0027-Command\u0027 (-join $cmd)\"\nCurrentDirectory: C:\\WINDOWS\\system32\\\nUser: DESKTOP-EVVU9LS\\victim-win-01\nLogonGuid: {D796217E-F44D-6A6F-136D-100000000000}\nLogonId: 0x106d13\nTerminalSessionId: 1\nIntegrityLevel: Medium\nHashes: SHA256=0FF6F2C94BC7E2833A5F7E16DE1622E5DBA70396F31C7D5F56381870317E8C46\nParentProcessGuid: {D796217E-F90D-6A6F-5401-000000000B00}\nParentProcessId: 2500\nParentImage: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\nParentCommandLine: \"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\\AEGIS\\transfer\\atomic-t1027-11.ps1\nParentUser: DESKTOP-EVVU9LS\\victim-win-01"
+                                            }
+                             }
+                         ]
+}

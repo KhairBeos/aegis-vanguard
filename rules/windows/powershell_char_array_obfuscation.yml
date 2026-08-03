@@ -1,0 +1,48 @@
+title: PowerShell Character-Array Obfuscated Execution
+id: d4e91a72-3c85-4f6b-9e2a-7b1c0d5f8a34
+status: experimental
+description: |
+  Detects PowerShell building a command or cmdlet name from an array of character
+  codes and rejoining it before execution, for example
+  [char[]](112,111,119,101,114,115,104,101,108,108) piped through -join.
+
+  This rule exists because a real Atomic Red Team variation evaded the whole rule
+  pack. T1027 test #11 obfuscates Start-Process by constructing both the interpreter
+  name and the command from decimal [char[]] arrays, then invoking with & (-join ...).
+  It carries no -EncodedCommand, no download-cradle vocabulary, and no scriptlet, so
+  the encoded-command rule (1131fb39), the decoded-cradle rule (8c1d2f4a), and the
+  LOLBin rules all miss it. Its Sysmon Event ID 1 command line was captured intact in
+  the lab (2026-08-02 atomic run) and every deployed rule returned zero hits against it.
+
+  The discriminator is the obfuscation idiom itself: a [char[]] cast paired with -join
+  is how a decimal code array is turned back into runnable text. Legitimate automation
+  essentially never assembles a command name this way, so the two markers are required
+  together to keep the rule tight.
+references:
+  - https://attack.mitre.org/techniques/T1027/
+  - https://attack.mitre.org/techniques/T1059/001/
+author: AEGIS-VANGUARD lab
+date: 2026-08-03
+tags:
+  - attack.defense-evasion
+  - attack.execution
+  - attack.t1027
+  - attack.t1059.001
+logsource:
+  product: windows
+  service: sysmon
+detection:
+  selection_event:
+    EventID: 1
+  selection_image:
+    Image|endswith:
+      - '\powershell.exe'
+      - '\pwsh.exe'
+  selection_charcast:
+    CommandLine|contains: '[char[]]('
+  selection_rejoin:
+    CommandLine|contains: '-join'
+  condition: all of selection_*
+falsepositives:
+  - Rare tooling that legitimately assembles strings from character-code arrays
+level: high

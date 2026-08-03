@@ -1,0 +1,37 @@
+﻿{
+    "scenario_id":  "AEGIS-SCN-0006",
+    "lab_session_id":  "AEGIS-LAB-20260802",
+    "collected_utc":  "2026-08-03T01:52:45.1175306Z",
+    "technique_id":  "T1218.010",
+    "atomic_test":  "#4 (2408973b) - regsvr32 registering a renamed local DLL, no scrobj/URL",
+    "marker_id":  "",
+    "detection_result":  "missed",
+    "alert_count":  0,
+    "source_doc_count":  0,
+    "time_to_detect_s":  "not applicable",
+    "execution_start":  "2026-08-02T10:55:05.0000000Z",
+    "execution_end":  "2026-08-02T10:55:50.0000000Z",
+    "alert_timestamp":  "not applicable",
+    "rule":  {
+                 "rule_id":  "6b5da61b-8454-449f-b33c-99f2335025c9",
+                 "uuid":  "dfcfbecb-733c-421c-ac67-791378c48b3e",
+                 "name":  "SIGMA - Regsvr32 Remote Scriptlet Execution",
+                 "version":  1,
+                 "interval":  "5m",
+                 "from":  "now-5m",
+                 "to":  "now",
+                 "index":  [
+                               "logs-windows.sysmon-aegis_lab",
+                               "logs-windows.powershell-aegis_lab",
+                               "logs-windows.defender-aegis_lab",
+                               "logs-system.security-aegis_lab"
+                           ],
+                 "query":  "winlog.channel:Microsoft\\-Windows\\-Sysmon\\/Operational AND (event.code:1 AND (process.executable:*\\\\regsvr32.exe OR winlog.event_data.Image:*\\\\regsvr32.exe) AND (winlog.event_data.CommandLine:(*scrobj.dll* OR *\\/i\\:http* OR *\\/i\\:ftp* OR *\\-i\\:http* OR *\\-i\\:ftp* OR *\\/i\\:\\\\*)))"
+             },
+    "alerts":  [
+
+               ],
+    "source_documents":  [
+
+                         ]
+}

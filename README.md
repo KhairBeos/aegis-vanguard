@@ -25,38 +25,43 @@ The lab is partly built and partly planned. The table below is the honest summar
 | ECS normalization, Sysmon / PowerShell / Defender | `Future` | Blocked: Windows integration `3.9.0` is incompatible with Elasticsearch `9.4.2`. Verified not to be a lab misconfiguration |
 | Executor error handling | `Runtime verified` | A missing index yields `partial failure`, a malformed query yields `failed`, and neither fabricates an alert |
 | Sigma conversion | `Unit tested` | `rules/`, `sigma/pipelines/aegis-lab.yml`, `scripts/convert-sigma.ps1` |
-| Detection rule query logic | `Unit tested` | `scripts/test-detection-rules.ps1`, 32 fixture cases across 5 rules |
+| Detection rule query logic | `Unit tested` | `scripts/test-detection-rules.ps1`, 37 fixture cases across 6 rules |
 | Ingest-time payload decoding | `Runtime verified` | `infra/elastic/ingest-pipelines/aegis-powershell-decode.json`; live events carry `aegis.powershell.decoded_command` |
-| Detection tuning | `Runtime verified` | `docs/detection-tuning-log.md`, TUNE-001 with before/after alert counts |
-| Detection rule deployment and execution | `Runtime verified` | `scripts/verify-detection-rules.ps1`; 4 rules enabled and executing |
-| Detection of real activity | `Runtime verified` | 3 evidence bundles in `evidence/`, each one alert correctly attributed to one source event |
+| Detection tuning | `Runtime verified` | `docs/detection-tuning-log.md`, TUNE-001 and TUNE-002, each with before/after measurement |
+| Detection rule deployment and execution | `Runtime verified` | `scripts/verify-detection-rules.ps1`; 6 rules enabled and executing |
+| Detection of real activity | `Runtime verified` | Detected evidence bundles in `evidence/`, each one alert correctly attributed to one source event |
+| Atomic Red Team gap analysis | `Runtime verified` | `docs/atomic-validation-gap-analysis.md`; 5 procedures run, 4 misses proven deterministically, 1 real gap found and closed |
 | MITRE coverage and gap analysis | `Runtime verified` | `mitre/coverage.md`, generated from evidence by `scripts/build-coverage.ps1` |
 | Alert deduplication | `Runtime verified` | One source document queried by three consecutive rule executions produced exactly one alert |
 | T1547.001 Run key rule vs Atomic test #1 | **`Live verified`** | `evidence/AEGIS-SCN-0005.md`, `docs/scenario-alignment-t1547-001.md`. This exact rule-scenario pair only |
+| T1027 char-array rule vs Atomic test #11 | **`Live verified`** | `evidence/AEGIS-SCN-0010.md`, `TUNE-002`. Found as a miss, closed, then re-verified live. This exact pair only |
 | Every other rule-scenario pair | `Runtime verified` | Benign marker runs, where the same author wrote both the rule and the trigger |
 | Optional post-MVP API/dashboard | `Future` | No artifact planned before MVP |
 | Portfolio packaging | `Runtime verified` | `docs/portfolio-report.md`: claim-to-evidence table, demo runbook, and the weaknesses a reviewer should press on |
 | Suricata network telemetry | `Runtime verified` (pipeline only) | `scripts/analyze-network-telemetry.ps1`; PCAP to `logs-suricata.eve-aegis_lab`. Real VM capture still `Future` |
 | Wazuh host log / FIM | `Runtime verified` (deployment only) | `infra/wazuh/docker-compose.yml`; manager running, 11 components. Agent on the victim VM still `Future` |
 | Kafka transport | `Runtime verified` | `scripts/verify-kafka-transport.ps1`; 15 real alerts round-trip byte-identical |
-| Detections from Suricata, Wazuh, or Kafka | `Future` | **None of the three has produced a detection.** All five detections still come from Sysmon via Elastic |
+| Detections from Suricata, Wazuh, or Kafka | `Future` | **None of the three has produced a detection.** Every detection still comes from Sysmon via Elastic |
 
 All coverage, false-positive-rate, MTTD, and gap-closure metrics are `Not measured yet`.
 
 ### What the detections do and do not prove
 
-Proven: four Sigma rules convert, deploy, and execute in Elastic Security. Three of them
-matched real telemetry produced by a live Windows VM, and each detection is captured in an
-evidence bundle that links one alert to one source document, with the query window, rule
-version, timestamps, and a SHA-256 of the raw export.
+Proven: six Sigma rules convert, deploy, and execute in Elastic Security. Several matched
+real telemetry produced by a live Windows VM, and each detection is captured in an evidence
+bundle that links one alert to one source document, with the query window, rule version,
+timestamps, and a SHA-256 of the raw export.
 
-One pair is `Live verified`: the Registry Run Key Persistence rule against Atomic Red Team
-T1547.001 test #1. That scenario matters more than the others because the activity was
-defined by someone outside this project. In the four marker-based scenarios the same author
-wrote both the rule and the thing meant to trigger it, which is the weakest possible test.
+Two pairs are `Live verified`: the Registry Run Key Persistence rule against Atomic Red Team
+T1547.001 test #1, and the Character-Array Obfuscated Execution rule against T1027 test #11.
+Both matter more than the marker runs because the activity was defined outside this project.
+The second is the stronger story: an Atomic run found four rules missing real procedures, one
+of those gaps was closed with a new rule, and that rule was then re-verified live — miss to
+detection with before/after measurement (`docs/atomic-validation-gap-analysis.md`, `TUNE-002`).
 
-Not proven: that any of this survives an attacker who is trying to evade it. One Atomic test
-of one procedure is not coverage of a technique, and `T1547.001` alone has 20 defined tests.
+Not proven: that any of this survives an attacker who is trying to evade it. Two Atomic tests
+of two procedures are not coverage of a technique, and `T1547.001` alone has 20 defined tests.
+The gap analysis is explicit that three of the four misses remain open or out of scope.
 
 The rules have already produced their first operational false positives. This project's own
 tooling drives the VM through `VBoxManage guestcontrol`, which invokes
@@ -263,7 +268,7 @@ The host was measured on `2026-08-02`: **61.7 GB total, 30.3 GB free** with the 
 | Wazuh manager + indexer | ~4 GB RAM | Estimate; not deployed |
 | Kafka | ~1.5-2 GB RAM | Estimate; not deployed |
 
-Resource pressure is therefore **not** the reason Suricata, Wazuh, and Kafka are absent. The reason is stated in `PROJECT_PLAN.md`: with four of five scenarios still benign marker runs, more components would make the project look broader and be worth less than more Atomic tests against the rules that already exist.
+Resource pressure is therefore **not** the reason Suricata, Wazuh, and Kafka are absent. The reason is stated in `PROJECT_PLAN.md`: with most scenarios still benign marker runs and open Atomic gaps recorded in `docs/atomic-validation-gap-analysis.md`, more components would make the project look broader and be worth less than closing those gaps and running more Atomic tests against the rules that already exist.
 
 | Mode | Use | Running components |
 | --- | --- | --- |

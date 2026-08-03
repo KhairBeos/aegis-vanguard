@@ -13,8 +13,8 @@ capability table. This section exists so the roadmap below is read against reali
 | --- | --- | --- |
 | Phase 0 - local lab foundation | **Complete** | `docs/phase-0-environment.md` |
 | Phase 1 - ingestion and ECS verification | **Partly complete** | Six data streams ingest under authentication. ECS normalization is verified for `system.*`; for Sysmon, PowerShell, and Defender it is blocked by a Windows integration package incompatibility, not by configuration. See `docs/ecs-normalization.md` |
-| Phase 2 - Sigma conversion, execution, alert persistence | **Complete** | Executor gate resolved in `docs/adr-001-detection-executor.md`. All five executor requirements verified, including deduplication and error handling. Five rules deployed, one tuning cycle with before/after measurement |
-| Phase 3 - Atomic-backed validation | **Complete for one pair** | Atomic T1547.001 test #1 executed with approval. `evidence/AEGIS-SCN-0005.md` is the first `Live verified` rule-scenario pair |
+| Phase 2 - Sigma conversion, execution, alert persistence | **Complete** | Executor gate resolved in `docs/adr-001-detection-executor.md`. All five executor requirements verified, including deduplication and error handling. Six rules deployed, two tuning cycles (TUNE-001, TUNE-002) each with before/after measurement |
+| Phase 3 - Atomic-backed validation | **Complete for two pairs** | Atomic T1547.001 test #1 and T1027 test #11 executed with approval. `evidence/AEGIS-SCN-0005.md` and `AEGIS-SCN-0010.md` are the two `Live verified` pairs; the second was found as a miss and closed. `docs/atomic-validation-gap-analysis.md` |
 | Phase 4 - MITRE coverage and gap analysis | **Complete for the current evidence** | `mitre/coverage.md` is generated from bundles and separates Atomic-backed scenarios from benign marker runs |
 | Phase 5 - Suricata | **Built, partially verified** | Pipeline `PCAP -> Suricata -> Elasticsearch` verified end to end. Live capture from the VM needs one elevated `pktmon` run. `docs/phase-5-7-additional-sources.md` |
 | Phase 6 - Wazuh | **Built, partially verified** | Manager running with 11 components. Its current alerts describe the container itself and were deliberately not ingested. Agent on the victim VM needs an elevated install |
@@ -23,12 +23,15 @@ capability table. This section exists so the roadmap below is read against reali
 
 **The MVP checkpoint below is met, 10 of 10.**
 
-What that does and does not mean: one rule-scenario pair is `Live verified`, and four of the
-five scenarios are still benign markers where the same author wrote both the rule and the
-thing meant to trigger it. `T1547.001` alone has 20 defined atomic tests and this lab has run
-one. The honest next move is more Atomic tests against the existing rules, not Suricata,
-Wazuh, or Kafka. Adding components to a lab with one externally validated detection would make
-the project look broader and be worth less.
+What that does and does not mean: two rule-scenario pairs are `Live verified`, both by
+approved Atomic Red Team tests. The rest of the scenarios are still benign markers where the
+same author wrote both the rule and the trigger. An Atomic run against the whole pack found
+four real procedures missed; one gap was closed with a new rule and re-verified live, one is a
+recorded variant gap, one was confounded by a test-harness quoting bug, and one is a correct
+scope boundary (`docs/atomic-validation-gap-analysis.md`). The honest next move remains more
+Atomic tests against the existing rules — closing the regsvr32 renamed-DLL gap and re-running
+T1027 #3 faithfully — not Suricata, Wazuh, or Kafka. More components would make the project
+look broader and be worth less.
 
 All metrics remain `Not measured yet`. The false-positive-rate metric in particular has a
 documented method and a real before/after in `docs/detection-tuning-log.md`, but a sample of

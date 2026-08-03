@@ -4,10 +4,41 @@
 
 ## Current working state
 
-- Evidence timestamp: `2026-08-02T05:54Z`.
-- Milestone result: `RULE PACK AND EVIDENCE-DRIVEN COVERAGE BUILT — ATOMIC VALIDATION STILL PENDING`.
-- Four rules deployed; three have evidence-backed detections across three MITRE techniques.
+- Evidence timestamp: `2026-08-03T02:19Z`.
+- Milestone result: `ATOMIC VALIDATION RUN — ONE REAL GAP FOUND AND CLOSED, SECOND LIVE-VERIFIED PAIR`.
+- **Six** rules deployed; two are now `Live verified` by approved Atomic Red Team pairs
+  (`AEGIS-SCN-0005` T1547.001, `AEGIS-SCN-0010` T1027 char-array).
 - `mitre/coverage.md` is generated from evidence bundles by `scripts/build-coverage.ps1`.
+
+## Atomic validation of the rule pack (2026-08-03)
+
+Five Atomic Red Team procedures were run against the pack; four produced telemetry and all
+four missed. The misses were proven **deterministically** — each deployed rule's own
+generated Lucene query returns 0 hits against the procedure's persisted Sysmon Event ID 1,
+so the misses are rule logic, not scheduler/overnight-downtime artifacts. Full write-up in
+`docs/atomic-validation-gap-analysis.md`. Each miss was triaged honestly:
+
+- `AEGIS-SCN-0006` T1218.010 #4 — regsvr32 loading a renamed **local** DLL; rule targets the
+  remote-scriptlet (Squiblydoo) form. Rule-logic **variant gap**, recorded not closed.
+- `AEGIS-SCN-0007` T1027 #3 — guest-control **mangled the nested quotes**, stripping
+  `FromBase64String` before it reached the command line. Miss confounded by the harness, not
+  a rule finding. Scenario limitation; faithful re-run is future work.
+- `AEGIS-SCN-0008` T1027 #11 — char-array obfuscation, faithful telemetry, **real gap → closed**.
+- `AEGIS-SCN-0009` T1059.005 #1 — cscript ran a VBS that spawned **no** shell; the Script Host
+  rule detects a script host *spawning a shell*. Correct scope boundary, not a defect
+  (verified: 0 children of cscript in the window).
+
+### The one detection-engineering loop — TUNE-002
+
+New rule `d4e91a72-3c85-4f6b-9e2a-7b1c0d5f8a34` — PowerShell Character-Array Obfuscated
+Execution — matches `[char[]](` **and** `-join` together. Measured: 0→1 on the exact missed
+document, 1 match across all Sysmon history (0 false positives), and a live detection on a
+faithful re-run (`AEGIS-SCN-0010`, MTTD 171.2s, source `02:12:31.003Z` → alert `02:15:17.205Z`).
+
+Harness lesson recorded in `TUNE-002`: putting the `[char[]]` line in a file and running it
+with `-File` executes it in-process and the obfuscation never lands on a command line — the
+faithful form spawns a child with the array as its `-Command` argument, which is how the
+original atomic and Sysmon record it.
 
 ## Tuning cycle TUNE-001 — measured, not guessed
 
@@ -440,5 +471,5 @@ Verified after installation rather than assumed:
 
 ## Remaining work
 2. **Windows integration package** stays blocked until either the package or the stack version moves. Re-test with `POST /api/fleet/epm/packages/windows` after any upgrade; if it installs, the two dataset renames become worth doing.
-3. **Breadth over depth is still the wrong move.** Phases 5-8 (Suricata, Wazuh, Kafka, packaging) remain gated behind judgement, not effort. Four of five scenarios are still benign marker runs, and only one rule-scenario pair is `Live verified`; more Atomic tests against the existing rules are worth more than any new component.
+3. **Breadth over depth is still the wrong move.** Phases 5-8 (Suricata, Wazuh, Kafka, packaging) remain gated behind judgement, not effort. Two rule-scenario pairs are now `Live verified`; the highest-value next work is the two open Atomic gaps — the regsvr32 renamed-local-DLL variant (`AEGIS-SCN-0006`) and a faithful re-run of the quote-mangled T1027 #3 (`AEGIS-SCN-0007`) — not any new component.
 4. **TLS** remains a recorded, accepted gap.
