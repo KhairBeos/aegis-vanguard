@@ -37,13 +37,17 @@ The lab is partly built and partly planned. The table below is the honest summar
 | T1027 char-array rule vs Atomic test #11 | **`Live verified`** | `evidence/AEGIS-SCN-0010.md`, `TUNE-002`. Found as a miss, closed, then re-verified live. This exact pair only |
 | T1218.010 non-registrable regsvr32 vs Atomic test #4 | **`Live verified`** | `evidence/AEGIS-SCN-0011.md`, `TUNE-004`. Miss closed by a new rule, re-verified live. This exact pair only |
 | T1027 cradle plaintext arm vs Atomic test #3 | **`Live verified`** | `evidence/AEGIS-SCN-0012.md`, `TUNE-003`. Miss closed by extending the cradle rule, re-verified live. This exact pair only |
+| T1059.001 encoded command vs Atomic test #17 | **`Live verified`** | `evidence/AEGIS-SCN-0013.md`. Converts a benign-marker rule to external validation. This exact pair only |
+| T1218.005 script host (mshta) vs Atomic test #10 | **`Live verified`** | `evidence/AEGIS-SCN-0014.md`. mshta spawns powershell; converts a benign-marker rule to external validation. This exact pair only |
 | Every other rule-scenario pair | `Runtime verified` | Benign marker runs, where the same author wrote both the rule and the trigger |
+| Rule pack specificity | `Runtime verified` | `docs/detection-tuning-log.md` smoke test: 0 false positives over 50 benign process events across all 7 rules |
 | Optional post-MVP API/dashboard | `Future` | No artifact planned before MVP |
 | Portfolio packaging | `Runtime verified` | `docs/portfolio-report.md`: claim-to-evidence table, demo runbook, and the weaknesses a reviewer should press on |
-| Suricata network telemetry | `Runtime verified` (pipeline only) | `scripts/analyze-network-telemetry.ps1`; PCAP to `logs-suricata.eve-aegis_lab`. Real VM capture still `Future` |
-| Wazuh host log / FIM | `Runtime verified` (deployment only) | `infra/wazuh/docker-compose.yml`; manager running, 11 components. Agent on the victim VM still `Future` |
+| Suricata network telemetry | `Runtime verified` (pipeline + engine detection) | `scripts/analyze-network-telemetry.ps1` + `infra/suricata/local.rules`; a real `alert` (sid 9000002) on a synthetic PCAP. Real VM capture still `Future` |
+| Wazuh host log / FIM | `Runtime verified` (deployment + engine detection) | `infra/wazuh/docker-compose.yml`; built-in rules `5710`/`5712` fired via `wazuh-logtest`. Agent on the victim VM still `Future` |
 | Kafka transport | `Runtime verified` | `scripts/verify-kafka-transport.ps1`; 15 real alerts round-trip byte-identical |
-| Detections from Suricata, Wazuh, or Kafka | `Future` | **None of the three has produced a detection.** Every detection still comes from Sysmon via Elastic |
+| Suricata / Wazuh engine detection | `Runtime verified` | Each engine matched a rule and emitted an alert (offline PCAP / injected log). Neither is `Live verified`: not yet fed real victim-VM telemetry. See `docs/phase-5-7-additional-sources.md` |
+| Live-verified detections from non-Sysmon sources | `Future` | Every `Live verified` detection still comes from Sysmon via Elastic; Suricata/Wazuh need real VM telemetry, Kafka is transport |
 
 All coverage, false-positive-rate, MTTD, and gap-closure metrics are `Not measured yet`.
 
@@ -54,16 +58,18 @@ real telemetry produced by a live Windows VM, and each detection is captured in 
 bundle that links one alert to one source document, with the query window, rule version,
 timestamps, and a SHA-256 of the raw export.
 
-Four pairs are `Live verified` by external Atomic Red Team tests. The strongest story is the
+Six pairs are `Live verified` by external Atomic Red Team tests. The strongest story is the
 gap loop: an Atomic run against the whole pack found four real procedures missing. Three were
 reproducible and were closed — a new char-array rule (T1027 #11), a new non-registrable
 regsvr32 rule (T1218.010 #4), and a plaintext arm added to the cradle rule (T1027 #3) — each
 with before/after measurement and each re-verified live on a faithful re-run
 (`docs/atomic-validation-gap-analysis.md`, `TUNE-002` to `TUNE-004`). The fourth non-detection
-(T1059.005 #1) is a correct scope boundary, kept as a miss on purpose.
+(T1059.005 #1) is a correct scope boundary, kept as a miss on purpose. Two more benign-marker
+rules were then converted to external validation with their own Atomic tests (encoded command
+T1059.001 #17, and mshta spawning powershell T1218.005 #10).
 
-Not proven: that any of this survives an attacker who is trying to evade it. Four Atomic tests
-of four procedures are not coverage of a technique, and `T1547.001` alone has 20 defined tests.
+Not proven: that any of this survives an attacker who is trying to evade it. Six Atomic tests
+of six procedures are not coverage of a technique, and `T1547.001` alone has 20 defined tests.
 Each rule detects one shape, not the technique; the tuning log names the evasions that still
 work against the new rules.
 

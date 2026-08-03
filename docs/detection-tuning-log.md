@@ -226,3 +226,28 @@ The negative-extension approach flags any non-`.dll`/`.ocx` target, including a 
 `regsvr32 /?`-style call if it ever carried a stray token; the bare-launch filter covers the
 no-target case but not every benign flag combination. A real environment with legitimate
 regsvr32 usage should measure the alert volume before enabling at `high`.
+
+---
+
+## Specificity smoke test - the pack against a benign workload
+
+**Date:** `2026-08-03`
+
+A benign administrator workload (18 read-only diagnostics: `hostname`, `whoami /all`,
+`ipconfig /all`, `Get-Process`, `tasklist`, `systeminfo`, `netstat`, `nslookup`, and similar)
+was run in `victim-win-01`, producing **50 Sysmon Event ID 1** process-creation events in the
+window `03:44:25Z`-`03:44:59Z`. Every deployed rule's own generated query was then run
+against that window.
+
+| Rule | Matches |
+| --- | --- |
+| all seven | **0** |
+| **Total false positives** | **0 over 50 benign events** |
+
+This is a specificity check, not a false-positive **rate**. Fifty events on one host in half a
+minute is nowhere near the scale a rate would need, so per `PROJECT_PLAN.md` the
+false-positive-rate metric stays `Not measured yet`. What it does show, deterministically, is
+that ordinary admin activity trips none of the seven rules - the pack is not obviously noisy.
+The one rule that has ever produced an operational false positive, the `medium` encoded-command
+rule, only does so against `-EncodedCommand` automation (TUNE-001), none of which appears in a
+normal diagnostic session.

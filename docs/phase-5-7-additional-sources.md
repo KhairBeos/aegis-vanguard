@@ -3,9 +3,11 @@
 Built `2026-08-02`. Each phase is recorded with what it actually demonstrates, which in every
 case is less than "we have Suricata / Wazuh / Kafka".
 
-The honest framing up front: none of these three improves detection in this lab today. They
-were built because the roadmap lists them and because each answers a narrow, checkable
-question. Where a phase stops short, that is stated rather than papered over.
+The honest framing up front: none of these three defends the victim VM today. They were built
+because the roadmap lists them and because each answers a narrow, checkable question. Suricata
+and Wazuh have since each produced a first engine detection (offline PCAP and `wazuh-logtest`
+respectively - see below), which proves the engines detect but not that they are fed real
+telemetry. Where a phase stops short, that is stated rather than papered over.
 
 ---
 
@@ -45,7 +47,24 @@ looked like findings and were not - they were an artefact of hand-computed packe
 checksum. Fixing the checksums removed them. Worth remembering: a synthetic input can
 manufacture alerts that mean nothing.
 
-Status: pipeline `Runtime verified`; network telemetry from the victim VM `Future`.
+### First engine detection
+
+`infra/suricata/local.rules` adds two self-authored lab signatures (sid `9000001`/`9000002`),
+loaded with the new `-LocalRulesPath` switch. Run over the crafted PCAP, Suricata produced a
+real `alert` record:
+
+| Field | Value |
+| --- | --- |
+| Signature | `AEGIS LAB Suspicious DNS query (aegis-lab-probe)` (sid `9000002`) |
+| Category | `Potentially Bad Traffic` |
+| Records ingested | `alert` 1, `dns` 1, `flow` 2 into `logs-suricata.eve-aegis_lab` |
+
+This is the Suricata engine matching a rule and emitting an alert end to end - the first
+detection in this lab from a source other than Sysmon. It is `Runtime verified`, **not**
+`Live verified`: the same author wrote the rule and the traffic, and the PCAP is synthetic
+rather than captured from the VM. It is the network equivalent of a benign marker run.
+
+Status: pipeline and engine detection `Runtime verified`; network telemetry from the victim VM `Future`.
 
 ---
 
@@ -75,7 +94,28 @@ defending, and every downstream count in `mitre/coverage.md` would become harder
 To get Wazuh telemetry from the victim VM, a Wazuh agent has to be installed there. That is an
 elevated MSI install, blocked by the same UAC constraint as `pktmon`.
 
-Status: deployment `Runtime verified`; Wazuh as a source of victim-VM telemetry `Future`.
+### First engine detection
+
+The manager's own decoders and **built-in ruleset** were exercised with `wazuh-logtest`,
+feeding an sshd authentication-failure log (no self-authored rule involved):
+
+```
+Aug  3 10:00:0N victim sshd[12NN]: Failed password for invalid user admin from 203.0.113.7 port ... ssh2
+```
+
+| Input | Wazuh built-in rule that fired | Level | MITRE |
+| --- | --- | --- | --- |
+| One failed login | `5710` sshd: Attempt to login using a non-existent user | 5 | `T1110.001`, `T1021.004` |
+| Eight in sequence | `5712` sshd: brute force trying to get access to the system | 10 | `T1110` |
+
+The escalation from `5710` to `5712` is Wazuh's own frequency-based correlation, using the
+shipped ruleset with its full MITRE/GDPR/PCI/HIPAA tagging - not something this lab wrote. It
+is a genuine Wazuh engine detection, and more defensible than the Suricata one because the rule
+is a vendor rule. The caveat is different: the log was injected through `wazuh-logtest` rather
+than collected by an agent on `victim-win-01`, so it proves the analysis engine detects, not
+that the lab is collecting host telemetry. `Runtime verified`, not `Live verified`.
+
+Status: deployment and engine detection `Runtime verified`; Wazuh as a source of victim-VM telemetry `Future`.
 
 ---
 
@@ -125,11 +165,14 @@ Status: transport `Runtime verified`; operational value `none at this scale`, by
 
 | Phase | Deployed | Verified | Still missing |
 | --- | --- | --- | --- |
-| 5 Suricata | yes | pipeline moves records end to end | real capture from the victim VM, needs one elevated `pktmon` run |
-| 6 Wazuh | manager only | 11 components running, ports host-only | agent on the victim VM, needs an elevated install |
+| 5 Suricata | yes | pipeline + engine detection (offline, self-authored rule) | real capture from the victim VM, needs one elevated `pktmon` run |
+| 6 Wazuh | manager only | 11 components + engine detection (built-in rules via logtest) | agent on the victim VM, needs an elevated install |
 | 7 Kafka | yes | 15 real alerts round-trip byte-identical | nothing; it works and is still not useful here |
 
-All three share one gap: **none of them has produced a detection**. The lab's five detections
-still come entirely from Sysmon via Elastic. Adding these components made the architecture
-diagram wider without making the detection story deeper, which is exactly the trade
-`docs/portfolio-report.md` warns a reviewer about.
+Suricata and Wazuh now each produce a detection through their own engines - Suricata matching a
+lab rule on a synthetic PCAP, Wazuh matching its shipped ruleset on an injected log. Both are
+`Runtime verified` (the engine detects), not `Live verified` (neither is fed real victim-VM
+telemetry yet). Kafka is transport and produces no detection by design. Every `Live verified`
+detection in the lab still comes from Sysmon via Elastic; these two show the other engines can
+detect once real telemetry reaches them, which is the honest half-step between "deployed" and
+"defending the VM".

@@ -14,25 +14,25 @@ capability table. This section exists so the roadmap below is read against reali
 | Phase 0 - local lab foundation | **Complete** | `docs/phase-0-environment.md` |
 | Phase 1 - ingestion and ECS verification | **Partly complete** | Six data streams ingest under authentication. ECS normalization is verified for `system.*`; for Sysmon, PowerShell, and Defender it is blocked by a Windows integration package incompatibility, not by configuration. See `docs/ecs-normalization.md` |
 | Phase 2 - Sigma conversion, execution, alert persistence | **Complete** | Executor gate resolved in `docs/adr-001-detection-executor.md`. All five executor requirements verified, including deduplication and error handling. Seven rules deployed, four tuning cycles (TUNE-001 to TUNE-004) each with before/after measurement |
-| Phase 3 - Atomic-backed validation | **Complete for four pairs** | Atomic tests T1547.001 #1, T1027 #11, T1218.010 #4, and T1027 #3 executed with approval. `AEGIS-SCN-0005/0010/0011/0012` are the four `Live verified` pairs; three of them were found as misses in the validation run and closed. `docs/atomic-validation-gap-analysis.md` |
+| Phase 3 - Atomic-backed validation | **Complete for six pairs** | Atomic tests T1547.001 #1, T1027 #11, T1218.010 #4, T1027 #3, T1059.001 #17, T1218.005 #10 executed with approval. `AEGIS-SCN-0005/0010/0011/0012/0013/0014` are the six `Live verified` pairs; three were found as misses in the validation run and closed. `docs/atomic-validation-gap-analysis.md` |
 | Phase 4 - MITRE coverage and gap analysis | **Complete for the current evidence** | `mitre/coverage.md` is generated from bundles and separates Atomic-backed scenarios from benign marker runs |
-| Phase 5 - Suricata | **Built, partially verified** | Pipeline `PCAP -> Suricata -> Elasticsearch` verified end to end. Live capture from the VM needs one elevated `pktmon` run. `docs/phase-5-7-additional-sources.md` |
-| Phase 6 - Wazuh | **Built, partially verified** | Manager running with 11 components. Its current alerts describe the container itself and were deliberately not ingested. Agent on the victim VM needs an elevated install |
+| Phase 5 - Suricata | **Built, partially verified** | Pipeline `PCAP -> Suricata -> Elasticsearch` verified end to end, plus a first engine detection (local rule sid 9000002 on a synthetic PCAP). Live capture from the VM needs one elevated `pktmon` run. `docs/phase-5-7-additional-sources.md` |
+| Phase 6 - Wazuh | **Built, partially verified** | Manager running with 11 components, plus a first engine detection (built-in rules 5710/5712 via `wazuh-logtest`). Agent on the victim VM needs an elevated install |
 | Phase 7 - Kafka | **Built and verified** | 15 real alerts crossed the broker byte-identical, compared per record by SHA-256 rather than by count |
 | Phase 8 - portfolio packaging | **Complete** | `docs/portfolio-report.md`: claim-to-evidence table, the four bugs worth discussing, a demo runbook, and a list of what a reviewer should push back on |
 
 **The MVP checkpoint below is met, 10 of 10.**
 
-What that does and does not mean: four rule-scenario pairs are `Live verified`, all by
-approved Atomic Red Team tests. The rest of the scenarios are still benign markers where the
-same author wrote both the rule and the trigger. An Atomic run against the whole pack found
-four real procedures missed; three were reproducible and are now closed — a char-array rule
-(T1027 #11), a non-registrable regsvr32 rule (T1218.010 #4), and a plaintext arm on the cradle
-rule (T1027 #3) — each re-verified live with before/after measurement. The fourth (T1059.005
-#1) is a correct scope boundary, kept as a miss (`docs/atomic-validation-gap-analysis.md`). The
-honest next move remains depth — more Atomic tests against the existing rules, converting the
-benign marker scenarios to externally validated ones — not Suricata, Wazuh, or Kafka. More
-components would make the project look broader and be worth less.
+What that does and does not mean: six rule-scenario pairs are `Live verified`, all by approved
+Atomic Red Team tests. An Atomic run against the whole pack found four real procedures missed;
+three were reproducible and are now closed — a char-array rule (T1027 #11), a non-registrable
+regsvr32 rule (T1218.010 #4), and a plaintext arm on the cradle rule (T1027 #3) — each
+re-verified live with before/after measurement. The fourth (T1059.005 #1) is a correct scope
+boundary, kept as a miss (`docs/atomic-validation-gap-analysis.md`). Two remaining benign-marker
+rules were then converted to external validation (T1059.001 #17, T1218.005 #10). Suricata and
+Wazuh each produced a first engine detection (offline PCAP / `wazuh-logtest`), and a specificity
+smoke test found 0 false positives over 50 benign events. The false-positive **rate** stays
+`Not measured yet`: that needs scale this lab has not run.
 
 All metrics remain `Not measured yet`. The false-positive-rate metric in particular has a
 documented method and a real before/after in `docs/detection-tuning-log.md`, but a sample of

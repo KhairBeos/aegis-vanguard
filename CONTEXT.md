@@ -4,13 +4,18 @@
 
 ## Current working state
 
-- Evidence timestamp: `2026-08-03T02:52Z`.
-- Milestone result: `ATOMIC VALIDATION RUN — THREE REPRODUCIBLE GAPS CLOSED, FOUR LIVE-VERIFIED PAIRS`.
-- **Seven** rules deployed; four are now `Live verified` by approved Atomic Red Team pairs
-  (`AEGIS-SCN-0005` T1547.001, `AEGIS-SCN-0010` T1027 char-array, `AEGIS-SCN-0011` T1218.010
-  regsvr32, `AEGIS-SCN-0012` T1027 cradle inline).
+- Evidence timestamp: `2026-08-03T03:45Z`.
+- Milestone result: `SIX LIVE-VERIFIED PAIRS; SURICATA + WAZUH FIRST ENGINE DETECTIONS; FP SMOKE TEST CLEAN`.
+- **Seven** rules deployed; **six** are now `Live verified` by approved Atomic Red Team pairs
+  (`AEGIS-SCN-0005` T1547.001, `0010` T1027 char-array, `0011` T1218.010 regsvr32, `0012` T1027
+  cradle inline, `0013` T1059.001 encoded, `0014` T1218.005 mshta→powershell).
+- Suricata first engine detection (`logs-suricata.eve`, local rule sid `9000002` on a synthetic
+  PCAP) and Wazuh first engine detection (built-in rules `5710`/`5712` via `wazuh-logtest`). Both
+  `Runtime verified`, not `Live verified` (no real VM telemetry). See `docs/phase-5-7-additional-sources.md`.
+- Specificity smoke test: **0 false positives over 50 benign process events** across all 7 rules
+  (deterministic, `docs/detection-tuning-log.md`). FP-rate stays `Not measured yet`.
 - `mitre/coverage.md` is generated from evidence bundles by `scripts/build-coverage.ps1`.
-- Fixture harness `44/44` across 7 rules. Tuning log holds TUNE-001..004.
+- Fixture harness `44/44` across 7 rules. Tuning log holds TUNE-001..004 + the smoke test.
 
 ## Atomic validation of the rule pack (2026-08-03)
 

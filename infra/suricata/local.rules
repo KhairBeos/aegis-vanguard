@@ -1,0 +1,16 @@
+# AEGIS-VANGUARD local Suricata rules.
+#
+# These are self-authored lab rules, not a vendor ruleset. A detection produced by them is
+# `Runtime verified` for "the Suricata engine matches a rule and emits an alert end to end",
+# and is deliberately NOT `Live verified`: the same author wrote the rule and the traffic, and
+# the capture is synthetic rather than taken from the victim VM. Treat exactly like the benign
+# marker Sysmon scenarios.
+#
+# sid range 9000000-9000999 is reserved for this lab so it never collides with ET Open.
+
+# A hardcoded, unusual User-Agent is a classic beacon fingerprint. This models a C2 implant
+# that always sends the same UA string regardless of the real browser.
+alert http any any -> any any (msg:"AEGIS LAB Suspicious beacon User-Agent (AEGIS-LabProbe)"; flow:to_server; http.user_agent; content:"AEGIS-LabProbe"; classtype:trojan-activity; sid:9000001; rev:1;)
+
+# A lookup for an oddly specific, non-resolvable label models DGA / DNS-tunnelling reconnaissance.
+alert dns any any -> any any (msg:"AEGIS LAB Suspicious DNS query (aegis-lab-probe)"; dns.query; content:"aegis-lab-probe"; nocase; classtype:bad-unknown; sid:9000002; rev:1;)

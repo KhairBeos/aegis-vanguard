@@ -16,6 +16,10 @@ param(
     # Rule updates reach out to the internet, so they are opt-in and never happen implicitly.
     [switch]$UpdateRules,
 
+    # A self-authored local ruleset (e.g. infra/suricata/local.rules). Loaded in addition to
+    # ET Open when supplied. A detection from a local rule is Runtime verified, not Live verified.
+    [string]$LocalRulesPath,
+
     [switch]$KeepWorkingDirectory
 )
 
@@ -52,12 +56,23 @@ try {
 
     $rulesPath = Join-Path $workRoot 'su\rules\suricata.rules'
     if (Test-Path -LiteralPath $rulesPath) {
-        $rulesArgument = @('-S', '/data/su/rules/suricata.rules')
-        Write-Host "PASS: using ruleset at $rulesPath" -ForegroundColor Green
+        $rulesArgument += @('-S', '/data/su/rules/suricata.rules')
+        Write-Host "PASS: using ET Open ruleset at $rulesPath" -ForegroundColor Green
     }
-    else {
+
+    if ($LocalRulesPath) {
+        if (-not (Test-Path -LiteralPath $LocalRulesPath)) {
+            Write-Host "FAIL: local rules not found: $LocalRulesPath" -ForegroundColor Red
+            exit 1
+        }
+        Copy-Item -LiteralPath (Resolve-Path -LiteralPath $LocalRulesPath).ProviderPath -Destination (Join-Path $workRoot 'local.rules') -Force
+        $rulesArgument += @('-S', '/data/local.rules')
+        Write-Host "PASS: using local ruleset $LocalRulesPath" -ForegroundColor Green
+    }
+
+    if ($rulesArgument.Count -eq 0) {
         Write-Host 'WARN: no ruleset present; protocol records will be produced but no alerts.' -ForegroundColor Yellow
-        Write-Host '      Re-run with -UpdateRules to fetch ET Open.' -ForegroundColor Yellow
+        Write-Host '      Re-run with -UpdateRules to fetch ET Open, or -LocalRulesPath for lab rules.' -ForegroundColor Yellow
     }
 
     & docker run --rm -v "${workRoot}:/data" $SuricataImage suricata -r /data/input.pcap -l /data @rulesArgument 2>&1 |
