@@ -1,0 +1,47 @@
+title: Regsvr32 Loading a Non-Registrable File
+id: f7a3c9e1-2b8d-4e6f-a1c5-9d0e3f7b2a48
+status: experimental
+description: |
+  Detects regsvr32.exe invoked against a file whose extension is not one it can
+  legitimately register (`.dll`, `.ocx`, `.cpl`, `.ax`). Loading a renamed library —
+  `regsvr32 /s shell32.jpg` — is a common way to run attacker code through a signed
+  Microsoft binary while defeating extension-based inspection.
+
+  This rule was written to close a real gap. Atomic Red Team T1218.010 #4 ran a renamed
+  local DLL and the Regsvr32 Remote Scriptlet rule (`6b5da61b`) missed it, because that
+  rule targets the remote scriptlet (Squiblydoo) form: `scrobj.dll` or a URL. The two
+  rules are deliberately separate so each keeps one clear meaning — remote scriptlet
+  versus renamed local library. A command line that carries `.dll`/`.ocx` (including the
+  Squiblydoo `scrobj.dll` case) is filtered out here and left to the other rule.
+references:
+  - https://attack.mitre.org/techniques/T1218/010/
+  - https://lolbas-project.github.io/lolbas/Binaries/Regsvr32/
+author: AEGIS-VANGUARD lab
+date: 2026-08-03
+tags:
+  - attack.defense-evasion
+  - attack.t1218.010
+logsource:
+  product: windows
+  service: sysmon
+detection:
+  selection:
+    EventID: 1
+    Image|endswith: '\regsvr32.exe'
+  filter_registrable:
+    CommandLine|contains:
+      - '.dll'
+      - '.ocx'
+      - '.cpl'
+      - '.ax'
+  filter_bare_launch:
+    # regsvr32 with no file argument (bare launch or a flag-only call) has no target to
+    # judge, so it is not treated as a non-registrable load.
+    CommandLine|endswith:
+      - '\regsvr32.exe'
+      - '\regsvr32.exe"'
+      - '\regsvr32'
+  condition: selection and not 1 of filter_*
+falsepositives:
+  - Rare tooling that passes a registrable component with a non-standard extension
+level: high

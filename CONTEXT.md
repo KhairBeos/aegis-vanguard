@@ -4,11 +4,13 @@
 
 ## Current working state
 
-- Evidence timestamp: `2026-08-03T02:19Z`.
-- Milestone result: `ATOMIC VALIDATION RUN — ONE REAL GAP FOUND AND CLOSED, SECOND LIVE-VERIFIED PAIR`.
-- **Six** rules deployed; two are now `Live verified` by approved Atomic Red Team pairs
-  (`AEGIS-SCN-0005` T1547.001, `AEGIS-SCN-0010` T1027 char-array).
+- Evidence timestamp: `2026-08-03T02:52Z`.
+- Milestone result: `ATOMIC VALIDATION RUN — THREE REPRODUCIBLE GAPS CLOSED, FOUR LIVE-VERIFIED PAIRS`.
+- **Seven** rules deployed; four are now `Live verified` by approved Atomic Red Team pairs
+  (`AEGIS-SCN-0005` T1547.001, `AEGIS-SCN-0010` T1027 char-array, `AEGIS-SCN-0011` T1218.010
+  regsvr32, `AEGIS-SCN-0012` T1027 cradle inline).
 - `mitre/coverage.md` is generated from evidence bundles by `scripts/build-coverage.ps1`.
+- Fixture harness `44/44` across 7 rules. Tuning log holds TUNE-001..004.
 
 ## Atomic validation of the rule pack (2026-08-03)
 
@@ -18,27 +20,33 @@ generated Lucene query returns 0 hits against the procedure's persisted Sysmon E
 so the misses are rule logic, not scheduler/overnight-downtime artifacts. Full write-up in
 `docs/atomic-validation-gap-analysis.md`. Each miss was triaged honestly:
 
-- `AEGIS-SCN-0006` T1218.010 #4 — regsvr32 loading a renamed **local** DLL; rule targets the
-  remote-scriptlet (Squiblydoo) form. Rule-logic **variant gap**, recorded not closed.
-- `AEGIS-SCN-0007` T1027 #3 — guest-control **mangled the nested quotes**, stripping
-  `FromBase64String` before it reached the command line. Miss confounded by the harness, not
-  a rule finding. Scenario limitation; faithful re-run is future work.
-- `AEGIS-SCN-0008` T1027 #11 — char-array obfuscation, faithful telemetry, **real gap → closed**.
+- `AEGIS-SCN-0006` T1218.010 #4 — regsvr32 loading a renamed **local** DLL; original rule
+  targeted the remote-scriptlet (Squiblydoo) form. Variant gap → **closed** by new rule
+  `f7a3c9e1` (`AEGIS-SCN-0011`, 2 alerts, MTTD 249.1s). TUNE-004.
+- `AEGIS-SCN-0007` T1027 #3 — first run guest-control **mangled the nested quotes**, stripping
+  `FromBase64String`. Re-run faithfully (child spawned with `-Command`): the cradle rule matched
+  only the decoded `-EncodedCommand` field, empty for inline deobfuscation → **closed** by adding
+  a raw-command-line arm to the cradle rule (`AEGIS-SCN-0012`, MTTD 214.1s, 0 FP). TUNE-003.
+- `AEGIS-SCN-0008` T1027 #11 — char-array obfuscation, faithful telemetry, **real gap → closed**
+  by new rule `d4e91a72` (`AEGIS-SCN-0010`). TUNE-002.
 - `AEGIS-SCN-0009` T1059.005 #1 — cscript ran a VBS that spawned **no** shell; the Script Host
-  rule detects a script host *spawning a shell*. Correct scope boundary, not a defect
-  (verified: 0 children of cscript in the window).
+  rule detects a script host *spawning a shell*. Correct scope boundary, kept as a miss on
+  purpose (verified: 0 children of cscript in the window).
 
-### The one detection-engineering loop — TUNE-002
+### Detection-engineering loops — TUNE-002/003/004
 
-New rule `d4e91a72-3c85-4f6b-9e2a-7b1c0d5f8a34` — PowerShell Character-Array Obfuscated
-Execution — matches `[char[]](` **and** `-join` together. Measured: 0→1 on the exact missed
-document, 1 match across all Sysmon history (0 false positives), and a live detection on a
-faithful re-run (`AEGIS-SCN-0010`, MTTD 171.2s, source `02:12:31.003Z` → alert `02:15:17.205Z`).
+- **TUNE-002** new rule `d4e91a72` (char-array): matches `[char[]](` **and** `-join`; 0→1 on the
+  missed doc, 0 FP across all history, live `AEGIS-SCN-0010` MTTD 171.2s.
+- **TUNE-003** cradle rule `8c1d2f4a` gains a raw-command-line arm
+  (`condition: selection_event and (selection_decoded or selection_cmdline)`); 0 plaintext FP,
+  live `AEGIS-SCN-0012`.
+- **TUNE-004** new rule `f7a3c9e1` (regsvr32 non-registrable): regsvr32 whose command line lacks
+  `.dll/.ocx/.cpl/.ax`, bare launch excluded; only 2 regsvr32 events ever, both atomic, 0 FP;
+  `scrobj.dll` Squiblydoo filtered to the remote rule; live `AEGIS-SCN-0011`.
 
-Harness lesson recorded in `TUNE-002`: putting the `[char[]]` line in a file and running it
-with `-File` executes it in-process and the obfuscation never lands on a command line — the
-faithful form spawns a child with the array as its `-Command` argument, which is how the
-original atomic and Sysmon record it.
+Harness lesson (recorded in TUNE-002/003): a procedure whose signal must appear **on a process
+command line** must be spawned as a child with `-Command`; running the same script via `-File`
+executes it in-process and the artifact never lands on any command line.
 
 ## Tuning cycle TUNE-001 — measured, not guessed
 
@@ -471,5 +479,5 @@ Verified after installation rather than assumed:
 
 ## Remaining work
 2. **Windows integration package** stays blocked until either the package or the stack version moves. Re-test with `POST /api/fleet/epm/packages/windows` after any upgrade; if it installs, the two dataset renames become worth doing.
-3. **Breadth over depth is still the wrong move.** Phases 5-8 (Suricata, Wazuh, Kafka, packaging) remain gated behind judgement, not effort. Two rule-scenario pairs are now `Live verified`; the highest-value next work is the two open Atomic gaps — the regsvr32 renamed-local-DLL variant (`AEGIS-SCN-0006`) and a faithful re-run of the quote-mangled T1027 #3 (`AEGIS-SCN-0007`) — not any new component.
+3. **Breadth over depth is still the wrong move.** Phases 5-8 (Suricata, Wazuh, Kafka, packaging) remain gated behind judgement, not effort. Four rule-scenario pairs are now `Live verified` and the three reproducible Atomic gaps are closed. The only Atomic non-detection left open is T1059.005 #1, a correct scope boundary (not a defect). The next depth work is new Atomic procedures against the existing rules and converting the four benign-marker scenarios (`AEGIS-SCN-0001..0004`) to externally validated ones — not any new component.
 4. **TLS** remains a recorded, accepted gap.

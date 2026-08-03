@@ -1,0 +1,809 @@
+﻿{
+    "scenario_id":  "AEGIS-SCN-0011",
+    "lab_session_id":  "AEGIS-LAB-20260803",
+    "collected_utc":  "2026-08-03T02:46:33.4911403Z",
+    "technique_id":  "T1218.010",
+    "atomic_test":  "#4 (2408973b) - regsvr32 registering a renamed local DLL (shell32.jpg), faithful re-run from a transferred .ps1",
+    "marker_id":  "",
+    "detection_result":  "detected",
+    "alert_count":  2,
+    "source_doc_count":  2,
+    "time_to_detect_s":  249.1,
+    "execution_start":  "2026-08-03T02:41:56.0000000Z",
+    "execution_end":  "2026-08-03T02:42:09.0000000Z",
+    "alert_timestamp":  "2026-08-03T02:46:05.124Z",
+    "rule":  {
+                 "rule_id":  "f7a3c9e1-2b8d-4e6f-a1c5-9d0e3f7b2a48",
+                 "uuid":  "8d7b4dfc-07be-4544-81dc-473573477dad",
+                 "name":  "SIGMA - Regsvr32 Loading a Non-Registrable File",
+                 "version":  1,
+                 "interval":  "5m",
+                 "from":  "now-5m",
+                 "to":  "now",
+                 "index":  [
+                               "logs-windows.sysmon-aegis_lab",
+                               "logs-windows.powershell-aegis_lab",
+                               "logs-windows.defender-aegis_lab",
+                               "logs-system.security-aegis_lab"
+                           ],
+                 "query":  "winlog.channel:Microsoft\\-Windows\\-Sysmon\\/Operational AND ((event.code:1 AND (process.executable:*\\\\regsvr32.exe OR winlog.event_data.Image:*\\\\regsvr32.exe)) AND (NOT ((winlog.event_data.CommandLine:(*.dll* OR *.ocx* OR *.cpl* OR *.ax*)) OR (winlog.event_data.CommandLine:(*\\\\regsvr32.exe OR *\\\\regsvr32.exe\\\" OR *\\\\regsvr32)))))"
+             },
+    "alerts":  [
+                   {
+                       "_index":  ".internal.alerts-security.alerts-default-000001",
+                       "_id":  "522a07150956411030b8856058555174b263e95b215220002b67d47082906824",
+                       "_score":  null,
+                       "_source":  {
+                                       "kibana.alert.rule.execution.timestamp":  "2026-08-03T02:46:05.130Z",
+                                       "kibana.alert.start":  "2026-08-03T02:46:05.130Z",
+                                       "kibana.alert.last_detected":  "2026-08-03T02:46:05.130Z",
+                                       "kibana.version":  "9.4.2",
+                                       "kibana.alert.rule.parameters":  {
+                                                                            "description":  "Detects regsvr32.exe invoked against a file whose extension is not one it can\nlegitimately register (`.dll`, `.ocx`, `.cpl`, `.ax`). Loading a renamed library â\n`regsvr32 /s shell32.jpg` â is a common way to run attacker code through a signed\nMicrosoft binary while defeating extension-based inspection.\n\nThis rule was written to close a real gap. Atomic Red Team T1218.010 #4 ran a renamed\nlocal DLL and the Regsvr32 Remote Scriptlet rule (`6b5da61b`) missed it, because that\nrule targets the remote scriptlet (Squiblydoo) form: `scrobj.dll` or a URL. The two\nrules are deliberately separate so each keeps one clear meaning â remote scriptlet\nversus renamed local library. A command line that carries `.dll`/`.ocx` (including the\nSquiblydoo `scrobj.dll` case) is filtered out here and left to the other rule.\n",
+                                                                            "risk_score":  73,
+                                                                            "severity":  "high",
+                                                                            "license":  "DRL",
+                                                                            "meta":  {
+                                                                                         "from":  "1m"
+                                                                                     },
+                                                                            "author":  [
+                                                                                           "AEGIS-VANGUARD lab"
+                                                                                       ],
+                                                                            "false_positives":  [
+                                                                                                    "Rare tooling that passes a registrable component with a non-standard extension"
+                                                                                                ],
+                                                                            "from":  "now-5m",
+                                                                            "rule_id":  "f7a3c9e1-2b8d-4e6f-a1c5-9d0e3f7b2a48",
+                                                                            "max_signals":  100,
+                                                                            "risk_score_mapping":  [
+
+                                                                                                   ],
+                                                                            "severity_mapping":  [
+
+                                                                                                 ],
+                                                                            "threat":  [
+
+                                                                                       ],
+                                                                            "to":  "now",
+                                                                            "references":  [
+                                                                                               "https://attack.mitre.org/techniques/T1218/010/",
+                                                                                               "https://lolbas-project.github.io/lolbas/Binaries/Regsvr32/"
+                                                                                           ],
+                                                                            "version":  1,
+                                                                            "exceptions_list":  [
+
+                                                                                                ],
+                                                                            "immutable":  false,
+                                                                            "rule_source":  {
+                                                                                                "type":  "internal"
+                                                                                            },
+                                                                            "related_integrations":  [
+
+                                                                                                     ],
+                                                                            "required_fields":  [
+
+                                                                                                ],
+                                                                            "setup":  "",
+                                                                            "type":  "query",
+                                                                            "language":  "lucene",
+                                                                            "index":  [
+                                                                                          "logs-windows.sysmon-aegis_lab",
+                                                                                          "logs-windows.powershell-aegis_lab",
+                                                                                          "logs-windows.defender-aegis_lab",
+                                                                                          "logs-system.security-aegis_lab"
+                                                                                      ],
+                                                                            "query":  "winlog.channel:Microsoft\\-Windows\\-Sysmon\\/Operational AND ((event.code:1 AND (process.executable:*\\\\regsvr32.exe OR winlog.event_data.Image:*\\\\regsvr32.exe)) AND (NOT ((winlog.event_data.CommandLine:(*.dll* OR *.ocx* OR *.cpl* OR *.ax*)) OR (winlog.event_data.CommandLine:(*\\\\regsvr32.exe OR *\\\\regsvr32.exe\\\" OR *\\\\regsvr32)))))",
+                                                                            "filters":  [
+
+                                                                                        ]
+                                                                        },
+                                       "kibana.alert.rule.category":  "Custom Query Rule",
+                                       "kibana.alert.rule.consumer":  "siem",
+                                       "kibana.alert.rule.execution.uuid":  "24e22261-680c-43f3-b960-1a6ab76ef8ea",
+                                       "kibana.alert.rule.name":  "SIGMA - Regsvr32 Loading a Non-Registrable File",
+                                       "kibana.alert.rule.producer":  "siem",
+                                       "kibana.alert.rule.revision":  0,
+                                       "kibana.alert.rule.rule_type_id":  "siem.queryRule",
+                                       "kibana.alert.rule.uuid":  "8d7b4dfc-07be-4544-81dc-473573477dad",
+                                       "kibana.space_ids":  [
+                                                                "default"
+                                                            ],
+                                       "kibana.alert.rule.tags":  [
+
+                                                                  ],
+                                       "@timestamp":  "2026-08-03T02:46:05.124Z",
+                                       "input":  {
+                                                     "type":  "winlog"
+                                                 },
+                                       "agent":  {
+                                                     "name":  "DESKTOP-EVVU9LS",
+                                                     "id":  "86fa468a-1a0a-484e-b406-fbdd60e82413",
+                                                     "ephemeral_id":  "d88fca8d-10f9-441b-a5ed-c0c36eea599f",
+                                                     "type":  "filebeat",
+                                                     "version":  "9.4.2"
+                                                 },
+                                       "winlog":  {
+                                                      "record_id":  4778,
+                                                      "computer_name":  "DESKTOP-EVVU9LS",
+                                                      "process":  {
+                                                                      "pid":  3488,
+                                                                      "thread":  {
+                                                                                     "id":  3148
+                                                                                 }
+                                                                  },
+                                                      "event_id":  "1",
+                                                      "task":  "Process Create (rule: ProcessCreate)",
+                                                      "provider_guid":  "{5770385F-C22A-43E0-BF4C-06F5698FFBD9}",
+                                                      "channel":  "Microsoft-Windows-Sysmon/Operational",
+                                                      "event_data":  {
+                                                                         "ParentImage":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                                                                         "Company":  "Microsoft Corporation",
+                                                                         "User":  "DESKTOP-EVVU9LS\\victim-win-01",
+                                                                         "Description":  "Microsoft(C) Register Server",
+                                                                         "LogonGuid":  "{D796217E-F44D-6A6F-136D-100000000000}",
+                                                                         "OriginalFileName":  "REGSVR32.EXE",
+                                                                         "TerminalSessionId":  "1",
+                                                                         "IntegrityLevel":  "Medium",
+                                                                         "ParentProcessId":  "7976",
+                                                                         "ParentUser":  "DESKTOP-EVVU9LS\\victim-win-01",
+                                                                         "Product":  "MicrosoftÂ® WindowsÂ® Operating System",
+                                                                         "Image":  "C:\\Windows\\System32\\regsvr32.exe",
+                                                                         "ProcessGuid":  "{D796217E-FFF9-6A6F-8601-000000000B00}",
+                                                                         "UtcTime":  "2026-08-03 02:42:01.675",
+                                                                         "CurrentDirectory":  "C:\\WINDOWS\\system32\\",
+                                                                         "CommandLine":  "\"C:\\Windows\\System32\\regsvr32.exe\" /s C:\\Users\\VICTIM~1\\AppData\\Local\\Temp\\shell32.jpg",
+                                                                         "Hashes":  "SHA256=A47E25A9BDCFAEFD687CEE74FEA0C811AC10DE216E55125DC04166D92EC41869",
+                                                                         "FileVersion":  "10.0.26100.5074 (WinBuild.160101.0800)",
+                                                                         "ProcessId":  "5608",
+                                                                         "ParentCommandLine":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\\AEGIS\\transfer\\atomic-t1218-010-4.ps1",
+                                                                         "ParentProcessGuid":  "{D796217E-FFF8-6A6F-8501-000000000B00}",
+                                                                         "LogonId":  "0x106d13",
+                                                                         "RuleName":  "-"
+                                                                     },
+                                                      "provider_name":  "Microsoft-Windows-Sysmon",
+                                                      "opcode":  "Info",
+                                                      "user":  {
+                                                                   "identifier":  "S-1-5-18",
+                                                                   "domain":  "NT AUTHORITY",
+                                                                   "name":  "SYSTEM",
+                                                                   "type":  "User"
+                                                               },
+                                                      "version":  5
+                                                  },
+                                       "ecs":  {
+                                                   "version":  "8.0.0"
+                                               },
+                                       "log":  {
+                                                   "level":  "information"
+                                               },
+                                       "data_stream":  {
+                                                           "namespace":  "aegis_lab",
+                                                           "type":  "logs",
+                                                           "dataset":  "windows.sysmon"
+                                                       },
+                                       "host":  {
+                                                    "hostname":  "DESKTOP-EVVU9LS",
+                                                    "os":  {
+                                                               "build":  "26200.6584",
+                                                               "kernel":  "10.0.26100.6584 (WinBuild.160101.0800)",
+                                                               "name":  "Windows 11 Enterprise Evaluation",
+                                                               "type":  "windows",
+                                                               "family":  "windows",
+                                                               "version":  "10.0",
+                                                               "platform":  "windows"
+                                                           },
+                                                    "ip":  [
+                                                               "fe80::67bf:cb80:c45d:f4d8",
+                                                               "192.168.56.10"
+                                                           ],
+                                                    "name":  "desktop-evvu9ls",
+                                                    "id":  "d796217e-7f00-44ee-bcfa-d00dd989ea1b",
+                                                    "mac":  [
+                                                                "08-00-27-FE-DE-BB"
+                                                            ],
+                                                    "architecture":  "x86_64"
+                                                },
+                                       "elastic_agent":  {
+                                                             "id":  "86fa468a-1a0a-484e-b406-fbdd60e82413",
+                                                             "version":  "9.4.2",
+                                                             "snapshot":  false
+                                                         },
+                                       "event":  {
+                                                     "code":  "1",
+                                                     "provider":  "Microsoft-Windows-Sysmon",
+                                                     "created":  "2026-08-03T02:42:03.361Z",
+                                                     "action":  "Process Create (rule: ProcessCreate)",
+                                                     "dataset":  "windows.sysmon"
+                                                 },
+                                       "message":  "Process Create:\nRuleName: -\nUtcTime: 2026-08-03 02:42:01.675\nProcessGuid: {D796217E-FFF9-6A6F-8601-000000000B00}\nProcessId: 5608\nImage: C:\\Windows\\System32\\regsvr32.exe\nFileVersion: 10.0.26100.5074 (WinBuild.160101.0800)\nDescription: Microsoft(C) Register Server\nProduct: MicrosoftÂ® WindowsÂ® Operating System\nCompany: Microsoft Corporation\nOriginalFileName: REGSVR32.EXE\nCommandLine: \"C:\\Windows\\System32\\regsvr32.exe\" /s C:\\Users\\VICTIM~1\\AppData\\Local\\Temp\\shell32.jpg\nCurrentDirectory: C:\\WINDOWS\\system32\\\nUser: DESKTOP-EVVU9LS\\victim-win-01\nLogonGuid: {D796217E-F44D-6A6F-136D-100000000000}\nLogonId: 0x106d13\nTerminalSessionId: 1\nIntegrityLevel: Medium\nHashes: SHA256=A47E25A9BDCFAEFD687CEE74FEA0C811AC10DE216E55125DC04166D92EC41869\nParentProcessGuid: {D796217E-FFF8-6A6F-8501-000000000B00}\nParentProcessId: 7976\nParentImage: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\nParentCommandLine: \"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\\AEGIS\\transfer\\atomic-t1218-010-4.ps1\nParentUser: DESKTOP-EVVU9LS\\victim-win-01",
+                                       "kibana.alert.original_data_stream.namespace":  "aegis_lab",
+                                       "kibana.alert.original_data_stream.type":  "logs",
+                                       "kibana.alert.original_data_stream.dataset":  "windows.sysmon",
+                                       "kibana.alert.original_event.code":  "1",
+                                       "kibana.alert.original_event.provider":  "Microsoft-Windows-Sysmon",
+                                       "kibana.alert.original_event.created":  "2026-08-03T02:42:03.361Z",
+                                       "kibana.alert.original_event.kind":  "event",
+                                       "kibana.alert.original_event.action":  "Process Create (rule: ProcessCreate)",
+                                       "kibana.alert.original_event.dataset":  "windows.sysmon",
+                                       "event.kind":  "signal",
+                                       "kibana.alert.original_time":  "2026-08-03T02:42:01.688Z",
+                                       "kibana.alert.ancestors":  [
+                                                                      {
+                                                                          "id":  "AZ_FgGZyveKuiCkIB0oY",
+                                                                          "type":  "event",
+                                                                          "index":  ".ds-logs-windows.sysmon-aegis_lab-2026.08.02-000002",
+                                                                          "depth":  0
+                                                                      }
+                                                                  ],
+                                       "kibana.alert.status":  "active",
+                                       "kibana.alert.workflow_status":  "open",
+                                       "kibana.alert.depth":  1,
+                                       "kibana.alert.reason":  "event on desktop-evvu9ls created high alert SIGMA - Regsvr32 Loading a Non-Registrable File.",
+                                       "kibana.alert.severity":  "high",
+                                       "kibana.alert.risk_score":  73,
+                                       "kibana.alert.rule.actions":  [
+
+                                                                     ],
+                                       "kibana.alert.rule.author":  [
+                                                                        "AEGIS-VANGUARD lab"
+                                                                    ],
+                                       "kibana.alert.rule.created_at":  "2026-08-03T02:40:58.263Z",
+                                       "kibana.alert.rule.created_by":  "elastic",
+                                       "kibana.alert.rule.description":  "Detects regsvr32.exe invoked against a file whose extension is not one it can\nlegitimately register (`.dll`, `.ocx`, `.cpl`, `.ax`). Loading a renamed library â\n`regsvr32 /s shell32.jpg` â is a common way to run attacker code through a signed\nMicrosoft binary while defeating extension-based inspection.\n\nThis rule was written to close a real gap. Atomic Red Team T1218.010 #4 ran a renamed\nlocal DLL and the Regsvr32 Remote Scriptlet rule (`6b5da61b`) missed it, because that\nrule targets the remote scriptlet (Squiblydoo) form: `scrobj.dll` or a URL. The two\nrules are deliberately separate so each keeps one clear meaning â remote scriptlet\nversus renamed local library. A command line that carries `.dll`/`.ocx` (including the\nSquiblydoo `scrobj.dll` case) is filtered out here and left to the other rule.\n",
+                                       "kibana.alert.rule.enabled":  true,
+                                       "kibana.alert.rule.exceptions_list":  [
+
+                                                                             ],
+                                       "kibana.alert.rule.false_positives":  [
+                                                                                 "Rare tooling that passes a registrable component with a non-standard extension"
+                                                                             ],
+                                       "kibana.alert.rule.from":  "now-5m",
+                                       "kibana.alert.rule.immutable":  false,
+                                       "kibana.alert.rule.interval":  "5m",
+                                       "kibana.alert.rule.indices":  [
+                                                                         "logs-windows.sysmon-aegis_lab",
+                                                                         "logs-windows.powershell-aegis_lab",
+                                                                         "logs-windows.defender-aegis_lab",
+                                                                         "logs-system.security-aegis_lab"
+                                                                     ],
+                                       "kibana.alert.rule.license":  "DRL",
+                                       "kibana.alert.rule.max_signals":  100,
+                                       "kibana.alert.rule.references":  [
+                                                                            "https://attack.mitre.org/techniques/T1218/010/",
+                                                                            "https://lolbas-project.github.io/lolbas/Binaries/Regsvr32/"
+                                                                        ],
+                                       "kibana.alert.rule.risk_score_mapping":  [
+
+                                                                                ],
+                                       "kibana.alert.rule.rule_id":  "f7a3c9e1-2b8d-4e6f-a1c5-9d0e3f7b2a48",
+                                       "kibana.alert.rule.severity_mapping":  [
+
+                                                                              ],
+                                       "kibana.alert.rule.threat":  [
+
+                                                                    ],
+                                       "kibana.alert.rule.to":  "now",
+                                       "kibana.alert.rule.type":  "query",
+                                       "kibana.alert.rule.updated_at":  "2026-08-03T02:40:58.263Z",
+                                       "kibana.alert.rule.updated_by":  "elastic",
+                                       "kibana.alert.rule.version":  1,
+                                       "kibana.alert.uuid":  "522a07150956411030b8856058555174b263e95b215220002b67d47082906824",
+                                       "kibana.alert.workflow_tags":  [
+
+                                                                      ],
+                                       "kibana.alert.workflow_assignee_ids":  [
+
+                                                                              ],
+                                       "kibana.alert.rule.meta.from":  "1m",
+                                       "kibana.alert.rule.risk_score":  73,
+                                       "kibana.alert.rule.severity":  "high",
+                                       "kibana.alert.intended_timestamp":  "2026-08-03T02:46:05.124Z",
+                                       "kibana.alert.rule.execution.type":  "scheduled"
+                                   },
+                       "sort":  [
+                                    1785725165124
+                                ]
+                   },
+                   {
+                       "_index":  ".internal.alerts-security.alerts-default-000001",
+                       "_id":  "53cddd8c27b315ab29027b96b652da3c98197c8b550874e5f76104dd2a9c0d7c",
+                       "_score":  null,
+                       "_source":  {
+                                       "kibana.alert.rule.execution.timestamp":  "2026-08-03T02:46:05.130Z",
+                                       "kibana.alert.start":  "2026-08-03T02:46:05.130Z",
+                                       "kibana.alert.last_detected":  "2026-08-03T02:46:05.130Z",
+                                       "kibana.version":  "9.4.2",
+                                       "kibana.alert.rule.parameters":  {
+                                                                            "description":  "Detects regsvr32.exe invoked against a file whose extension is not one it can\nlegitimately register (`.dll`, `.ocx`, `.cpl`, `.ax`). Loading a renamed library â\n`regsvr32 /s shell32.jpg` â is a common way to run attacker code through a signed\nMicrosoft binary while defeating extension-based inspection.\n\nThis rule was written to close a real gap. Atomic Red Team T1218.010 #4 ran a renamed\nlocal DLL and the Regsvr32 Remote Scriptlet rule (`6b5da61b`) missed it, because that\nrule targets the remote scriptlet (Squiblydoo) form: `scrobj.dll` or a URL. The two\nrules are deliberately separate so each keeps one clear meaning â remote scriptlet\nversus renamed local library. A command line that carries `.dll`/`.ocx` (including the\nSquiblydoo `scrobj.dll` case) is filtered out here and left to the other rule.\n",
+                                                                            "risk_score":  73,
+                                                                            "severity":  "high",
+                                                                            "license":  "DRL",
+                                                                            "meta":  {
+                                                                                         "from":  "1m"
+                                                                                     },
+                                                                            "author":  [
+                                                                                           "AEGIS-VANGUARD lab"
+                                                                                       ],
+                                                                            "false_positives":  [
+                                                                                                    "Rare tooling that passes a registrable component with a non-standard extension"
+                                                                                                ],
+                                                                            "from":  "now-5m",
+                                                                            "rule_id":  "f7a3c9e1-2b8d-4e6f-a1c5-9d0e3f7b2a48",
+                                                                            "max_signals":  100,
+                                                                            "risk_score_mapping":  [
+
+                                                                                                   ],
+                                                                            "severity_mapping":  [
+
+                                                                                                 ],
+                                                                            "threat":  [
+
+                                                                                       ],
+                                                                            "to":  "now",
+                                                                            "references":  [
+                                                                                               "https://attack.mitre.org/techniques/T1218/010/",
+                                                                                               "https://lolbas-project.github.io/lolbas/Binaries/Regsvr32/"
+                                                                                           ],
+                                                                            "version":  1,
+                                                                            "exceptions_list":  [
+
+                                                                                                ],
+                                                                            "immutable":  false,
+                                                                            "rule_source":  {
+                                                                                                "type":  "internal"
+                                                                                            },
+                                                                            "related_integrations":  [
+
+                                                                                                     ],
+                                                                            "required_fields":  [
+
+                                                                                                ],
+                                                                            "setup":  "",
+                                                                            "type":  "query",
+                                                                            "language":  "lucene",
+                                                                            "index":  [
+                                                                                          "logs-windows.sysmon-aegis_lab",
+                                                                                          "logs-windows.powershell-aegis_lab",
+                                                                                          "logs-windows.defender-aegis_lab",
+                                                                                          "logs-system.security-aegis_lab"
+                                                                                      ],
+                                                                            "query":  "winlog.channel:Microsoft\\-Windows\\-Sysmon\\/Operational AND ((event.code:1 AND (process.executable:*\\\\regsvr32.exe OR winlog.event_data.Image:*\\\\regsvr32.exe)) AND (NOT ((winlog.event_data.CommandLine:(*.dll* OR *.ocx* OR *.cpl* OR *.ax*)) OR (winlog.event_data.CommandLine:(*\\\\regsvr32.exe OR *\\\\regsvr32.exe\\\" OR *\\\\regsvr32)))))",
+                                                                            "filters":  [
+
+                                                                                        ]
+                                                                        },
+                                       "kibana.alert.rule.category":  "Custom Query Rule",
+                                       "kibana.alert.rule.consumer":  "siem",
+                                       "kibana.alert.rule.execution.uuid":  "24e22261-680c-43f3-b960-1a6ab76ef8ea",
+                                       "kibana.alert.rule.name":  "SIGMA - Regsvr32 Loading a Non-Registrable File",
+                                       "kibana.alert.rule.producer":  "siem",
+                                       "kibana.alert.rule.revision":  0,
+                                       "kibana.alert.rule.rule_type_id":  "siem.queryRule",
+                                       "kibana.alert.rule.uuid":  "8d7b4dfc-07be-4544-81dc-473573477dad",
+                                       "kibana.space_ids":  [
+                                                                "default"
+                                                            ],
+                                       "kibana.alert.rule.tags":  [
+
+                                                                  ],
+                                       "@timestamp":  "2026-08-03T02:46:05.125Z",
+                                       "input":  {
+                                                     "type":  "winlog"
+                                                 },
+                                       "agent":  {
+                                                     "name":  "DESKTOP-EVVU9LS",
+                                                     "id":  "86fa468a-1a0a-484e-b406-fbdd60e82413",
+                                                     "ephemeral_id":  "d88fca8d-10f9-441b-a5ed-c0c36eea599f",
+                                                     "type":  "filebeat",
+                                                     "version":  "9.4.2"
+                                                 },
+                                       "winlog":  {
+                                                      "computer_name":  "DESKTOP-EVVU9LS",
+                                                      "record_id":  4781,
+                                                      "process":  {
+                                                                      "pid":  3488,
+                                                                      "thread":  {
+                                                                                     "id":  3148
+                                                                                 }
+                                                                  },
+                                                      "task":  "Process Create (rule: ProcessCreate)",
+                                                      "event_id":  "1",
+                                                      "provider_guid":  "{5770385F-C22A-43E0-BF4C-06F5698FFBD9}",
+                                                      "channel":  "Microsoft-Windows-Sysmon/Operational",
+                                                      "event_data":  {
+                                                                         "ParentImage":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                                                                         "Company":  "Microsoft Corporation",
+                                                                         "User":  "DESKTOP-EVVU9LS\\victim-win-01",
+                                                                         "LogonGuid":  "{D796217E-F44D-6A6F-136D-100000000000}",
+                                                                         "Description":  "Microsoft(C) Register Server",
+                                                                         "OriginalFileName":  "REGSVR32.EXE",
+                                                                         "TerminalSessionId":  "1",
+                                                                         "IntegrityLevel":  "Medium",
+                                                                         "ParentProcessId":  "7976",
+                                                                         "ParentUser":  "DESKTOP-EVVU9LS\\victim-win-01",
+                                                                         "Product":  "MicrosoftÂ® WindowsÂ® Operating System",
+                                                                         "Image":  "C:\\Windows\\System32\\regsvr32.exe",
+                                                                         "ProcessGuid":  "{D796217E-FFFA-6A6F-8801-000000000B00}",
+                                                                         "UtcTime":  "2026-08-03 02:42:02.900",
+                                                                         "CurrentDirectory":  "C:\\WINDOWS\\system32\\",
+                                                                         "CommandLine":  "\"C:\\Windows\\System32\\regsvr32.exe\" /u /s C:\\Users\\VICTIM~1\\AppData\\Local\\Temp\\shell32.jpg",
+                                                                         "Hashes":  "SHA256=A47E25A9BDCFAEFD687CEE74FEA0C811AC10DE216E55125DC04166D92EC41869",
+                                                                         "FileVersion":  "10.0.26100.5074 (WinBuild.160101.0800)",
+                                                                         "ProcessId":  "1536",
+                                                                         "ParentCommandLine":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\\AEGIS\\transfer\\atomic-t1218-010-4.ps1",
+                                                                         "ParentProcessGuid":  "{D796217E-FFF8-6A6F-8501-000000000B00}",
+                                                                         "LogonId":  "0x106d13",
+                                                                         "RuleName":  "-"
+                                                                     },
+                                                      "opcode":  "Info",
+                                                      "provider_name":  "Microsoft-Windows-Sysmon",
+                                                      "user":  {
+                                                                   "identifier":  "S-1-5-18",
+                                                                   "domain":  "NT AUTHORITY",
+                                                                   "name":  "SYSTEM",
+                                                                   "type":  "User"
+                                                               },
+                                                      "version":  5
+                                                  },
+                                       "ecs":  {
+                                                   "version":  "8.0.0"
+                                               },
+                                       "log":  {
+                                                   "level":  "information"
+                                               },
+                                       "data_stream":  {
+                                                           "namespace":  "aegis_lab",
+                                                           "type":  "logs",
+                                                           "dataset":  "windows.sysmon"
+                                                       },
+                                       "host":  {
+                                                    "hostname":  "DESKTOP-EVVU9LS",
+                                                    "os":  {
+                                                               "build":  "26200.6584",
+                                                               "kernel":  "10.0.26100.6584 (WinBuild.160101.0800)",
+                                                               "name":  "Windows 11 Enterprise Evaluation",
+                                                               "type":  "windows",
+                                                               "family":  "windows",
+                                                               "version":  "10.0",
+                                                               "platform":  "windows"
+                                                           },
+                                                    "ip":  [
+                                                               "fe80::67bf:cb80:c45d:f4d8",
+                                                               "192.168.56.10"
+                                                           ],
+                                                    "name":  "desktop-evvu9ls",
+                                                    "id":  "d796217e-7f00-44ee-bcfa-d00dd989ea1b",
+                                                    "mac":  [
+                                                                "08-00-27-FE-DE-BB"
+                                                            ],
+                                                    "architecture":  "x86_64"
+                                                },
+                                       "elastic_agent":  {
+                                                             "id":  "86fa468a-1a0a-484e-b406-fbdd60e82413",
+                                                             "version":  "9.4.2",
+                                                             "snapshot":  false
+                                                         },
+                                       "message":  "Process Create:\nRuleName: -\nUtcTime: 2026-08-03 02:42:02.900\nProcessGuid: {D796217E-FFFA-6A6F-8801-000000000B00}\nProcessId: 1536\nImage: C:\\Windows\\System32\\regsvr32.exe\nFileVersion: 10.0.26100.5074 (WinBuild.160101.0800)\nDescription: Microsoft(C) Register Server\nProduct: MicrosoftÂ® WindowsÂ® Operating System\nCompany: Microsoft Corporation\nOriginalFileName: REGSVR32.EXE\nCommandLine: \"C:\\Windows\\System32\\regsvr32.exe\" /u /s C:\\Users\\VICTIM~1\\AppData\\Local\\Temp\\shell32.jpg\nCurrentDirectory: C:\\WINDOWS\\system32\\\nUser: DESKTOP-EVVU9LS\\victim-win-01\nLogonGuid: {D796217E-F44D-6A6F-136D-100000000000}\nLogonId: 0x106d13\nTerminalSessionId: 1\nIntegrityLevel: Medium\nHashes: SHA256=A47E25A9BDCFAEFD687CEE74FEA0C811AC10DE216E55125DC04166D92EC41869\nParentProcessGuid: {D796217E-FFF8-6A6F-8501-000000000B00}\nParentProcessId: 7976\nParentImage: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\nParentCommandLine: \"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\\AEGIS\\transfer\\atomic-t1218-010-4.ps1\nParentUser: DESKTOP-EVVU9LS\\victim-win-01",
+                                       "event":  {
+                                                     "code":  "1",
+                                                     "provider":  "Microsoft-Windows-Sysmon",
+                                                     "created":  "2026-08-03T02:42:04.365Z",
+                                                     "action":  "Process Create (rule: ProcessCreate)",
+                                                     "dataset":  "windows.sysmon"
+                                                 },
+                                       "kibana.alert.original_data_stream.namespace":  "aegis_lab",
+                                       "kibana.alert.original_data_stream.type":  "logs",
+                                       "kibana.alert.original_data_stream.dataset":  "windows.sysmon",
+                                       "kibana.alert.original_event.code":  "1",
+                                       "kibana.alert.original_event.provider":  "Microsoft-Windows-Sysmon",
+                                       "kibana.alert.original_event.created":  "2026-08-03T02:42:04.365Z",
+                                       "kibana.alert.original_event.kind":  "event",
+                                       "kibana.alert.original_event.action":  "Process Create (rule: ProcessCreate)",
+                                       "kibana.alert.original_event.dataset":  "windows.sysmon",
+                                       "event.kind":  "signal",
+                                       "kibana.alert.original_time":  "2026-08-03T02:42:02.911Z",
+                                       "kibana.alert.ancestors":  [
+                                                                      {
+                                                                          "id":  "AZ_FgGZyveKuiCkIB0of",
+                                                                          "type":  "event",
+                                                                          "index":  ".ds-logs-windows.sysmon-aegis_lab-2026.08.02-000002",
+                                                                          "depth":  0
+                                                                      }
+                                                                  ],
+                                       "kibana.alert.status":  "active",
+                                       "kibana.alert.workflow_status":  "open",
+                                       "kibana.alert.depth":  1,
+                                       "kibana.alert.reason":  "event on desktop-evvu9ls created high alert SIGMA - Regsvr32 Loading a Non-Registrable File.",
+                                       "kibana.alert.severity":  "high",
+                                       "kibana.alert.risk_score":  73,
+                                       "kibana.alert.rule.actions":  [
+
+                                                                     ],
+                                       "kibana.alert.rule.author":  [
+                                                                        "AEGIS-VANGUARD lab"
+                                                                    ],
+                                       "kibana.alert.rule.created_at":  "2026-08-03T02:40:58.263Z",
+                                       "kibana.alert.rule.created_by":  "elastic",
+                                       "kibana.alert.rule.description":  "Detects regsvr32.exe invoked against a file whose extension is not one it can\nlegitimately register (`.dll`, `.ocx`, `.cpl`, `.ax`). Loading a renamed library â\n`regsvr32 /s shell32.jpg` â is a common way to run attacker code through a signed\nMicrosoft binary while defeating extension-based inspection.\n\nThis rule was written to close a real gap. Atomic Red Team T1218.010 #4 ran a renamed\nlocal DLL and the Regsvr32 Remote Scriptlet rule (`6b5da61b`) missed it, because that\nrule targets the remote scriptlet (Squiblydoo) form: `scrobj.dll` or a URL. The two\nrules are deliberately separate so each keeps one clear meaning â remote scriptlet\nversus renamed local library. A command line that carries `.dll`/`.ocx` (including the\nSquiblydoo `scrobj.dll` case) is filtered out here and left to the other rule.\n",
+                                       "kibana.alert.rule.enabled":  true,
+                                       "kibana.alert.rule.exceptions_list":  [
+
+                                                                             ],
+                                       "kibana.alert.rule.false_positives":  [
+                                                                                 "Rare tooling that passes a registrable component with a non-standard extension"
+                                                                             ],
+                                       "kibana.alert.rule.from":  "now-5m",
+                                       "kibana.alert.rule.immutable":  false,
+                                       "kibana.alert.rule.interval":  "5m",
+                                       "kibana.alert.rule.indices":  [
+                                                                         "logs-windows.sysmon-aegis_lab",
+                                                                         "logs-windows.powershell-aegis_lab",
+                                                                         "logs-windows.defender-aegis_lab",
+                                                                         "logs-system.security-aegis_lab"
+                                                                     ],
+                                       "kibana.alert.rule.license":  "DRL",
+                                       "kibana.alert.rule.max_signals":  100,
+                                       "kibana.alert.rule.references":  [
+                                                                            "https://attack.mitre.org/techniques/T1218/010/",
+                                                                            "https://lolbas-project.github.io/lolbas/Binaries/Regsvr32/"
+                                                                        ],
+                                       "kibana.alert.rule.risk_score_mapping":  [
+
+                                                                                ],
+                                       "kibana.alert.rule.rule_id":  "f7a3c9e1-2b8d-4e6f-a1c5-9d0e3f7b2a48",
+                                       "kibana.alert.rule.severity_mapping":  [
+
+                                                                              ],
+                                       "kibana.alert.rule.threat":  [
+
+                                                                    ],
+                                       "kibana.alert.rule.to":  "now",
+                                       "kibana.alert.rule.type":  "query",
+                                       "kibana.alert.rule.updated_at":  "2026-08-03T02:40:58.263Z",
+                                       "kibana.alert.rule.updated_by":  "elastic",
+                                       "kibana.alert.rule.version":  1,
+                                       "kibana.alert.uuid":  "53cddd8c27b315ab29027b96b652da3c98197c8b550874e5f76104dd2a9c0d7c",
+                                       "kibana.alert.workflow_tags":  [
+
+                                                                      ],
+                                       "kibana.alert.workflow_assignee_ids":  [
+
+                                                                              ],
+                                       "kibana.alert.rule.meta.from":  "1m",
+                                       "kibana.alert.rule.risk_score":  73,
+                                       "kibana.alert.rule.severity":  "high",
+                                       "kibana.alert.intended_timestamp":  "2026-08-03T02:46:05.125Z",
+                                       "kibana.alert.rule.execution.type":  "scheduled"
+                                   },
+                       "sort":  [
+                                    1785725165125
+                                ]
+                   }
+               ],
+    "source_documents":  [
+                             {
+                                 "document_id":  "AZ_FgGZyveKuiCkIB0oY",
+                                 "index":  ".ds-logs-windows.sysmon-aegis_lab-2026.08.02-000002",
+                                 "source":  {
+                                                "input":  {
+                                                              "type":  "winlog"
+                                                          },
+                                                "agent":  {
+                                                              "name":  "DESKTOP-EVVU9LS",
+                                                              "id":  "86fa468a-1a0a-484e-b406-fbdd60e82413",
+                                                              "ephemeral_id":  "d88fca8d-10f9-441b-a5ed-c0c36eea599f",
+                                                              "type":  "filebeat",
+                                                              "version":  "9.4.2"
+                                                          },
+                                                "@timestamp":  "2026-08-03T02:42:01.688Z",
+                                                "winlog":  {
+                                                               "record_id":  4778,
+                                                               "computer_name":  "DESKTOP-EVVU9LS",
+                                                               "process":  {
+                                                                               "pid":  3488,
+                                                                               "thread":  {
+                                                                                              "id":  3148
+                                                                                          }
+                                                                           },
+                                                               "event_id":  "1",
+                                                               "task":  "Process Create (rule: ProcessCreate)",
+                                                               "provider_guid":  "{5770385F-C22A-43E0-BF4C-06F5698FFBD9}",
+                                                               "channel":  "Microsoft-Windows-Sysmon/Operational",
+                                                               "event_data":  {
+                                                                                  "ParentImage":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                                                                                  "Company":  "Microsoft Corporation",
+                                                                                  "User":  "DESKTOP-EVVU9LS\\victim-win-01",
+                                                                                  "Description":  "Microsoft(C) Register Server",
+                                                                                  "LogonGuid":  "{D796217E-F44D-6A6F-136D-100000000000}",
+                                                                                  "OriginalFileName":  "REGSVR32.EXE",
+                                                                                  "TerminalSessionId":  "1",
+                                                                                  "IntegrityLevel":  "Medium",
+                                                                                  "ParentProcessId":  "7976",
+                                                                                  "ParentUser":  "DESKTOP-EVVU9LS\\victim-win-01",
+                                                                                  "Product":  "MicrosoftÂ® WindowsÂ® Operating System",
+                                                                                  "Image":  "C:\\Windows\\System32\\regsvr32.exe",
+                                                                                  "ProcessGuid":  "{D796217E-FFF9-6A6F-8601-000000000B00}",
+                                                                                  "UtcTime":  "2026-08-03 02:42:01.675",
+                                                                                  "CurrentDirectory":  "C:\\WINDOWS\\system32\\",
+                                                                                  "CommandLine":  "\"C:\\Windows\\System32\\regsvr32.exe\" /s C:\\Users\\VICTIM~1\\AppData\\Local\\Temp\\shell32.jpg",
+                                                                                  "Hashes":  "SHA256=A47E25A9BDCFAEFD687CEE74FEA0C811AC10DE216E55125DC04166D92EC41869",
+                                                                                  "FileVersion":  "10.0.26100.5074 (WinBuild.160101.0800)",
+                                                                                  "ProcessId":  "5608",
+                                                                                  "ParentCommandLine":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\\AEGIS\\transfer\\atomic-t1218-010-4.ps1",
+                                                                                  "ParentProcessGuid":  "{D796217E-FFF8-6A6F-8501-000000000B00}",
+                                                                                  "LogonId":  "0x106d13",
+                                                                                  "RuleName":  "-"
+                                                                              },
+                                                               "provider_name":  "Microsoft-Windows-Sysmon",
+                                                               "opcode":  "Info",
+                                                               "user":  {
+                                                                            "identifier":  "S-1-5-18",
+                                                                            "domain":  "NT AUTHORITY",
+                                                                            "name":  "SYSTEM",
+                                                                            "type":  "User"
+                                                                        },
+                                                               "version":  5
+                                                           },
+                                                "ecs":  {
+                                                            "version":  "8.0.0"
+                                                        },
+                                                "log":  {
+                                                            "level":  "information"
+                                                        },
+                                                "data_stream":  {
+                                                                    "namespace":  "aegis_lab",
+                                                                    "type":  "logs",
+                                                                    "dataset":  "windows.sysmon"
+                                                                },
+                                                "host":  {
+                                                             "hostname":  "DESKTOP-EVVU9LS",
+                                                             "os":  {
+                                                                        "build":  "26200.6584",
+                                                                        "kernel":  "10.0.26100.6584 (WinBuild.160101.0800)",
+                                                                        "name":  "Windows 11 Enterprise Evaluation",
+                                                                        "type":  "windows",
+                                                                        "family":  "windows",
+                                                                        "version":  "10.0",
+                                                                        "platform":  "windows"
+                                                                    },
+                                                             "ip":  [
+                                                                        "fe80::67bf:cb80:c45d:f4d8",
+                                                                        "192.168.56.10"
+                                                                    ],
+                                                             "name":  "desktop-evvu9ls",
+                                                             "id":  "d796217e-7f00-44ee-bcfa-d00dd989ea1b",
+                                                             "mac":  [
+                                                                         "08-00-27-FE-DE-BB"
+                                                                     ],
+                                                             "architecture":  "x86_64"
+                                                         },
+                                                "elastic_agent":  {
+                                                                      "id":  "86fa468a-1a0a-484e-b406-fbdd60e82413",
+                                                                      "version":  "9.4.2",
+                                                                      "snapshot":  false
+                                                                  },
+                                                "event":  {
+                                                              "code":  "1",
+                                                              "provider":  "Microsoft-Windows-Sysmon",
+                                                              "created":  "2026-08-03T02:42:03.361Z",
+                                                              "kind":  "event",
+                                                              "action":  "Process Create (rule: ProcessCreate)",
+                                                              "dataset":  "windows.sysmon"
+                                                          },
+                                                "message":  "Process Create:\nRuleName: -\nUtcTime: 2026-08-03 02:42:01.675\nProcessGuid: {D796217E-FFF9-6A6F-8601-000000000B00}\nProcessId: 5608\nImage: C:\\Windows\\System32\\regsvr32.exe\nFileVersion: 10.0.26100.5074 (WinBuild.160101.0800)\nDescription: Microsoft(C) Register Server\nProduct: MicrosoftÂ® WindowsÂ® Operating System\nCompany: Microsoft Corporation\nOriginalFileName: REGSVR32.EXE\nCommandLine: \"C:\\Windows\\System32\\regsvr32.exe\" /s C:\\Users\\VICTIM~1\\AppData\\Local\\Temp\\shell32.jpg\nCurrentDirectory: C:\\WINDOWS\\system32\\\nUser: DESKTOP-EVVU9LS\\victim-win-01\nLogonGuid: {D796217E-F44D-6A6F-136D-100000000000}\nLogonId: 0x106d13\nTerminalSessionId: 1\nIntegrityLevel: Medium\nHashes: SHA256=A47E25A9BDCFAEFD687CEE74FEA0C811AC10DE216E55125DC04166D92EC41869\nParentProcessGuid: {D796217E-FFF8-6A6F-8501-000000000B00}\nParentProcessId: 7976\nParentImage: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\nParentCommandLine: \"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\\AEGIS\\transfer\\atomic-t1218-010-4.ps1\nParentUser: DESKTOP-EVVU9LS\\victim-win-01"
+                                            }
+                             },
+                             {
+                                 "document_id":  "AZ_FgGZyveKuiCkIB0of",
+                                 "index":  ".ds-logs-windows.sysmon-aegis_lab-2026.08.02-000002",
+                                 "source":  {
+                                                "input":  {
+                                                              "type":  "winlog"
+                                                          },
+                                                "agent":  {
+                                                              "name":  "DESKTOP-EVVU9LS",
+                                                              "id":  "86fa468a-1a0a-484e-b406-fbdd60e82413",
+                                                              "ephemeral_id":  "d88fca8d-10f9-441b-a5ed-c0c36eea599f",
+                                                              "type":  "filebeat",
+                                                              "version":  "9.4.2"
+                                                          },
+                                                "@timestamp":  "2026-08-03T02:42:02.911Z",
+                                                "winlog":  {
+                                                               "computer_name":  "DESKTOP-EVVU9LS",
+                                                               "record_id":  4781,
+                                                               "process":  {
+                                                                               "pid":  3488,
+                                                                               "thread":  {
+                                                                                              "id":  3148
+                                                                                          }
+                                                                           },
+                                                               "task":  "Process Create (rule: ProcessCreate)",
+                                                               "event_id":  "1",
+                                                               "provider_guid":  "{5770385F-C22A-43E0-BF4C-06F5698FFBD9}",
+                                                               "channel":  "Microsoft-Windows-Sysmon/Operational",
+                                                               "event_data":  {
+                                                                                  "ParentImage":  "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                                                                                  "Company":  "Microsoft Corporation",
+                                                                                  "User":  "DESKTOP-EVVU9LS\\victim-win-01",
+                                                                                  "LogonGuid":  "{D796217E-F44D-6A6F-136D-100000000000}",
+                                                                                  "Description":  "Microsoft(C) Register Server",
+                                                                                  "OriginalFileName":  "REGSVR32.EXE",
+                                                                                  "TerminalSessionId":  "1",
+                                                                                  "IntegrityLevel":  "Medium",
+                                                                                  "ParentProcessId":  "7976",
+                                                                                  "ParentUser":  "DESKTOP-EVVU9LS\\victim-win-01",
+                                                                                  "Product":  "MicrosoftÂ® WindowsÂ® Operating System",
+                                                                                  "Image":  "C:\\Windows\\System32\\regsvr32.exe",
+                                                                                  "ProcessGuid":  "{D796217E-FFFA-6A6F-8801-000000000B00}",
+                                                                                  "UtcTime":  "2026-08-03 02:42:02.900",
+                                                                                  "CurrentDirectory":  "C:\\WINDOWS\\system32\\",
+                                                                                  "CommandLine":  "\"C:\\Windows\\System32\\regsvr32.exe\" /u /s C:\\Users\\VICTIM~1\\AppData\\Local\\Temp\\shell32.jpg",
+                                                                                  "Hashes":  "SHA256=A47E25A9BDCFAEFD687CEE74FEA0C811AC10DE216E55125DC04166D92EC41869",
+                                                                                  "FileVersion":  "10.0.26100.5074 (WinBuild.160101.0800)",
+                                                                                  "ProcessId":  "1536",
+                                                                                  "ParentCommandLine":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\\AEGIS\\transfer\\atomic-t1218-010-4.ps1",
+                                                                                  "ParentProcessGuid":  "{D796217E-FFF8-6A6F-8501-000000000B00}",
+                                                                                  "LogonId":  "0x106d13",
+                                                                                  "RuleName":  "-"
+                                                                              },
+                                                               "opcode":  "Info",
+                                                               "provider_name":  "Microsoft-Windows-Sysmon",
+                                                               "user":  {
+                                                                            "identifier":  "S-1-5-18",
+                                                                            "domain":  "NT AUTHORITY",
+                                                                            "name":  "SYSTEM",
+                                                                            "type":  "User"
+                                                                        },
+                                                               "version":  5
+                                                           },
+                                                "ecs":  {
+                                                            "version":  "8.0.0"
+                                                        },
+                                                "log":  {
+                                                            "level":  "information"
+                                                        },
+                                                "data_stream":  {
+                                                                    "namespace":  "aegis_lab",
+                                                                    "type":  "logs",
+                                                                    "dataset":  "windows.sysmon"
+                                                                },
+                                                "host":  {
+                                                             "hostname":  "DESKTOP-EVVU9LS",
+                                                             "os":  {
+                                                                        "build":  "26200.6584",
+                                                                        "kernel":  "10.0.26100.6584 (WinBuild.160101.0800)",
+                                                                        "name":  "Windows 11 Enterprise Evaluation",
+                                                                        "type":  "windows",
+                                                                        "family":  "windows",
+                                                                        "version":  "10.0",
+                                                                        "platform":  "windows"
+                                                                    },
+                                                             "ip":  [
+                                                                        "fe80::67bf:cb80:c45d:f4d8",
+                                                                        "192.168.56.10"
+                                                                    ],
+                                                             "name":  "desktop-evvu9ls",
+                                                             "id":  "d796217e-7f00-44ee-bcfa-d00dd989ea1b",
+                                                             "mac":  [
+                                                                         "08-00-27-FE-DE-BB"
+                                                                     ],
+                                                             "architecture":  "x86_64"
+                                                         },
+                                                "elastic_agent":  {
+                                                                      "id":  "86fa468a-1a0a-484e-b406-fbdd60e82413",
+                                                                      "version":  "9.4.2",
+                                                                      "snapshot":  false
+                                                                  },
+                                                "message":  "Process Create:\nRuleName: -\nUtcTime: 2026-08-03 02:42:02.900\nProcessGuid: {D796217E-FFFA-6A6F-8801-000000000B00}\nProcessId: 1536\nImage: C:\\Windows\\System32\\regsvr32.exe\nFileVersion: 10.0.26100.5074 (WinBuild.160101.0800)\nDescription: Microsoft(C) Register Server\nProduct: MicrosoftÂ® WindowsÂ® Operating System\nCompany: Microsoft Corporation\nOriginalFileName: REGSVR32.EXE\nCommandLine: \"C:\\Windows\\System32\\regsvr32.exe\" /u /s C:\\Users\\VICTIM~1\\AppData\\Local\\Temp\\shell32.jpg\nCurrentDirectory: C:\\WINDOWS\\system32\\\nUser: DESKTOP-EVVU9LS\\victim-win-01\nLogonGuid: {D796217E-F44D-6A6F-136D-100000000000}\nLogonId: 0x106d13\nTerminalSessionId: 1\nIntegrityLevel: Medium\nHashes: SHA256=A47E25A9BDCFAEFD687CEE74FEA0C811AC10DE216E55125DC04166D92EC41869\nParentProcessGuid: {D796217E-FFF8-6A6F-8501-000000000B00}\nParentProcessId: 7976\nParentImage: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\nParentCommandLine: \"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\\AEGIS\\transfer\\atomic-t1218-010-4.ps1\nParentUser: DESKTOP-EVVU9LS\\victim-win-01",
+                                                "event":  {
+                                                              "code":  "1",
+                                                              "provider":  "Microsoft-Windows-Sysmon",
+                                                              "created":  "2026-08-03T02:42:04.365Z",
+                                                              "kind":  "event",
+                                                              "action":  "Process Create (rule: ProcessCreate)",
+                                                              "dataset":  "windows.sysmon"
+                                                          }
+                                            }
+                             }
+                         ]
+}

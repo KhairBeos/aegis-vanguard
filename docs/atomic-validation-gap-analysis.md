@@ -3,9 +3,11 @@
 The rule pack was validated against real Atomic Red Team procedures rather than the
 benign marker scenarios it was written alongside. The point of the exercise was to find
 out where the rules are narrow, and it did. Four of five procedures that produced
-telemetry went undetected. This document records each result honestly, separates a genuine
-detection gap from a test-harness artifact and from a correct scope boundary, and closes
-the one gap that was both real and cleanly reproducible.
+telemetry went undetected. This document records each result honestly, separates genuine
+detection gaps from a test-harness artifact and from a correct scope boundary, and closes
+every gap that was both real and reproducible — three rules added or extended, each
+re-verified live. The one remaining non-detection (T1059.005 #1) is a correct scope
+boundary, not a defect.
 
 ## The run
 
@@ -15,11 +17,11 @@ self-cleaning, non-elevated, no-egress subset; the driver is preserved out of tr
 
 | Atomic | GUID | Ran faithfully? | Rule expected to catch it | Result |
 | --- | --- | --- | --- | --- |
-| T1218.010 #4 | `2408973b` | yes | Regsvr32 Remote Scriptlet (`6b5da61b`) | **missed** — variant gap |
-| T1027 #3 | `450e7218` | no — harness mangled the quotes | Encoded Download Cradle (`8c1d2f4a`) | **missed** — confounded |
-| T1027 #11 | `6683baf0` | yes | none existed | **missed** — real gap, now closed |
+| T1218.010 #4 | `2408973b` | yes | Regsvr32 Remote Scriptlet (`6b5da61b`) | missed → **closed** by new rule `f7a3c9e1` (`AEGIS-SCN-0011`) |
+| T1027 #3 | `450e7218` | first run mangled; re-run faithful | Encoded Download Cradle (`8c1d2f4a`) | missed → **closed** by cradle plaintext arm (`AEGIS-SCN-0012`) |
+| T1027 #11 | `6683baf0` | yes | none existed | missed → **closed** by new rule `d4e91a72` (`AEGIS-SCN-0010`) |
 | T1059.001 #10 | `fa050f5e` | no — failed to execute (quoting) | Encoded Command (`1131fb39`) | not evaluated |
-| T1059.005 #1 | `bc4fafd0` | yes | Script Host Spawns Shell (`a41ef4b6`) | **missed** — correct scope boundary |
+| T1059.005 #1 | `bc4fafd0` | yes | Script Host Spawns Shell (`a41ef4b6`) | **missed** — correct scope boundary, not a defect |
 
 ## The miss was proven deterministically, not inferred from a quiet alert feed
 
@@ -55,26 +57,32 @@ powershell.exe -NoProfile -Command "$ps=[char[]](112,111,119,101,114,115,104,101
 This is a clean, generic obfuscation signal on faithful telemetry, so it became the target
 of the tuning loop below (`TUNE-002`).
 
-### T1218.010 #4 — a variant gap, recorded not closed
+### T1218.010 #4 — a variant gap, now closed
 
-`regsvr32.exe /s shell32.jpg` loads a **local, renamed** DLL. The rule matches the remote
-scriptlet form (Squiblydoo): `scrobj.dll` or a URL. This is a different sub-technique — a
-renamed-extension local library, not a remote script — and catching it well means matching
-regsvr32 loading any file whose extension is not `.dll`/`.ocx`, which needs its own rule
-and its own false-positive measurement against legitimate installers. It is logged here as
-future work rather than bolted onto the remote-scriptlet rule, which would blur what that
-rule means.
+`regsvr32.exe /s shell32.jpg` loads a **local, renamed** DLL. The original rule matched only
+the remote scriptlet form (Squiblydoo): `scrobj.dll` or a URL. This is a different
+sub-technique — a renamed-extension local library, not a remote script. Rather than blur the
+remote-scriptlet rule, a **new** rule (`f7a3c9e1-2b8d-4e6f-a1c5-9d0e3f7b2a48` — Regsvr32
+Loading a Non-Registrable File) matches regsvr32 whose command line carries no registrable
+extension (`.dll`/`.ocx`/`.cpl`/`.ax`), excluding bare launches. Only two regsvr32 events
+exist in all lab history — both this atomic — so it measured 0 false positives, and a
+`scrobj.dll` Squiblydoo command line is filtered out and left to the remote rule. Re-verified
+live: `AEGIS-SCN-0011`, detected, 2 alerts (register + unregister), MTTD 249.1s. See `TUNE-004`.
 
-### T1027 #3 — confounded by the test harness, not usable as a target
+### T1027 #3 — confounded by the test harness, then re-run faithfully and closed
 
 The intended command runs an inline `IEX ([Convert]::FromBase64String(...))` read from the
-registry. Passed through the guest-control layer, its nested double quotes were mangled:
-the inner runner was recorded as `powershell.exe -Command \IEX \`, with the
-`FromBase64String` deobfuscation stripped off before it reached the command line. The
-registry value was set, but the deobfuscate-and-execute step the cradle rule would key on
-never appeared in the telemetry. Tuning a rule to match this document would mean tuning to
-a broken artifact, so it was deliberately not used. Re-running it faithfully (correct
-escaping, or a transferred script file) is future work.
+registry. On the first attempt, passed through the guest-control layer, its nested double
+quotes were mangled: the inner runner was recorded as `powershell.exe -Command \IEX \`, with
+the `FromBase64String` deobfuscation stripped off before it reached the command line. Tuning
+to that broken artifact would have been dishonest, so it was not used.
+
+The faithful re-run spawns the deobfuscation as a child with `-Command`, so the plaintext
+`IEX (...FromBase64String...)` lands on the command line as the real procedure does. This
+exposed a genuine gap: the cradle rule matched only the decoded `-EncodedCommand` field, which
+is empty when base64 is deobfuscated inline. The rule was extended to match the same
+vocabulary on the raw command line too (0 false positives across all lab history). Re-verified
+live: `AEGIS-SCN-0012`, detected, MTTD 214.1s, with `decoded_command` empty. See `TUNE-003`.
 
 ### T1059.005 #1 — a correct scope boundary, not a defect
 

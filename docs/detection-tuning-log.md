@@ -147,3 +147,82 @@ The rule detects one obfuscation idiom, not obfuscation in general. `[string]::J
 format-operator rebuilds, and other reassembly methods evade it. The zero-false-positive
 figure is over one lab's history, not a rate. Per `PROJECT_PLAN.md` the false-positive-rate
 metric stays `Not measured yet`.
+
+---
+
+## TUNE-003 - Cradle rule, plaintext arm, `T1027` / `T1140`
+
+**Rule:** `8c1d2f4a-5b6e-47c8-9a03-2e7f81d4b6c5` - PowerShell Encoded Download Cradle
+**Date:** `2026-08-03`
+
+### What was observed
+
+Atomic T1027 #3 deobfuscates a base64 blob read from the registry and runs it inline with
+`IEX ([Convert]::FromBase64String(...))`. It uses no `-EncodedCommand`, so the ingest decoder
+never runs and `decoded_command` is empty. The cradle rule matched only `decoded_command`, so
+it missed the procedure entirely even though the very primitives it looks for — `frombase64string`,
+`iex (` — were sitting in plaintext on the command line.
+
+### What was done
+
+The same vocabulary is now matched on the raw command line as a second arm:
+`condition: selection_event and (selection_decoded or selection_cmdline)`. When base64 is
+hidden in `-EncodedCommand`, the decoded arm still catches it; when it is deobfuscated inline,
+the plaintext arm does. The list is duplicated deliberately rather than abstracted — a Sigma
+rule is clearer with both field checks spelled out.
+
+### After
+
+| Measure | Value |
+| --- | --- |
+| Raw-command-line vocab across all Sysmon history, before the re-run | 0 events — the plaintext arm adds 0 false positives |
+| Faithful re-run detection | `AEGIS-SCN-0012`, **detected**, 1 alert, `decoded_command` empty |
+| Time to detect | 214.1 s (source `02:42:12.323Z`, alert `02:45:44.148Z`) |
+| Decoded-arm regression | preserved — the 4 decoded fixture positives still match |
+
+The first attempt at this procedure was mangled by guest-control quote handling
+(`AEGIS-SCN-0007`), stripping `FromBase64String` off the command line; the faithful re-run
+spawns the deobfuscation as a child with `-Command` so the plaintext primitives are recorded.
+
+### Residual risk
+
+Matching `iex(` / `invoke-expression` / `downloadstring` on the raw command line is noisier in
+a real estate than in this lab, where it measured zero. Bare `IEX` is common in admin scripts;
+here it only alerts alongside the other cradle verbs, but a production rollout should re-measure
+before trusting the plaintext arm at `high`.
+
+---
+
+## TUNE-004 - Regsvr32 non-registrable file, `T1218.010`
+
+**Rule:** `f7a3c9e1-2b8d-4e6f-a1c5-9d0e3f7b2a48` - Regsvr32 Loading a Non-Registrable File (new)
+**Date:** `2026-08-03`
+
+### What was observed
+
+Atomic T1218.010 #4 runs `regsvr32 /s shell32.jpg` — a renamed **local** DLL. The existing
+Regsvr32 rule (`6b5da61b`) targets the remote-scriptlet form (`scrobj.dll` or a URL) and
+returned 0 hits (`AEGIS-SCN-0006`). The abuse is real but structurally different.
+
+### What was done
+
+A new rule matches regsvr32 whose command line does **not** carry a registrable extension
+(`.dll`, `.ocx`, `.cpl`, `.ax`), excluding bare flag-only launches. A separate rule was chosen
+over widening the remote-scriptlet rule so each keeps one meaning; a `scrobj.dll` Squiblydoo
+command line carries `.dll` and is therefore filtered here and left to `6b5da61b`.
+
+### After
+
+| Measure | Value |
+| --- | --- |
+| regsvr32 events across all Sysmon history | 2 — both this atomic (register + `/u` cleanup), 0 legitimate |
+| New-rule false positives | 0 |
+| Faithful re-run detection | `AEGIS-SCN-0011`, **detected**, 2 alerts (register and unregister), 2 source docs |
+| Time to detect | 249.1 s (first source `02:42:01.688Z`, alert `02:46:05.124Z`) |
+
+### Residual risk
+
+The negative-extension approach flags any non-`.dll`/`.ocx` target, including a bare
+`regsvr32 /?`-style call if it ever carried a stray token; the bare-launch filter covers the
+no-target case but not every benign flag combination. A real environment with legitimate
+regsvr32 usage should measure the alert volume before enabling at `high`.

